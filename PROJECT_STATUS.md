@@ -6,7 +6,7 @@
 
 **Status:** Release Candidate
 
-**Last Updated:** 2026-07-23
+**Last Updated:** 2026-07-24
 
 ---
 
@@ -162,8 +162,8 @@ Modules:
 
 | Test | Status |
 |------|--------|
-| Runtime Tests | Planned |
-| Unit Tests | Planned |
+| Runtime Tests | ✅ Complete |
+| Unit Tests | ✅ Complete |
 | Integration Tests | Planned |
 | CLI Tests | Planned |
 | Security Tests | Planned |
@@ -236,6 +236,7 @@ When working on this repository:
 - Initial production architecture completed.
 - Documentation prepared.
 - Release workflow prepared.
+- Implemented the YasinAI Core Runtime (yasinai/core) including config loader, system registry, bootstrap module discovery, and runtime orchestrator. Added comprehensive unit tests in tests/test_runtime.py.
 
 ---
 

@@ -1,0 +1,13 @@
+# Python cached files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pytest and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local configuration files
+.env
+*.local
