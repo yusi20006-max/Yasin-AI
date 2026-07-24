@@ -33,7 +33,28 @@ def handle_memory(args) -> int:
     """Handle 'yasin memory' commands."""
     if args.memory_cmd == "search":
         print(f"Searching memory for '{args.query}'...")
-        # Placeholder for Knowledge Platform integration
+        # Integrate with Knowledge Platform Semantic Search and Memory Manager
+        from yasinai.knowledge_platform.manager import MemoryManager
+        from yasinai.knowledge_platform.search import LocalSemanticRetriever
+
+        # Load any existing memories to search from
+        manager = MemoryManager()
+        retriever = LocalSemanticRetriever()
+
+        # Pull from long term memories
+        keys = manager.long_term.list_keys()
+        for key in keys:
+            val = manager.fetch_from_long_term(key)
+            doc_text = f"{key}: {val}" if not isinstance(val, str) else val
+            retriever.add_document(doc_id=key, text=doc_text, metadata={"key": key})
+
+        results = retriever.search(args.query)
+        if not results:
+            print("No matching memories found.")
+        else:
+            print("Ranked Results:")
+            for i, (doc, score) in enumerate(results, 1):
+                print(f"  {i}. [Score: {score:.4f}] {doc['text']}")
         return 0
     else:
         print("Error: Unknown memory subcommand.", file=sys.stderr)
