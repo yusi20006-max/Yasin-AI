@@ -1,0 +1,6 @@
+{
+  "name": "test-agent",
+  "version": "1.0.0",
+  "description": "Scaffolded test-agent Agent",
+  "entrypoint": "src.agent.TestAgentAgent"
+}
