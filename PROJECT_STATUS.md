@@ -239,6 +239,7 @@ When working on this repository:
 - Implemented the YasinAI Core Runtime (yasinai/core) including config loader, system registry, bootstrap module discovery, and runtime orchestrator. Added comprehensive unit tests in tests/test_runtime.py.
 - Implemented the YasinAI CLI system (yasinai/cli) supporting nested command line subcommands status, agent create, memory search, security check, and package build. Registered standard 'yasin' console entrypoint via setup.py. Added CLI unit tests in tests/test_cli.py.
 - Implemented the YasinAI Knowledge Platform (yasinai/knowledge_platform) featuring the Memory System (short term, long term, memory manager), Knowledge Graph (entity, relation, graph, query engine), Local Semantic Search (TF-IDF vectorizer and cosine similarity), Context Engine (context, context builder), and CLI memory search integration with comprehensive unit and integration tests in tests/test_knowledge.py.
+- Implemented the YasinAI Developer Platform (yasinai/developer_platform) containing Agent SDK, Plugin SDK, Application SDK, Generator, Package Builder, and integrated it into the CLI via `yasin agent create` and `yasin package build` with thorough testing in tests/test_developer.py.
 
 ---
 
