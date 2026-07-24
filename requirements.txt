@@ -1,5 +1,0 @@
-# Core & Security dependencies
-cryptography>=42.0.0
-
-# Development / Testing
-pytest>=8.0.0

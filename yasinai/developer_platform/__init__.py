@@ -1,1 +1,0 @@
-"""Developer Platform package initialization."""

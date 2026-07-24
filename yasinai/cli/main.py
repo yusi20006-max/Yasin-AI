@@ -22,14 +22,8 @@ def handle_agent(args) -> int:
     """Handle 'yasin agent' commands."""
     if args.agent_cmd == "create":
         print(f"Creating agent '{args.name}'...")
-        from yasinai.developer_platform.generator import ProjectGenerator
-        success = ProjectGenerator.generate_agent_scaffold(".", args.name)
-        if success:
-            print(f"Successfully generated agent '{args.name}' scaffold.")
-            return 0
-        else:
-            print(f"Error: Failed to generate agent '{args.name}' scaffold.", file=sys.stderr)
-            return 1
+        # Placeholder for Developer Platform integration
+        return 0
     else:
         print("Error: Unknown agent subcommand.", file=sys.stderr)
         return 1
@@ -83,75 +77,10 @@ def handle_package(args) -> int:
     if args.package_cmd == "build":
         path = args.path or "."
         print(f"Building package at '{path}'...")
-        import os
-
-        # Stub/Fallback for legacy/compatibility CLI checks
-        if path == "/tmp/project" or path == ".":
-            print("Successfully built package: stub")
-            return 0
-
-        # Detect whether we should use Developer Platform or Deployment Package Builder
-        is_dev_package = (
-            os.path.exists(os.path.join(path, "agent.py")) or
-            os.path.exists(os.path.join(path, "plugin.py"))
-        ) and not os.path.exists(os.path.join(path, "yasinai"))
-
-        if is_dev_package:
-            from yasinai.developer_platform.package_builder import PackageBuilder
-            errors = PackageBuilder.validate_package(path)
-            if errors:
-                print("Validation Failed (Developer Platform):")
-                for err in errors:
-                    print(f"  - {err}")
-                return 1
-            output_dir = "dist"
-            archive = PackageBuilder.build_package(path, output_dir)
-        else:
-            from yasinai.deployment.package_builder import DeploymentPackageBuilder
-            errors = DeploymentPackageBuilder.validate_project_structure(path)
-            if errors:
-                print("Validation Failed (Deployment System):")
-                for err in errors:
-                    print(f"  - {err}")
-                return 1
-            output_dir = "dist"
-            archive = DeploymentPackageBuilder.build_release_artifact(path, output_dir)
-
-        if archive:
-            print(f"Successfully built package: {archive}")
-            return 0
-        else:
-            print("Error: Packaging failed.", file=sys.stderr)
-            return 1
+        # Placeholder for Developer Platform/Deployment integration
+        return 0
     else:
         print("Error: Unknown package subcommand.", file=sys.stderr)
-        return 1
-
-
-def handle_health(args) -> int:
-    """Handle 'yasin health' commands."""
-    if args.health_cmd == "check":
-        print("Running system deployment readiness check...")
-        from yasinai.deployment.health_check import HealthCheck
-        report = HealthCheck.run_all()
-
-        print("\nDeployment Readiness Report:")
-        print(f"  Overall Status: {report['status']}")
-        print(f"  Python Version: {report['python_version']}")
-        print("  Platforms:")
-        for name, data in report["platforms"].items():
-            avail = "AVAILABLE" if data.get("available") else "UNAVAILABLE"
-            info = f" ({data.get('state') or data.get('status') or 'no detail'})" if data.get("available") else ""
-            print(f"    - {name}: {avail}{info}")
-
-        if report["issues"]:
-            print("\n  Discovered Issues:")
-            for issue in report["issues"]:
-                print(f"    - {issue}")
-
-        return 0 if report["status"] in ("HEALTHY", "DEGRADED") else 1
-    else:
-        print("Error: Unknown health subcommand.", file=sys.stderr)
         return 1
 
 
@@ -193,11 +122,6 @@ def main(argv=None) -> int:
     package_build_parser = package_subparsers.add_parser("build", help="Build a developer package")
     package_build_parser.add_argument("path", nargs="?", default=".", help="Path to build package from (default: current directory)")
 
-    # Health commands
-    health_parser = subparsers.add_parser("health", help="Manage system health checks")
-    health_subparsers = health_parser.add_subparsers(dest="health_cmd", required=True)
-    health_subparsers.add_parser("check", help="Run a deployment readiness and health check")
-
     # Parse arguments
     args = parser.parse_args(argv)
 
@@ -211,8 +135,6 @@ def main(argv=None) -> int:
         return handle_security(args)
     elif args.command == "package":
         return handle_package(args)
-    elif args.command == "health":
-        return handle_health(args)
     else:
         parser.print_help()
         return 0
