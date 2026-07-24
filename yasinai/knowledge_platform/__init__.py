@@ -1,0 +1,1 @@
+"""Knowledge Platform package initialization."""
