@@ -233,6 +233,10 @@ When working on this repository:
 
 ## v1.0.0
 
+- Deployment System implemented with Installer, Docker Manager, Health Check, and shared Package Builder (Issue #6).
+- Added comprehensive unit tests for Installer, DockerManager, HealthCheck, and PackageBuilder in `tests/test_deployment.py`.
+- Created Dockerfile and docker-compose.yml configurations at the repository root.
+- Created `requirements.txt` at the repository root.
 - Knowledge Platform fully implemented (Memory System, Knowledge Graph, Semantic Search, Context Engine, and Reasoning) (Issue #4).
 - Added comprehensive unit tests for MemoryManager, KnowledgeGraph, SemanticSearch, ContextBuilder, and KnowledgeReasoner.
 - Integrated CLI memory search with the actual retriever in the Knowledge Platform.
