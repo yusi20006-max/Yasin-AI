@@ -165,7 +165,7 @@ Modules:
 | Runtime Tests | ✅ Complete |
 | Unit Tests | ✅ Complete |
 | Integration Tests | Planned |
-| CLI Tests | Planned |
+| CLI Tests | ✅ Complete |
 | Security Tests | Planned |
 | Memory Tests | Planned |
 
@@ -237,6 +237,7 @@ When working on this repository:
 - Documentation prepared.
 - Release workflow prepared.
 - Implemented the YasinAI Core Runtime (yasinai/core) including config loader, system registry, bootstrap module discovery, and runtime orchestrator. Added comprehensive unit tests in tests/test_runtime.py.
+- Implemented the YasinAI CLI system (yasinai/cli) supporting nested command line subcommands status, agent create, memory search, security check, and package build. Registered standard 'yasin' console entrypoint via setup.py. Added CLI unit tests in tests/test_cli.py.
 
 ---
 
