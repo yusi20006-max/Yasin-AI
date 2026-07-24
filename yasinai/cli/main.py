@@ -3,6 +3,8 @@
 import argparse
 import sys
 from yasinai.core.runtime import RuntimeOrchestrator
+from yasinai.developer_platform.generator import ScaffoldGenerator
+from yasinai.developer_platform.package_builder import PackageBuilder
 
 
 def handle_status(args) -> int:
@@ -22,7 +24,9 @@ def handle_agent(args) -> int:
     """Handle 'yasin agent' commands."""
     if args.agent_cmd == "create":
         print(f"Creating agent '{args.name}'...")
-        # Placeholder for Developer Platform integration
+        # Integrate with ScaffoldGenerator
+        agent_path = ScaffoldGenerator.generate_agent_scaffold(args.name)
+        print(f"Successfully created agent scaffold at '{agent_path}'")
         return 0
     else:
         print("Error: Unknown agent subcommand.", file=sys.stderr)
@@ -77,8 +81,18 @@ def handle_package(args) -> int:
     if args.package_cmd == "build":
         path = args.path or "."
         print(f"Building package at '{path}'...")
-        # Placeholder for Developer Platform/Deployment integration
-        return 0
+        # Validate package
+        is_valid, errors = PackageBuilder.validate_package(path)
+        if not is_valid:
+            print(f"Validation Error: {', '.join(errors)}", file=sys.stderr)
+            return 0
+        try:
+            zip_file = PackageBuilder.build_package(path)
+            print(f"Successfully built package archive: {zip_file}")
+            return 0
+        except Exception as e:
+            print(f"Error: {str(e)}", file=sys.stderr)
+            return 0
     else:
         print("Error: Unknown package subcommand.", file=sys.stderr)
         return 1
