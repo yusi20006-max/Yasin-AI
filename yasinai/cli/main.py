@@ -39,22 +39,28 @@ def handle_status(args: argparse.Namespace) -> int:
 def handle_agent_create(args: argparse.Namespace) -> int:
     """
     Handle the 'yasin agent create' command.
-    Simulates creating a new AI Agent.
+    Creates a new AI Agent using the Developer Platform.
     """
     name = args.name
     role = getattr(args, "role", "general")
     description = getattr(args, "description", "A helpful AI agent")
     agent_type = getattr(args, "type", "standard")
 
+    from developer_platform.agent import AgentSDK
+
+    sdk = AgentSDK()
+    agent = sdk.create_agent(name=name, role=role, description=description, type=agent_type)
+    agent.start()
+
     result = {
         "success": True,
-        "message": f"Agent '{name}' created successfully.",
+        "message": f"Agent '{agent.name}' created successfully.",
         "agent": {
-            "name": name,
-            "role": role,
-            "description": description,
-            "type": agent_type,
-            "status": "active"
+            "name": agent.name,
+            "role": agent.role,
+            "description": agent.description,
+            "type": agent.type,
+            "status": agent.status
         }
     }
 
@@ -62,13 +68,13 @@ def handle_agent_create(args: argparse.Namespace) -> int:
         print(json.dumps(result, indent=2))
     else:
         print("-----------------------------------------")
-        print(f"Creating agent '{name}'...")
+        print(f"Creating agent '{agent.name}'...")
         print("-----------------------------------------")
-        print(f"Role:        {role}")
-        print(f"Description: {description}")
-        print(f"Type:        {agent_type}")
+        print(f"Role:        {agent.role}")
+        print(f"Description: {agent.description}")
+        print(f"Type:        {agent.type}")
         print("-----------------------------------------")
-        print(f"SUCCESS: Agent '{name}' is ready to deploy.")
+        print(f"SUCCESS: Agent '{agent.name}' is ready to deploy.")
     return 0
 
 
@@ -165,21 +171,15 @@ def handle_security_check(args: argparse.Namespace) -> int:
 def handle_package_build(args: argparse.Namespace) -> int:
     """
     Handle the 'yasin package build' command.
-    Simulates packaging modules and extensions into a deployable package.
+    Packages modules and extensions using the Developer Platform PackageBuilder.
     """
     output_dir = getattr(args, "output", "dist/")
     version = getattr(args, "version", "1.0.0")
 
-    result = {
-        "success": True,
-        "package_name": f"yasinai-pkg-{version}.tar.gz",
-        "output_directory": output_dir,
-        "files_included": [
-            "yasinai/core/",
-            "yasinai/cli/",
-            "pyproject.toml"
-        ]
-    }
+    from developer_platform.package_builder import PackageBuilder
+
+    builder = PackageBuilder()
+    result = builder.build_package(name="yasinai", version=version, output_directory=output_dir)
 
     if args.json:
         print(json.dumps(result, indent=2))
