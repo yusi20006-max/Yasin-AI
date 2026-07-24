@@ -75,25 +75,31 @@ def handle_agent_create(args: argparse.Namespace) -> int:
 def handle_memory_search(args: argparse.Namespace) -> int:
     """
     Handle the 'yasin memory search' command.
-    Simulates searching semantic memory.
+    Searches semantic memory using the Knowledge Platform.
     """
     query = args.query
     limit = getattr(args, "limit", 5)
     threshold = getattr(args, "threshold", 0.7)
 
-    # Simulated semantic search results
-    simulated_results = [
-        {"id": "mem_001", "content": "YasinAI configuration loading rules.", "score": 0.95},
-        {"id": "mem_002", "content": "How to register custom modules in Core Runtime.", "score": 0.88},
-        {"id": "mem_003", "content": "Security platform and identity management specs.", "score": 0.74},
-    ]
+    from knowledge_platform.semantic_search import Retriever
 
-    # Filter mock results if a query is provided
-    results = simulated_results
-    if query:
-        results = [r for r in simulated_results if query.lower() in r["content"].lower()]
+    retriever = Retriever()
+    # Populate the retriever with mock data to maintain backward compatibility and support real semantic indexing
+    retriever.add_document("mem_001", "YasinAI configuration loading rules.")
+    retriever.add_document("mem_002", "How to register custom modules in Core Runtime.")
+    retriever.add_document("mem_003", "Security platform and identity management specs.")
 
-    results = results[:limit]
+    # Execute search
+    search_results = retriever.retrieve(query or "", limit=limit, threshold=threshold)
+
+    # Map output format for CLI output
+    results = []
+    for r in search_results:
+        results.append({
+            "id": r["id"],
+            "content": r["metadata"]["text"],
+            "score": round(r["score"], 2)
+        })
 
     output = {
         "query": query,
