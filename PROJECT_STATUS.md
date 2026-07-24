@@ -6,7 +6,7 @@
 
 **Status:** Release Candidate
 
-**Last Updated:** 2026-07-23
+**Last Updated:** 2026-07-24
 
 ---
 
@@ -162,8 +162,8 @@ Modules:
 
 | Test | Status |
 |------|--------|
-| Runtime Tests | Planned |
-| Unit Tests | Planned |
+| Runtime Tests | ✅ Passed |
+| Unit Tests | ✅ Passed |
 | Integration Tests | Planned |
 | CLI Tests | Planned |
 | Security Tests | Planned |
@@ -233,6 +233,8 @@ When working on this repository:
 
 ## v1.0.0
 
+- Core Runtime fully implemented (config, system info, service registry, dynamic bootstrap loading, lifecycle orchestration) (Issue #1).
+- Added comprehensive unit tests for Core Runtime config loading, service registry, bootstrap discovery, and state transition flow.
 - Initial production architecture completed.
 - Documentation prepared.
 - Release workflow prepared.
