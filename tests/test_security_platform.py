@@ -168,6 +168,26 @@ def test_encryption_engine():
         engine.decrypt(ciphertext, another_key)
 
 
+def test_encryption_engine_tampering():
+    engine = EncryptionEngine()
+    key = engine.generate_key()
+    plaintext = "Top secret information."
+    ciphertext_b64 = engine.encrypt(plaintext, key)
+
+    # Let's decode to modify a byte in the encrypted combined data
+    import base64
+    combined = bytearray(base64.b64decode(ciphertext_b64.encode("utf-8")))
+
+    # Flip the last bit of the last byte to tamper with it
+    combined[-1] ^= 1
+
+    tampered_ciphertext = base64.b64encode(combined).decode("utf-8")
+
+    # Decryption should fail due to MAC verification failure (HMAC mismatch)
+    with pytest.raises(ValueError, match="HMAC mismatch"):
+        engine.decrypt(tampered_ciphertext, key)
+
+
 def test_secret_store():
     engine = EncryptionEngine()
     store = SecretStore(engine)

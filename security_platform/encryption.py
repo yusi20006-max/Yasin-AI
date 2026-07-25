@@ -12,7 +12,8 @@ from typing import Dict, Optional
 
 class EncryptionEngine:
     """
-    Symmetric encryption engine using HMAC-SHA256 CTR keystream generation (no external dependencies).
+    Symmetric encryption engine using HMAC-SHA256 CTR keystream generation with
+    Encrypt-then-MAC authentication for robust ciphertext integrity (no external dependencies).
     """
 
     @staticmethod
@@ -32,7 +33,7 @@ class EncryptionEngine:
     @classmethod
     def encrypt(cls, plaintext: str, key: str) -> str:
         """
-        Encrypt a string using HMAC-SHA256 in CTR mode.
+        Encrypt a string using HMAC-SHA256 in CTR mode, with Encrypt-then-MAC authentication.
         Returns a base64-encoded string.
         """
         plaintext_bytes = plaintext.encode("utf-8")
@@ -53,22 +54,38 @@ class EncryptionEngine:
         # XOR to get ciphertext
         ciphertext = bytes(p ^ k for p, k in zip(plaintext_bytes, keystream))
 
-        # Combine IV and ciphertext and base64-encode
-        combined = iv + ciphertext
+        # Derive a distinct MAC key from key_bytes to keep encryption and MAC keys independent
+        mac_key = hmac.digest(key_bytes, b"MAC-Key-Derivation", hashlib.sha256)
+
+        # Compute HMAC over IV + ciphertext
+        mac = hmac.digest(mac_key, iv + ciphertext, hashlib.sha256)
+
+        # Combine MAC, IV, and ciphertext
+        combined = mac + iv + ciphertext
         return base64.b64encode(combined).decode("utf-8")
 
     @classmethod
     def decrypt(cls, ciphertext_b64: str, key: str) -> str:
         """
-        Decrypt a base64-encoded CTR encrypted string.
+        Decrypt a base64-encoded CTR encrypted string after verifying the MAC.
         """
         combined = base64.b64decode(ciphertext_b64.encode("utf-8"))
-        if len(combined) < 16:
-            raise ValueError("Invalid ciphertext: too short.")
+        if len(combined) < 32 + 16:
+            raise ValueError("Invalid ciphertext: too short for MAC and IV.")
 
-        iv = combined[:16]
-        ciphertext = combined[16:]
+        mac = combined[:32]
+        iv = combined[32:48]
+        ciphertext = combined[48:]
+
         key_bytes = hashlib.sha256(key.encode("utf-8")).digest()
+
+        # Derive the distinct MAC key
+        mac_key = hmac.digest(key_bytes, b"MAC-Key-Derivation", hashlib.sha256)
+
+        # Verify HMAC before decrypting (Encrypt-then-MAC verification)
+        expected_mac = hmac.digest(mac_key, iv + ciphertext, hashlib.sha256)
+        if not hmac.compare_digest(mac, expected_mac):
+            raise ValueError("Ciphertext verification failed: HMAC mismatch.")
 
         # Re-generate keystream
         keystream = bytearray()
