@@ -6,6 +6,7 @@ Provides secure SHA-256 hashing, symmetric encryption/decryption, and a secure s
 import base64
 import hashlib
 import hmac
+import os
 import secrets
 from typing import Dict, Optional
 
@@ -37,7 +38,10 @@ class EncryptionEngine:
         Returns a base64-encoded string.
         """
         plaintext_bytes = plaintext.encode("utf-8")
-        key_bytes = hashlib.sha256(key.encode("utf-8")).digest()
+
+        # Strengthen key derivation using PBKDF2 with HMAC-SHA256 and a random 16-byte salt
+        salt = secrets.token_bytes(16)
+        key_bytes = hashlib.pbkdf2_hmac("sha256", key.encode("utf-8"), salt, 100000)
 
         # Generate 16 bytes random IV
         iv = secrets.token_bytes(16)
@@ -60,8 +64,8 @@ class EncryptionEngine:
         # Compute HMAC over IV + ciphertext
         mac = hmac.digest(mac_key, iv + ciphertext, hashlib.sha256)
 
-        # Combine MAC, IV, and ciphertext
-        combined = mac + iv + ciphertext
+        # Combine Salt, MAC, IV, and ciphertext
+        combined = salt + mac + iv + ciphertext
         return base64.b64encode(combined).decode("utf-8")
 
     @classmethod
@@ -70,14 +74,16 @@ class EncryptionEngine:
         Decrypt a base64-encoded CTR encrypted string after verifying the MAC.
         """
         combined = base64.b64decode(ciphertext_b64.encode("utf-8"))
-        if len(combined) < 32 + 16:
-            raise ValueError("Invalid ciphertext: too short for MAC and IV.")
+        if len(combined) < 16 + 32 + 16:
+            raise ValueError("Invalid ciphertext: too short for salt, MAC, and IV.")
 
-        mac = combined[:32]
-        iv = combined[32:48]
-        ciphertext = combined[48:]
+        salt = combined[:16]
+        mac = combined[16:48]
+        iv = combined[48:64]
+        ciphertext = combined[64:]
 
-        key_bytes = hashlib.sha256(key.encode("utf-8")).digest()
+        # Strengthen key derivation using PBKDF2 with HMAC-SHA256 and the extracted salt
+        key_bytes = hashlib.pbkdf2_hmac("sha256", key.encode("utf-8"), salt, 100000)
 
         # Derive the distinct MAC key
         mac_key = hmac.digest(key_bytes, b"MAC-Key-Derivation", hashlib.sha256)
@@ -114,6 +120,8 @@ class SecretStore:
         """
         Encrypts and stores a secret key-value.
         """
+        if master_key not in os.environ.values():
+            raise ValueError("Master key must be loaded strictly from an OS environment variable.")
         encrypted = self.engine.encrypt(secret_value, master_key)
         self._secrets[name] = encrypted
 
@@ -121,6 +129,8 @@ class SecretStore:
         """
         Decrypts and retrieves a stored secret.
         """
+        if master_key not in os.environ.values():
+            raise ValueError("Master key must be loaded strictly from an OS environment variable.")
         encrypted = self._secrets.get(name)
         if not encrypted:
             return None
