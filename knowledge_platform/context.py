@@ -3,7 +3,10 @@ Context Engine subsystem for YasinAI Knowledge Platform.
 Implements ConversationMemory, ContextBuilder, and ReasoningEngine.
 """
 
+import logging
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class ConversationMemory:
@@ -16,6 +19,7 @@ class ConversationMemory:
 
     def add_message(self, role: str, content: str) -> None:
         """Add a turn to conversation history."""
+        logger.debug(f"Adding message to conversation history: role={role}")
         self.history.append({"role": role, "content": content})
 
     def get_history(self) -> List[Dict[str, str]]:
@@ -24,7 +28,7 @@ class ConversationMemory:
 
     def get_formatted_history(self) -> str:
         """Get formatted chat history as string."""
-        formatted = []
+        formatted: List[str] = []
         for msg in self.history:
             role_label = msg["role"].capitalize()
             formatted.append(f"{role_label}: {msg['content']}")
@@ -32,6 +36,7 @@ class ConversationMemory:
 
     def clear(self) -> None:
         """Clear the history."""
+        logger.info("Clearing conversation message history.")
         self.history.clear()
 
 
@@ -48,7 +53,8 @@ class ContextBuilder:
         """
         Synthesize the final structured context prompt.
         """
-        sections = []
+        logger.debug(f"Synthesizing structured prompt context for input='{user_input}'...")
+        sections: List[str] = []
 
         # 1. System Prompt / Instructions
         sections.append("System Prompt: You are a helpful AI Assistant. Synthesize responses based on the provided context, rules, and conversation history.")
@@ -87,6 +93,7 @@ class ReasoningEngine:
         if not rules_applied:
             return raw_context
 
+        logger.debug(f"Applying reasoning/compliance refinement for {len(rules_applied)} rules.")
         refinement_clause = "\n--- REASONING COMPLIANCE INSTRUCTIONS ---\nThis context must adhere strictly to the following verified facts/rules:\n"
         for rule in rules_applied:
             refinement_clause += f"- {rule}\n"

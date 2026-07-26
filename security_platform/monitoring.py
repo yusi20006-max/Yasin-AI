@@ -3,8 +3,11 @@ Monitoring and Audit Logging Module for YasinAI Security Platform.
 Records security events and contains rule-based heuristics for threat detection.
 """
 
+import logging
 import time
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class SecurityEvent:
@@ -49,14 +52,16 @@ class AuditLogger:
         """
         event = SecurityEvent(event_type, username, status, details, severity)
         self._events.append(event)
+        logger.info(f"AuditLog Event registered: {event}")
         return event
 
     def get_logs(self, event_type: Optional[str] = None, username: Optional[str] = None, min_severity: Optional[str] = None) -> List[SecurityEvent]:
         """
         Filter and return matching logs.
         """
-        severity_ranks = {"low": 1, "medium": 2, "high": 3, "critical": 4}
-        filtered = self._events
+        logger.debug(f"Retrieving audit logs with filters: event_type={event_type}, username={username}, min_severity={min_severity}")
+        severity_ranks: Dict[str, int] = {"low": 1, "medium": 2, "high": 3, "critical": 4}
+        filtered: List[SecurityEvent] = self._events
 
         if event_type:
             filtered = [e for e in filtered if e.event_type == event_type]
@@ -70,6 +75,7 @@ class AuditLogger:
 
     def clear(self) -> None:
         """Clear all records from audit logs."""
+        logger.info("Clearing audit logs.")
         self._events.clear()
 
 
@@ -89,7 +95,8 @@ class ThreatDetector:
           - Multi-Access Denied: 3+ authorization/access failures.
           - Deactivated User Access Attempt: 1+ attempt of access by an inactive/deleted user profile.
         """
-        threats = []
+        logger.debug("Running threat detection scan on audit logs...")
+        threats: List[Dict[str, Any]] = []
         logs = self.audit_logger.get_logs()
 
         # Group login failure counts by user
@@ -143,4 +150,8 @@ class ThreatDetector:
                     "timestamp": time.time()
                 })
 
+        if threats:
+            logger.warning(f"Threat detection scan completed: {len(threats)} potential threat(s) detected!")
+        else:
+            logger.debug("Threat detection scan completed. No threats identified.")
         return threats

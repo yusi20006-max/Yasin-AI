@@ -2,12 +2,15 @@
 Knowledge Graph coordinator for YasinAI Knowledge Platform.
 """
 
+import logging
 from typing import Dict, List, Optional, Tuple
 
 from knowledge_platform.entity import Entity
 from knowledge_platform.relation import Relation
 from knowledge_platform.triple_store import TripleStore
 from knowledge_platform.query_engine import QueryEngine
+
+logger = logging.getLogger(__name__)
 
 
 class KnowledgeGraph:
@@ -24,6 +27,7 @@ class KnowledgeGraph:
 
     def add_entity(self, name: str, entity_type: str = "Concept", properties: Optional[dict] = None) -> Entity:
         """Create and add an entity to the graph."""
+        logger.debug(f"KnowledgeGraph: Adding entity '{name}' of type '{entity_type}'")
         if name in self.entities:
             # Update properties if already exists
             entity = self.entities[name]
@@ -40,6 +44,7 @@ class KnowledgeGraph:
 
     def delete_entity(self, name: str) -> bool:
         """Delete an entity and remove all associated triples."""
+        logger.info(f"KnowledgeGraph: Deleting entity '{name}'")
         if name in self.entities:
             del self.entities[name]
             # Clean up triple store
@@ -49,11 +54,14 @@ class KnowledgeGraph:
             associated_triples = self.triple_store.query_triples(obj=name)
             for s, p, o in associated_triples:
                 self.triple_store.remove_triple(s, p, o)
+            logger.info(f"KnowledgeGraph: Successfully deleted entity '{name}' and associated relations.")
             return True
+        logger.warning(f"KnowledgeGraph: Attempted to delete non-existent entity '{name}'")
         return False
 
     def add_relation(self, name: str, description: str = "", properties: Optional[dict] = None) -> Relation:
         """Create and register a relation definition."""
+        logger.debug(f"KnowledgeGraph: Registering relation '{name}'")
         if name in self.relations:
             relation = self.relations[name]
             relation.description = description
@@ -70,6 +78,7 @@ class KnowledgeGraph:
 
     def add_triple(self, subject: str, predicate: str, obj: str) -> None:
         """Add a relationship triple to the graph, creating entities/relations if necessary."""
+        logger.debug(f"KnowledgeGraph: Adding relationship triple ({subject}, {predicate}, {obj})")
         if subject not in self.entities:
             self.add_entity(subject)
         if predicate not in self.relations:
@@ -89,6 +98,7 @@ class KnowledgeGraph:
 
     def clear(self) -> None:
         """Clear the complete graph."""
+        logger.info("Clearing KnowledgeGraph components completely.")
         self.entities.clear()
         self.relations.clear()
         self.triple_store.clear()

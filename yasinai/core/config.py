@@ -1,6 +1,10 @@
 import os
 import json
+import logging
 from typing import Any, Dict, Optional
+
+# Setup local module logger
+logger = logging.getLogger(__name__)
 
 
 class Config:
@@ -31,6 +35,7 @@ class Config:
         Environment variables will still override the loaded file config.
         """
         if not os.path.exists(filepath):
+            logger.warning(f"Configuration file not found at path: {filepath}")
             return False
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
@@ -38,9 +43,12 @@ class Config:
                 if isinstance(file_data, dict):
                     self._config.update(file_data)
                     self._load_from_env()  # Ensure env overrides are applied on top
+                    logger.info(f"Successfully loaded configuration from {filepath}")
                     return True
-        except Exception:
-            pass
+                else:
+                    logger.error(f"Configuration file {filepath} does not contain a valid JSON object.")
+        except Exception as e:
+            logger.error(f"Error loading configuration from file {filepath}: {e}", exc_info=True)
         return False
 
     def _load_from_env(self) -> None:
@@ -59,21 +67,21 @@ class Config:
                 elif isinstance(current_val, int):
                     try:
                         self._config[key] = int(val)
-                    except ValueError:
-                        pass
+                    except ValueError as e:
+                        logger.warning(f"Environment variable '{env_key}' value '{val}' could not be cast to int: {e}")
                 elif isinstance(current_val, float):
                     try:
                         self._config[key] = float(val)
-                    except ValueError:
-                        pass
+                    except ValueError as e:
+                        logger.warning(f"Environment variable '{env_key}' value '{val}' could not be cast to float: {e}")
                 elif isinstance(current_val, list):
                     try:
                         if val.startswith("[") and val.endswith("]"):
                             self._config[key] = json.loads(val)
                         else:
                             self._config[key] = [item.strip() for item in val.split(",") if item.strip()]
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.warning(f"Environment variable '{env_key}' value '{val}' could not be parsed to list: {e}")
                 else:
                     self._config[key] = val
 

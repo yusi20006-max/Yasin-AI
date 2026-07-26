@@ -5,10 +5,13 @@ Manages user credentials, hashing, tokens, and active sessions.
 
 import hashlib
 import hmac
+import logging
 import secrets
 import time
 from typing import Dict, Optional, Set
 from security_platform.identity import IdentityManager
+
+logger = logging.getLogger(__name__)
 
 
 class Session:
@@ -44,6 +47,7 @@ class AuthManager:
         """
         user = self.identity_manager.get_user(username)
         if not user:
+            logger.error(f"Failed to register credentials: User '{username}' does not exist.")
             raise ValueError(f"Cannot register credentials: User '{username}' does not exist.")
 
         salt = secrets.token_bytes(16)
@@ -52,13 +56,16 @@ class AuthManager:
 
         self._user_secrets[username] = salt
         self._password_hashes[username] = pwd_hash
+        logger.info(f"Successfully registered secure credentials for user '{username}'.")
 
     def login(self, username: str, password: str, session_duration: int = 3600) -> Optional[str]:
         """
         Authenticate user and return a secure session token if successful.
         """
+        logger.debug(f"Login attempt for user: '{username}'")
         # Enforce maximum session duration of 24 hours (86400 seconds)
         if session_duration > 86400:
+            logger.error(f"Login failed: Session duration {session_duration} exceeds maximum limit of 24 hours.")
             raise ValueError("Session duration exceeds maximum limit of 24 hours.")
 
         user = self.identity_manager.get_user(username)
@@ -75,13 +82,16 @@ class AuthManager:
                 token = secrets.token_urlsafe(32)
                 session = Session(token, username, duration=session_duration)
                 self._sessions[token] = session
+                logger.info(f"Successful login for user '{username}'. Session token generated.")
                 return token
             else:
+                logger.warning(f"Login failed for user '{username}': incorrect password.")
                 return None
         else:
             # Perform dummy PBKDF2 hash to prevent timing attacks
             dummy_salt = b"\x00" * 16
             hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), dummy_salt, 600000)
+            logger.warning(f"Login failed for user '{username}': user not found, inactive, or not registered.")
             return None
 
     def logout(self, token: str) -> bool:
@@ -89,8 +99,11 @@ class AuthManager:
         Invalidate a session by token. Returns True if successfully logged out.
         """
         if token in self._sessions:
+            session = self._sessions[token]
+            logger.info(f"Logging out user '{session.username}' and invalidating session token.")
             del self._sessions[token]
             return True
+        logger.warning("Logout failed: Invalid or inactive session token.")
         return False
 
     def validate_token(self, token: str) -> bool:
@@ -99,18 +112,22 @@ class AuthManager:
         """
         session = self._sessions.get(token)
         if not session:
+            logger.debug("Token validation: Session not found.")
             return False
 
         if session.is_expired():
+            logger.info(f"Token validation: Session has expired for user '{session.username}'.")
             self.logout(token)
             return False
 
         # Ensure user is still active
         user = self.identity_manager.get_user(session.username)
         if not user or not user.active:
+            logger.info(f"Token validation: User '{session.username}' is deleted or no longer active.")
             self.logout(token)
             return False
 
+        logger.debug(f"Token validation: Token is valid for user '{session.username}'.")
         return True
 
     def get_session(self, token: str) -> Optional[Session]:
