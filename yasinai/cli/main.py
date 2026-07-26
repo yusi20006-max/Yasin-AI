@@ -234,6 +234,107 @@ def handle_package_build(args: argparse.Namespace) -> int:
         return 1
 
 
+def handle_serve(args: argparse.Namespace) -> int:
+    """
+    Handle the 'yasin serve' command.
+    Keeps the YasinAI runtime alive as a long-running foreground supervisor loop,
+    performing periodic health checks.
+    """
+    import signal
+    import time
+    from yasinai.deployment.health_check import HealthCheck
+
+    logger.debug("Executing CLI command: serve")
+    interval: int = getattr(args, "interval", 300)
+
+    # Validate interval
+    if interval <= 0:
+        logger.error("Interval must be a positive integer.")
+        print("Error: Interval must be a positive integer.", file=sys.stderr)
+        return 1
+
+    runtime = Runtime()
+    stop_flag = False
+
+    def signal_handler(signum, frame):
+        nonlocal stop_flag
+        stop_flag = True
+
+    # Register signal handlers
+    original_sigint = signal.getsignal(signal.SIGINT)
+    original_sigterm = signal.getsignal(signal.SIGTERM)
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    try:
+        runtime.start()
+
+        health_checker = HealthCheck()
+
+        startup_msg = f"YasinAI Core Runtime started in foreground supervisor mode. Health check interval: {interval} seconds."
+        if args.json:
+            print(json.dumps({
+                "event": "startup",
+                "status": "running",
+                "interval": interval,
+                "message": startup_msg
+            }))
+        else:
+            print("=========================================")
+            print("         YasinAI Foreground Serve        ")
+            print("=========================================")
+            print(startup_msg)
+            print("Press Ctrl+C to stop.")
+            print("=========================================")
+        logger.info(startup_msg)
+
+        while not stop_flag:
+            report = health_checker.run_all_checks()
+
+            if args.json:
+                print(json.dumps({
+                    "event": "health_check",
+                    "status": report.get("status"),
+                    "success": report.get("success"),
+                    "timestamp": time.strftime('%Y-%m-%d %H:%M:%S')
+                }))
+            else:
+                timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
+                print(f"[{timestamp}] Health Check Status: {report.get('status')} (Success: {report.get('success')})")
+
+            logger.info(f"Health Check Completed: {report}")
+
+            # Sleep in small increments to be responsive to signals
+            slept = 0
+            while slept < interval and not stop_flag:
+                time.sleep(1)
+                slept += 1
+
+    except Exception as e:
+        logger.error(f"Error in serve loop: {e}", exc_info=True)
+        print(f"Error in serve loop: {e}", file=sys.stderr)
+        return 1
+    finally:
+        # Restore signal handlers
+        signal.signal(signal.SIGINT, original_sigint)
+        signal.signal(signal.SIGTERM, original_sigterm)
+
+        shutdown_msg = "Shutting down YasinAI Core Runtime cleanly..."
+        if args.json:
+            print(json.dumps({
+                "event": "shutdown",
+                "status": "stopped",
+                "message": shutdown_msg
+            }))
+        else:
+            print(shutdown_msg)
+        logger.info(shutdown_msg)
+
+        runtime.shutdown()
+
+    return 0
+
+
 def create_parser() -> argparse.ArgumentParser:
     """
     Creates and configures the argument parser for YasinAI CLI.
@@ -290,6 +391,11 @@ def create_parser() -> argparse.ArgumentParser:
     package_build_parser.add_argument("--output", default="dist/", help="Output directory")
     package_build_parser.add_argument("--version", default="1.0.0", help="Target package version")
     package_build_parser.set_defaults(func=handle_package_build)
+
+    # 6. 'serve' command
+    serve_parser = subparsers.add_parser("serve", help="Keep Core Runtime alive as a foreground process", parents=[parent_parser])
+    serve_parser.add_argument("--interval", type=int, default=300, help="Periodic health-check interval in seconds")
+    serve_parser.set_defaults(func=handle_serve)
 
     return parser
 
