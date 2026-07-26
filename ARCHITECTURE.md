@@ -72,6 +72,8 @@ Main components:
 runtime.py
 system.py
 bootstrap.py
+config.py
+__init__.py
 
 
 Flow:
@@ -99,49 +101,37 @@ Purpose:
 Provide tools for creating and managing AI extensions.
 
 
-Components:
-
-
-## Agent SDK
-
-
-Responsible for:
-
-- Creating agents
-- Executing tasks
-- Managing agent lifecycle
-
-
----
-
-## Plugin SDK
-
-
-Responsible for:
-
-- External extensions
-- Third party modules
+Components / Files:
+- `agent.py`: Agent SDK for creating agents, executing tasks, and managing agent lifecycle.
+- `app.py`: Application SDK for building AI applications.
+- `debugger.py`: Interactive debugger for tracing agent logic and state transitions.
+- `extension.py`: Extensibility templates and API helpers.
+- `generator.py`: Scaffolding generator for plugins, apps, and agents.
+- `package_builder.py`: Developer packaging utilities for plugins and extensions.
+- `plugin.py`: Plugin SDK for managing external extensions and third-party modules.
+- `profiler.py`: Profiler utility for benchmarking agent/plugin task execution times.
+- `__init__.py`: Module initialization.
 
 
 ---
 
-## Application SDK
+## CLI Tools (CLI System)
 
 
-Responsible for:
-
-- Building AI applications
-
-
----
-
-## CLI Tools
-
+Location:
+yasinai/cli/
 
 Commands:
-yasin status
-yasin agent create
-yasin package build
+- `yasin status`
+- `yasin agent create`
+- `yasin memory search`
+- `yasin security check`
+- `yasin package build`
+
+Files:
+- `main.py`: Command routing, argument processing, and status displays.
+- `__main__.py`: Package execution entrypoint.
+- `__init__.py`: Package initialization.
 
 
 ---
@@ -183,65 +173,13 @@ Audit
 Threat Detection
 
 
----
-
-## Identity Layer
-
-
-Handles:
-
-- Users
-- Roles
-- Identity information
-
-
----
-
-## Authentication Layer
-
-
-Handles:
-
-- Login
-- Tokens
-- Sessions
-
-
----
-
-## Authorization Layer
-
-
-Handles:
-
-- Permissions
-- Policies
-- Access Control
-
-
----
-
-## Encryption Layer
-
-
-Handles:
-
-- Data protection
-- Hashing
-- Keys
-- Secrets
-
-
----
-
-## Monitoring Layer
-
-
-Handles:
-
-- Security events
-- Audit logs
-- Threat analysis
+Files & Modules:
+- `identity.py`: Handles user identity, roles, and profiles.
+- `auth.py`: Handles login authentication, token management, and session verification.
+- `authorization.py`: Implements policy-based permission and access control.
+- `encryption.py`: Implements secure data encryption, hashing, and key management.
+- `monitoring.py`: Audits system logs, logs security events, and detects potential threats.
+- `__init__.py`: Package initialization.
 
 
 ---
@@ -268,6 +206,19 @@ Semantic Search
 Context Engine
 |
 Reasoning
+
+
+Files & Modules:
+- `memory.py`: Implements short-term/long-term memory storage.
+- `triple_store.py`: Provides persistent triple indexing for relationship modeling.
+- `entity.py`: Represents semantic entities in the knowledge base.
+- `relation.py`: Defines semantic relationships between entities.
+- `graph.py`: Coordinates entities and relations in a Knowledge Graph.
+- `query_engine.py`: Performs structured queries over the Knowledge Graph.
+- `semantic_search.py`: Vector and similarity search retrieval.
+- `context.py`: Conversation memory and system context builder.
+- `reasoning.py`: Rule engines and context reasoners.
+- `__init__.py`: Package initialization.
 
 
 ---
@@ -404,11 +355,12 @@ Docker
 Server Deployment
 
 
-Components:
-installer.py
-docker_manager.py
-package_builder.py
-health_check.py
+Components / Files:
+- `installer.py`: Automated local system directories and default config builder.
+- `docker_manager.py`: Parses and validates Docker configurations (`Dockerfile`, `docker-compose.yml`).
+- `package_builder.py`: Packs platform, runtime, and CLI into deployable archives.
+- `health_check.py`: System health check and diagnostic tool.
+- `__init__.py`: Package initialization.
 
 ---
 

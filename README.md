@@ -36,12 +36,21 @@ Target release: **v1.0.0** — GitHub production release in progress. See [`PROJ
 
 ### CLI Quick Reference
 
-```
+```bash
+# Check general platform/runtime status
 yasin status
-yasin agent create
-yasin memory search
+
+# Create a custom AI Agent
+yasin agent create [name] --role [role] --description [description] --type [type]
+
+# Query the semantic memory store
+yasin memory search [query] --limit [limit] --threshold [threshold]
+
+# Run platform security checks and vulnerability scans
 yasin security check
-yasin package build
+
+# Build deployment artifacts and packages
+yasin package build --output [directory] --version [version]
 ```
 
 ### Development Rules (summary)
@@ -89,12 +98,21 @@ YasinAI یک اکوسیستم هوش مصنوعی ماژولار است که ب�
 
 ### مرجع سریع دستورات CLI
 
-```
+```bash
+# بررسی وضعیت عمومی پلتفرم و زمان اجرا
 yasin status
-yasin agent create
-yasin memory search
+
+# ایجاد یک عامل هوش مصنوعی سفارشی
+yasin agent create [name] --role [role] --description [description] --type [type]
+
+# جستجو در مخزن حافظه معنایی
+yasin memory search [query] --limit [limit] --threshold [threshold]
+
+# اجرای ممیزی امنیتی پلتفرم و بررسی آسیب‌پذیری‌ها
 yasin security check
-yasin package build
+
+# ساخت بسته‌ها و محصولات استقرار
+yasin package build --output [directory] --version [version]
 ```
 
 ### قوانین توسعه (خلاصه)
