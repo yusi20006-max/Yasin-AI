@@ -1,20 +1,22 @@
-[build-system]
-requires = ["setuptools>=61.0.0"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "yasinai"
-version = "1.0.0"
-description = "YasinAI Modular AI Platform"
+[tool.poetry]
+name = "feedbridge"
+version = "0.7.0"
+description = "FeedBridge is a self-contained content bridge for Telegram to Eitaa."
+authors = ["Yousef <yusi20006@gmail.com>"]
 readme = "README.md"
-requires-python = ">=3.8"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-]
+packages = [{include = "feedbridge", from = "src"}]
 
-[project.scripts]
-yasin = "yasinai.cli.main:main"
+[tool.poetry.dependencies]
+python = "^3.12"
+pyyaml = "^6.0.1"
+python-dotenv = "^1.0.1"
 
-[tool.pytest.ini_options]
-pythonpath = ["."]
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+pytest-asyncio = "^0.23.5"
+ruff = "^0.3.0"
+black = "^24.2.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,27 @@
+version: 0.7
+
+phase1:
+  - Configuration
+  - Database
+  - Scheduler
+  - Health Monitor
+  - Vendor OpenFeed Fetcher Component
+
+phase2:
+  - Channel Manager
+  - Fetch Engine
+  - Duplicate Detector
+
+phase3:
+  - Queue Manager
+  - Publish Engine
+  - Dashboard
+
+phase4:
+  - AI Engine
+  - Plugins
+
+phase5:
+  - Tests
+  - Documentation
+  - Release

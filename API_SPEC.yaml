@@ -1,0 +1,13 @@
+version: 1
+
+routes:
+  - GET: /status
+  - GET: /channels
+  - POST: /channels/add
+  - DELETE: /channels/remove
+  - POST: /publish
+  - GET: /queue
+  - POST: /queue/retry
+  - GET: /logs
+  - GET: /config
+  - POST: /config/save

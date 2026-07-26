@@ -1,0 +1,15 @@
+version: 0.7
+
+modules:
+  - name: Configuration
+  - name: Database
+  - name: Scheduler
+  - name: ChannelManager
+  - name: FetchEngine
+  - name: DuplicateDetector
+  - name: QueueManager
+  - name: PublishEngine
+  - name: AIEngine
+  - name: Dashboard
+  - name: HealthMonitor
+  - name: PluginManager

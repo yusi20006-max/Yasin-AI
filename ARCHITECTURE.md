@@ -1,556 +1,80 @@
-# YasinAI Architecture Document
+# FeedBridge Architecture
 
-Version:
-1.0.0
+Version: 0.7
 
+## Core Modules
 
-# 1. Overview
+Configuration
 
+Scheduler
 
-YasinAI is a modular Artificial Intelligence platform.
+Database
 
-The architecture is designed around independent systems that communicate through defined interfaces.
+Channel Manager
 
+Fetch Engine
 
-Main goals:
+Duplicate Detector
 
-- Extensibility
-- Security
-- Scalability
-- Maintainability
-- Developer Friendly Design
+Queue Manager
 
+Publish Engine
 
----
+Dashboard
 
-# 2. High Level Architecture
-YasinAI
+AI Engine
 
+Health Monitor
 
-                        |
+Plugin Manager
 
-                 Core Runtime
+## Data Flow
 
+Vendored Fetcher (embedded Go component — Telegram via Google Translate domain fronting + uTLS)
 
-                        |
+↓ internal call (subprocess, or compiled to a local binary invoked by Fetch Engine)
 
- ┌──────────────────────┼──────────────────────┐
-Developer Platform     Security Platform     Knowledge Platform
-|
+Fetch Engine
 
-                Application Layer
-
-
-                        |
-
-             Users / Developers / Agents
-
----
-
-# 3. Core Runtime
-
-
-Location:
-yasinai/core/
-
-
-Purpose:
-
-The Runtime is the central execution layer.
-
-
-Responsibilities:
-
-- Start system
-- Load modules
-- Manage lifecycle
-- Register services
-- Provide system information
-
-
-Main components:
-runtime.py
-system.py
-bootstrap.py
-
-
-Flow:
-Startup
 ↓
-Bootstrap
+
+Duplicate Detector
+
 ↓
-Runtime Initialization
+
+AI Engine
+
 ↓
-Module Registration
+
+Queue
+
 ↓
-System Ready
 
----
+Publisher
 
-# 4. Developer Platform
-
-
-Location:
-developer_platform/
-
-
-Purpose:
-
-Provide tools for creating and managing AI extensions.
-
-
-Components:
-
-
-## Agent SDK
-
-
-Responsible for:
-
-- Creating agents
-- Executing tasks
-- Managing agent lifecycle
-
-
----
-
-## Plugin SDK
-
-
-Responsible for:
-
-- External extensions
-- Third party modules
-
-
----
-
-## Application SDK
-
-
-Responsible for:
-
-- Building AI applications
-
-
----
-
-## CLI Tools
-
-
-Commands:
-yasin status
-yasin agent create
-yasin package build
-
-
----
-
-## Developer Architecture
-Developer
-|
-SDK
-|
-Runtime API
-|
-YasinAI Core
-
----
-
-# 5. Security Platform
-
-
-Location:
-security_platform/
-
-
-Purpose:
-
-Protect the complete ecosystem.
-
-
-Architecture:
-Identity
-|
-Authentication
-|
-Authorization
-|
-Encryption
-|
-Audit
-|
-Threat Detection
-
-
----
-
-## Identity Layer
-
-
-Handles:
-
-- Users
-- Roles
-- Identity information
-
-
----
-
-## Authentication Layer
-
-
-Handles:
-
-- Login
-- Tokens
-- Sessions
-
-
----
-
-## Authorization Layer
-
-
-Handles:
-
-- Permissions
-- Policies
-- Access Control
-
-
----
-
-## Encryption Layer
-
-
-Handles:
-
-- Data protection
-- Hashing
-- Keys
-- Secrets
-
-
----
-
-## Monitoring Layer
-
-
-Handles:
-
-- Security events
-- Audit logs
-- Threat analysis
-
-
----
-
-# 6. Knowledge Platform
-
-
-Location:
-knowledge_platform/
-
-
-Purpose:
-
-Provide memory and intelligence context.
-
-
-Architecture:
-Memory
-|
-Knowledge Graph
-|
-Semantic Search
-|
-Context Engine
-|
-Reasoning
-
-
----
-
-# 7. Memory System
-
-
-Components:
-
-
-## Short Term Memory
-
-
-Purpose:
-
-Temporary conversation information.
-
-
----
-
-## Long Term Memory
-
-
-Purpose:
-
-Persistent information storage.
-
-
----
-
-Flow:
-Input
 ↓
-Memory Manager
-↓
-Storage
-↓
-Retrieval
 
----
+Eitaa
 
-# 8. Knowledge Graph
+## Vendored Fetcher Component
 
+FeedBridge is one project — it does not depend on a separately running
+OpenFeed instance. The core Telegram-fetching logic from OpenFeed
+(the `telemirror` and `provider` packages: domain fronting via Google
+Translate + TLS fingerprint spoofing via uTLS) is vendored directly
+into this repository (e.g. under `/fetcher`), built as part of the
+FeedBridge build/deploy process, and invoked internally by Fetch
+Engine. OpenFeed's PWA and its own HTTP API layer are not needed here
+and are not carried over — only the fetch/bypass logic is reused.
+This avoids re-solving filtering circumvention from scratch in
+Python while keeping FeedBridge fully self-contained.
 
-Purpose:
+## Future
 
-Store relationships between concepts.
+REST API
 
+Web Dashboard
 
-Structure:
-Entity
+Plugin Marketplace
 
-Relation
-
-Entity
-
-
-Example:
-YasinAI
-created_by
-Developer
-
-
-Components:
-entity.py
-relation.py
-graph.py
-query_engine.py
-triple_store.py
-
----
-
-# 9. Semantic Search
-
-
-Purpose:
-
-Find related information by meaning.
-
-
-Components:
-Embedding Engine
-Vector Store
-Semantic Search
-Retriever
-
-
-Flow:
-Query
-↓
-Embedding
-↓
-Vector Search
-↓
-Relevant Memory
-
----
-
-# 10. Context Engine
-
-
-Purpose:
-
-Build AI context before response generation.
-
-
-Components:
-Conversation Memory
-Context Builder
-Reasoning Engine
-
-
-Flow:
-User Input
-↓
-Previous Context
-↓
-Knowledge Retrieval
-↓
-AI Context
-
----
-
-# 11. Deployment Architecture
-
-
-Location:
-yasinai/deployment/
-
-
-Supported:
-Local Installation
-Docker
-Server Deployment
-
-
-Components:
-installer.py
-docker_manager.py
-package_builder.py
-health_check.py
-
----
-
-# 12. Testing Architecture
-
-
-Testing layers:
-Unit Tests
-|
-Module Tests
-|
-Integration Tests
-|
-Release Tests
-
-
-Required tests:
-
-
-- Runtime startup
-- SDK execution
-- Security validation
-- Memory storage
-- CLI commands
-
-
----
-
-# 13. Data Flow
-
-
-General request:
-User Request
-↓
-CLI / API
-↓
-Runtime
-↓
-Security Check
-↓
-Knowledge Retrieval
-↓
-Agent Execution
-↓
-Response
-↓
-Memory Update
-
----
-
-# 14. Extension Model
-
-
-Future modules can be added:
-
-
-Examples:
-Robotics Platform
-Automation Platform
-Business Platform
-IoT Platform
-Research Platform
-
-
-New modules must:
-
-
-- Follow modular design
-- Have tests
-- Have documentation
-- Respect security rules
-
-
----
-
-# 15. Development Principles
-
-
-## Modularity
-
-Every component should be independent.
-
-
-## Security First
-
-Sensitive data must always be protected.
-
-
-## Documentation
-
-Every public feature requires documentation.
-
-
-## Backward Compatibility
-
-Existing features should not break.
-
-
----
-
-# Current Status
-
-
-Version:
-
-1.0.0
-
-
-Status:
-
-Production Release Candidate
-
-
-Completed:
-
-- Core Runtime
-- Developer Platform
-- Security Platform
-- Knowledge Platform
-- CLI
-- Deployment
-- Documentation
-
-
----
-
-# Future Architecture Direction
-
-
-YasinAI v2.x
-
-
-Possible additions:
-
-
-- Distributed AI Network
-- Multi Agent Collaboration
-- Advanced Automation
-- Robotics Integration
-- Self Optimization Systems
-
-
----
-
-End of Architecture Document
+Distributed Workers

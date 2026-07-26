@@ -1,0 +1,26 @@
+# FeedBridge Configuration File
+# General and non-sensitive settings only.
+
+app:
+  name: "FeedBridge"
+  environment: "development"
+
+database:
+  path: "feedbridge.db"
+
+scheduler:
+  interval: 300  # Interval in seconds to run scheduler tasks
+
+fetch:
+  interval: 600  # Interval in seconds to scrape new Telegram channel posts
+
+ai:
+  enabled: false
+  model: "gpt-4o"
+  prompt_template: "Clean and translate the following Telegram post for publication. Content:\n{content}"
+
+publish:
+  eitaa_base_url: "https://eitaa.com/"
+
+logging:
+  level: "INFO"

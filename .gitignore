@@ -1,9 +1,16 @@
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-.pytest_cache/
-yasinai.egg-info/
+*.db
+*.sqlite3
+.env
+logs/
+cache/
+media/
 dist/
 build/
-*.egg-info/
+.venv/
+
+# vendored Go fetcher build artifacts
+fetcher/fetch
+fetcher/fetch.exe
+fetcher/go.sum
