@@ -62,25 +62,27 @@ class AuthManager:
             raise ValueError("Session duration exceeds maximum limit of 24 hours.")
 
         user = self.identity_manager.get_user(username)
-        if not user or not user.active:
-            return None
+        user_active = user.active if user else False
 
         salt = self._user_secrets.get(username)
         stored_hash = self._password_hashes.get(username)
 
-        if not salt or not stored_hash:
+        if user and user_active and salt and stored_hash:
+            # Verify password hash
+            test_hash = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 600000)
+            if hmac.compare_digest(stored_hash, test_hash):
+                # Create session
+                token = secrets.token_urlsafe(32)
+                session = Session(token, username, duration=session_duration)
+                self._sessions[token] = session
+                return token
+            else:
+                return None
+        else:
+            # Perform dummy PBKDF2 hash to prevent timing attacks
+            dummy_salt = b"\x00" * 16
+            hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), dummy_salt, 600000)
             return None
-
-        # Verify password hash
-        test_hash = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 600000)
-        if not hmac.compare_digest(stored_hash, test_hash):
-            return None
-
-        # Create session
-        token = secrets.token_urlsafe(32)
-        session = Session(token, username, duration=session_duration)
-        self._sessions[token] = session
-        return token
 
     def logout(self, token: str) -> bool:
         """
