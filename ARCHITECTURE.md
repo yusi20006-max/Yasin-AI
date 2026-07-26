@@ -68,12 +68,13 @@ Responsibilities:
 - Provide system information
 
 
-Main components:
-runtime.py
-system.py
-bootstrap.py
-config.py
-__init__.py
+Main components, Files & Key Classes:
+
+- `runtime.py`: Contains class `Runtime`, which orchestrates the entire lifecycle flow: Startup -> Bootstrap -> Runtime Initialization -> Module Registration -> System Ready.
+- `system.py`: Contains class `SystemInfo` (stores platform/OS details and version info) and `ServiceRegistry` (manages service discovery and registration).
+- `bootstrap.py`: Contains class `Bootstrap`, which dynamically resolves, discovers and loads configured modules.
+- `config.py`: Contains class `Config`, which processes runtime configuration options and defaults.
+- `__init__.py`: Package initialization.
 
 
 Flow:
@@ -101,15 +102,16 @@ Purpose:
 Provide tools for creating and managing AI extensions.
 
 
-Components / Files:
-- `agent.py`: Agent SDK for creating agents, executing tasks, and managing agent lifecycle.
-- `app.py`: Application SDK for building AI applications.
-- `debugger.py`: Interactive debugger for tracing agent logic and state transitions.
+Components, Files & Key Classes:
+
+- `agent.py`: Contains class `Agent` (definition and execution details) and `AgentSDK` (manages the registration and lifecycles of multiple agents).
+- `app.py`: Contains class `AIApplication` (composes multiple agents and plugins into pipelines) and `AppSDK` (orchestrates and registers application pipelines).
+- `debugger.py`: Contains class `Debugger`, tracing execution logs, active tracing sessions, and step-by-step agent transitions.
 - `extension.py`: Extensibility templates and API helpers.
-- `generator.py`: Scaffolding generator for plugins, apps, and agents.
-- `package_builder.py`: Developer packaging utilities for plugins and extensions.
-- `plugin.py`: Plugin SDK for managing external extensions and third-party modules.
-- `profiler.py`: Profiler utility for benchmarking agent/plugin task execution times.
+- `generator.py`: Contains class `Generator`, generating scaffolding for custom plugins, apps, and agents.
+- `package_builder.py`: Contains class `PackageBuilder` (developer packaging utilities for plugins and extensions).
+- `plugin.py`: Contains class `Plugin` (encapsulates third-party extensible behavior) and `PluginSDK` (registers and toggles plugins).
+- `profiler.py`: Contains class `Profiler` (utility for benchmarking execution elapsed times).
 - `__init__.py`: Module initialization.
 
 
@@ -128,8 +130,8 @@ Commands:
 - `yasin security check`
 - `yasin package build`
 
-Files:
-- `main.py`: Command routing, argument processing, and status displays.
+Files & Main logic:
+- `main.py`: Argument parsing, command routing, console printing (supporting `--json` outputs), and runtime lifecycle binding.
 - `__main__.py`: Package execution entrypoint.
 - `__init__.py`: Package initialization.
 
@@ -173,12 +175,13 @@ Audit
 Threat Detection
 
 
-Files & Modules:
-- `identity.py`: Handles user identity, roles, and profiles.
-- `auth.py`: Handles login authentication, token management, and session verification.
-- `authorization.py`: Implements policy-based permission and access control.
-- `encryption.py`: Implements secure data encryption, hashing, and key management.
-- `monitoring.py`: Audits system logs, logs security events, and detects potential threats.
+Files & Modules (Key Classes):
+
+- `identity.py`: Contains class `Identity` and `IdentityManager` (handles user profiles and system roles).
+- `auth.py`: Contains class `AuthManager` (validates credentials, generates session tokens, and verifies active sessions).
+- `authorization.py`: Contains class `PolicyEngine` and `PermissionManager` (manages fine-grained policy-based and role-based access control).
+- `encryption.py`: Contains class `EncryptionEngine` (implements standard hashing, secret protection, and encryption routines).
+- `monitoring.py`: Contains class `SecurityMonitor` (handles security events, audit logging, and threat detection).
 - `__init__.py`: Package initialization.
 
 
@@ -208,16 +211,17 @@ Context Engine
 Reasoning
 
 
-Files & Modules:
-- `memory.py`: Implements short-term/long-term memory storage.
-- `triple_store.py`: Provides persistent triple indexing for relationship modeling.
-- `entity.py`: Represents semantic entities in the knowledge base.
-- `relation.py`: Defines semantic relationships between entities.
-- `graph.py`: Coordinates entities and relations in a Knowledge Graph.
-- `query_engine.py`: Performs structured queries over the Knowledge Graph.
-- `semantic_search.py`: Vector and similarity search retrieval.
-- `context.py`: Conversation memory and system context builder.
-- `reasoning.py`: Rule engines and context reasoners.
+Files & Modules (Key Classes):
+
+- `memory.py`: Contains class `MemoryManager` (manages short-term/long-term memory storage).
+- `triple_store.py`: Contains class `TripleStore` (persistent storage and indexing of semantic relationship triples).
+- `entity.py`: Contains class `Entity` (represents individuals or objects in the knowledge base).
+- `relation.py`: Contains class `Relation` (represents semantic connections between entities).
+- `graph.py`: Contains class `KnowledgeGraph` (coordinates and visualizes structural triples).
+- `query_engine.py`: Contains class `QueryEngine` (performs structured search and queries over the graph).
+- `semantic_search.py`: Contains class `VectorStore` (embeddings registry), `EmbeddingEngine` (similarity computations), and `Retriever` (relevance-based retrieval).
+- `context.py`: Contains class `ContextBuilder` (assembles conversational logs and retrieves context before model invocation).
+- `reasoning.py`: Contains class `KnowledgeReasoner` (deduces relationship paths and applies inference rules).
 - `__init__.py`: Package initialization.
 
 
@@ -355,11 +359,12 @@ Docker
 Server Deployment
 
 
-Components / Files:
-- `installer.py`: Automated local system directories and default config builder.
-- `docker_manager.py`: Parses and validates Docker configurations (`Dockerfile`, `docker-compose.yml`).
-- `package_builder.py`: Packs platform, runtime, and CLI into deployable archives.
-- `health_check.py`: System health check and diagnostic tool.
+Components & Key Classes:
+
+- `installer.py`: Contains class `Installer` (validates system requirements, constructs project folder layouts, and writes initial configuration templates).
+- `docker_manager.py`: Contains class `DockerManager` (inspects and validates `Dockerfile` and `docker-compose.yml`).
+- `package_builder.py`: Contains class `PackageBuilder` (packages system binaries, SDK, and config templates into portable ZIP/TAR archives).
+- `health_check.py`: Contains class `HealthCheck` (scans file systems, service registries, and runtime state to generate system health reports).
 - `__init__.py`: Package initialization.
 
 ---
@@ -377,14 +382,14 @@ Integration Tests
 Release Tests
 
 
-Required tests:
+Required tests (implemented in `tests/`):
 
-
-- Runtime startup
-- SDK execution
-- Security validation
-- Memory storage
-- CLI commands
+- `test_runtime.py`: Verifies config loading, service registry, dynamic bootstrap loading, and state transition flow.
+- `test_cli.py`: Verifies argument parsing, command routing, console printing, and JSON serialization.
+- `test_developer_platform.py`: Verifies SDKs, plugin loading, generator, and debugger capabilities.
+- `test_security_platform.py`: Validates user identities, authentications, role permissions, encryption, and audit logs.
+- `test_knowledge_platform.py`: Validates semantic memories, knowledge graphs, semantic search, and context building.
+- `test_deployment.py`: Verifies installer directory validation, docker configuration parses, and packaging pipelines.
 
 
 ---

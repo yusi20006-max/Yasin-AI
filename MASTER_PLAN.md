@@ -186,14 +186,23 @@ Purpose:
 
 Command line management interface.
 
-Commands:
+Commands & Usage:
 
-```
-yasin status
-yasin agent create
-yasin memory search
-yasin security check
-yasin package build
+```bash
+# General platform/runtime diagnostics (supports --json)
+yasin status [--json]
+
+# Create a custom AI Agent (supports --role, --description, --type, and --json)
+yasin agent create [name] --role [role] --description [description] --type [type] [--json]
+
+# Query the semantic memory store (supports --limit, --threshold, and --json)
+yasin memory search [query] --limit [limit] --threshold [threshold] [--json]
+
+# Run platform security checks and vulnerability scans (supports --json)
+yasin security check [--json]
+
+# Build deployment artifacts and packages (supports --output, --version, and --json)
+yasin package build --output [directory] --version [version] [--json]
 ```
 
 Location:
@@ -333,7 +342,7 @@ Tasks:
 1. Repository audit (Complete)
 2. Fix missing imports (Complete)
 3. Run tests (Complete - 79 tests passing)
-4. Improve documentation (Complete - All reference files updated for consistency)
+4. Improve documentation (Complete - All reference files updated for perfect codebase consistency)
 5. Prepare release (Complete - v1.0.0 Ready)
 6. Publish v1.0.0 (Ready)
 
