@@ -263,3 +263,48 @@ def test_monitoring_audit_and_threats():
     assert len(inactive_threats) >= 1
     assert inactive_threats[0]["username"] == "deleted_user"
     assert inactive_threats[0]["severity"] == "high"
+
+
+def test_login_timing_mitigation(monkeypatch):
+    id_mgr = IdentityManager()
+    id_mgr.create_role("user")
+    id_mgr.create_user("bob", roles=["user"])
+
+    auth_mgr = AuthManager(id_mgr)
+    auth_mgr.register_credentials("bob", "secret_pass_123")
+
+    # Record the arguments of pbkdf2_hmac calls
+    pbkdf2_calls = []
+    import hashlib
+    original_pbkdf2 = hashlib.pbkdf2_hmac
+
+    def mock_pbkdf2(*args, **kwargs):
+        pbkdf2_calls.append(args)
+        return original_pbkdf2(*args, **kwargs)
+
+    monkeypatch.setattr(hashlib, "pbkdf2_hmac", mock_pbkdf2)
+
+    # 1. Login with nonexistent user - should still call PBKDF2 to prevent timing attacks
+    res = auth_mgr.login("nonexistent", "some_password")
+    assert res is None
+    assert len(pbkdf2_calls) == 1
+    assert pbkdf2_calls[0][3] == 600000  # 600,000 iterations
+
+    pbkdf2_calls.clear()
+
+    # 2. Login with registered inactive user - should still call PBKDF2
+    user = id_mgr.get_user("bob")
+    user.active = False
+    res = auth_mgr.login("bob", "secret_pass_123")
+    assert res is None
+    assert len(pbkdf2_calls) == 1
+    assert pbkdf2_calls[0][3] == 600000
+
+    pbkdf2_calls.clear()
+
+    # 3. Login with active user, wrong password - should call PBKDF2
+    user.active = True
+    res = auth_mgr.login("bob", "wrong_password")
+    assert res is None
+    assert len(pbkdf2_calls) == 1
+    assert pbkdf2_calls[0][3] == 600000

@@ -120,8 +120,9 @@ class SecretStore:
         """
         Encrypts and stores a secret key-value.
         """
-        if master_key not in os.environ.values():
-            raise ValueError("Master key must be loaded strictly from an OS environment variable.")
+        expected_key = os.environ.get("YASINAI_MASTER_KEY")
+        if not expected_key or master_key != expected_key:
+            raise ValueError("Master key must be loaded strictly from an OS environment variable (specifically YASINAI_MASTER_KEY).")
         encrypted = self.engine.encrypt(secret_value, master_key)
         self._secrets[name] = encrypted
 
@@ -129,8 +130,9 @@ class SecretStore:
         """
         Decrypts and retrieves a stored secret.
         """
-        if master_key not in os.environ.values():
-            raise ValueError("Master key must be loaded strictly from an OS environment variable.")
+        expected_key = os.environ.get("YASINAI_MASTER_KEY")
+        if not expected_key or master_key != expected_key:
+            raise ValueError("Master key must be loaded strictly from an OS environment variable (specifically YASINAI_MASTER_KEY).")
         encrypted = self._secrets.get(name)
         if not encrypted:
             return None
