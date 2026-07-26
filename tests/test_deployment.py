@@ -143,3 +143,70 @@ def test_package_builder_build():
 
     res_other = builder.build_package(name="custom-plugin", version="2.5", output_directory="temp/")
     assert res_other["package_name"] == "custom-plugin-v2.5.tar.gz"
+
+
+def test_additional_deployment_coverage(tmp_path):
+    # 1. DockerManager compose check subprocess exceptions (lines 47-51)
+    manager = DockerManager()
+    with patch("shutil.which", side_effect=lambda name: "/usr/bin/docker" if name == "docker" else None):
+        with patch("subprocess.run", side_effect=Exception("Subprocess failed")):
+            assert manager.check_docker_compose_available() is False
+
+    # DockerManager when check_docker_available is False (lines 50-51)
+    with patch.object(DockerManager, "check_docker_available", return_value=False):
+        assert manager.check_docker_compose_available() is False
+
+    # DockerManager generate files IOError (lines 91-92, 101-102)
+    # Mocking open to raise IOError when writing
+    with patch("builtins.open", side_effect=IOError("Disk full")):
+        res = manager.generate_docker_files(overwrite=True)
+        assert res["dockerfile_created"] is False
+        assert res["compose_created"] is False
+
+    # 2. HealthCheck subplatform health checks exceptions (lines 58-60, 87-89, 122-124, 156-158)
+    health = HealthCheck()
+    with patch("yasinai.core.runtime.Runtime.start", side_effect=Exception("Runtime start error")):
+        res = health.check_runtime()
+        assert res["success"] is False
+        assert "Runtime start error" in res["message"]
+
+    with patch("yasinai.cli.main.create_parser", side_effect=Exception("Parser create error")):
+        res = health.check_cli()
+        assert res["success"] is False
+        assert "Parser create error" in res["message"]
+
+    with patch("security_platform.identity.IdentityManager", side_effect=Exception("Identity error")):
+        res = health.check_security_platform()
+        assert res["success"] is False
+        assert "Identity error" in res["message"]
+
+    with patch("knowledge_platform.memory.MemoryManager", side_effect=Exception("Memory error")):
+        res = health.check_knowledge_platform()
+        assert res["success"] is False
+        assert "Memory error" in res["message"]
+
+    # 3. Installer setup_directories exceptions (lines 64-65)
+    installer = Installer(target_directory=str(tmp_path))
+    with patch("os.makedirs", side_effect=Exception("Permission denied")):
+        # directory setup logs the error and continues, returning empty list of newly created directories
+        res = installer.setup_directories()
+        assert len(res) == 0
+
+    # Installer environment verification failures (lines 75-76)
+    with patch.object(Installer, "verify_environment", return_value={"success": False}):
+        res = installer.install()
+        assert res["success"] is False
+        assert "Environment verification failed" in res["message"]
+
+    # Installer environment template creation IOError (lines 101-102)
+    with patch("builtins.open", side_effect=IOError("Cannot open file")):
+        res = installer.install()
+        assert res["success"] is True  # installation is successful but configuration creation is logged and skipped
+        assert res["config_created"] is False
+
+    # 4. PackageBuilder build exception (lines 43-45)
+    builder = PackageBuilder()
+    # pass None as name to trigger TypeError inside name check
+    res = builder.build_package(name=None)
+    assert res["success"] is False
+    assert res["package_name"] == ""

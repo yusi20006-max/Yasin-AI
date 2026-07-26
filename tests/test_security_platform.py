@@ -9,7 +9,7 @@ from security_platform.identity import IdentityManager
 from security_platform.auth import AuthManager
 from security_platform.authorization import PolicyEngine
 from security_platform.encryption import EncryptionEngine, SecretStore
-from security_platform.monitoring import AuditLogger, ThreatDetector
+from security_platform.monitoring import AuditLogger, ThreatDetector, SecurityEvent
 
 
 # --- Identity Tests ---
@@ -308,3 +308,146 @@ def test_login_timing_mitigation(monkeypatch):
     assert res is None
     assert len(pbkdf2_calls) == 1
     assert pbkdf2_calls[0][3] == 600000
+
+
+def test_additional_security_platform_coverage(monkeypatch):
+    # 1. AuthManager exceptions and validation edge cases
+    id_mgr = IdentityManager()
+    id_mgr.create_role("user")
+    id_mgr.create_user("alice", roles=["user"])
+    auth_mgr = AuthManager(id_mgr)
+
+    # register credentials for nonexistent user
+    with pytest.raises(ValueError, match="Cannot register credentials: User 'nonexistent' does not exist."):
+        auth_mgr.register_credentials("nonexistent", "pwd")
+
+    # login duration exceeded
+    with pytest.raises(ValueError, match="Session duration exceeds maximum limit of 24 hours."):
+        auth_mgr.login("alice", "pwd", session_duration=999999)
+
+    # login incorrect password registered user
+    auth_mgr.register_credentials("alice", "correct")
+    assert auth_mgr.login("alice", "incorrect") is None
+
+    # session expired validation trigger logout
+    # we can mock validate_token session is_expired or session expiration
+    token = auth_mgr.login("alice", "correct", session_duration=-10)
+    assert auth_mgr.validate_token(token) is False
+    assert auth_mgr.get_session(token) is None
+
+    # logout with invalid token
+    assert auth_mgr.logout("invalid_token") is False
+
+    # 2. Authorization (PolicyEngine) edge cases and repr
+    policy_engine = PolicyEngine(id_mgr)
+    perm1 = policy_engine.create_permission("p1", "desc1")
+    assert repr(perm1) == "Permission(name='p1')"
+    # get_permission
+    assert policy_engine.get_permission("p1") is perm1
+
+    # duplicate permission
+    with pytest.raises(ValueError, match="Permission 'p1' already exists."):
+        policy_engine.create_permission("p1")
+
+    # unregistered permission in policy creation
+    with pytest.raises(ValueError, match="Permission 'unregistered' is not registered."):
+        policy_engine.create_policy("pol1", ["user"], ["unregistered"])
+
+    # unregistered role in policy creation
+    with pytest.raises(ValueError, match="Role 'unregistered_role' is not registered in the Identity System."):
+        policy_engine.create_policy("pol1", ["unregistered_role"], ["p1"])
+
+    # duplicate policy
+    policy_engine.create_policy("pol1", ["user"], ["p1"])
+    assert repr(policy_engine.get_policy("pol1")) == "Policy(name='pol1', roles=['user'], permissions=['p1'])"
+    with pytest.raises(ValueError, match="Policy 'pol1' already exists."):
+        policy_engine.create_policy("pol1", ["user"], ["p1"])
+
+    # is_authorized with unregistered permission
+    assert policy_engine.is_authorized("alice", "unregistered_perm") is False
+
+    # 3. EncryptionEngine hash_data, short ciphertext decryption, secret store edge cases
+    enc = EncryptionEngine()
+    assert enc.hash_data("hello") == EncryptionEngine.hash_data("hello")
+    with pytest.raises(ValueError, match="Invalid ciphertext: too short for salt, MAC, and IV."):
+        enc.decrypt("YQ==", "some_key")
+
+    store = SecretStore(enc)
+    # set_secret master key mismatch / not set
+    monkeypatch.delenv("YASINAI_MASTER_KEY", raising=False)
+    with pytest.raises(ValueError, match="Master key must be loaded strictly from an OS environment variable"):
+        store.set_secret("S1", "val", "master")
+
+    # get_secret master key mismatch / not set
+    with pytest.raises(ValueError, match="Master key must be loaded strictly from an OS environment variable"):
+        store.get_secret("S1", "master")
+
+    # failed decryption corrupt data
+    monkeypatch.setenv("YASINAI_MASTER_KEY", "master_key")
+    store.set_secret("S1", "val", "master_key")
+    # corrupt the encrypted data in secret store
+    store._secrets["S1"] = "invalid_b64"
+    assert store.get_secret("S1", "master_key") is None
+
+    # delete non-existent secret
+    assert store.delete_secret("nonexistent") is False
+
+    # 4. IdentityManager representations, deletion and listings
+    role1 = id_mgr.get_role("user")
+    assert repr(role1) == "Role(name='user')"
+    user1 = id_mgr.get_user("alice")
+    assert repr(user1) == "User(username='alice', roles=['user'], active=True)"
+
+    # delete non-existent role
+    assert id_mgr.delete_role("nonexistent") is False
+    # delete role holding users
+    assert id_mgr.delete_role("user") is True
+
+    # delete user
+    assert id_mgr.delete_user("alice") is True
+    assert id_mgr.delete_user("nonexistent") is False
+
+    # assign role existence check failed
+    assert id_mgr.assign_role_to_user("nonexistent", "user") is False
+
+    # revoke role branch
+    id_mgr.create_role("new_role")
+    id_mgr.create_user("charlie", roles=["new_role"])
+    # revoke role possessed
+    assert id_mgr.revoke_role_from_user("charlie", "new_role") is True
+    # revoke role not possessed
+    assert id_mgr.revoke_role_from_user("charlie", "nonexistent") is False
+    # revoke role user not found
+    assert id_mgr.revoke_role_from_user("nonexistent_user", "some_role") is False
+
+    # list users and roles
+    assert len(id_mgr.list_users()) > 0
+    assert len(id_mgr.list_roles()) > 0
+
+    # 5. Monitoring audit and threat detector edge cases
+    event = SecurityEvent("evt", "username", "success", "desc")
+    assert repr(event) == "SecurityEvent(type='evt', user='username', status='success', severity='low')"
+    assert "event_type" in event.to_dict()
+
+    # get logs with min_severity
+    audit = AuditLogger()
+    audit.log_event("evt", "u", "success", "d", severity="critical")
+    audit.log_event("evt", "u", "success", "d", severity="low")
+    critical_logs = audit.get_logs(min_severity="high")
+    assert len(critical_logs) == 1
+
+    # threat detection success reset login failure counter
+    audit.clear()
+    audit.log_event("login", "bob", "failure", "failed", "medium")
+    audit.log_event("login", "bob", "success", "success", "low")
+    audit.log_event("login", "bob", "failure", "failed", "medium")
+    audit.log_event("login", "bob", "failure", "failed", "medium")
+    td = ThreatDetector(audit)
+    threats = td.detect_threats()
+    # should NOT detect BruteForceAttack since success reset the failures to 0, then we only have 2 failures
+    assert len([t for t in threats if t["type"] == "BruteForceAttack"]) == 0
+
+    # no threats logs scan
+    audit.clear()
+    threats_empty = td.detect_threats()
+    assert threats_empty == []

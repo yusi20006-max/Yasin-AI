@@ -250,3 +250,88 @@ def test_main_package_build(capsys):
     assert exc_info.value.code == 0
     captured = capsys.readouterr()
     assert "Building YasinAI deployment package" in captured.out
+
+
+def test_additional_cli_coverage(capsys):
+    # 1. handle_agent_create exception path (lines 89-92)
+    with patch("developer_platform.agent.AgentSDK.create_agent", side_effect=Exception("Agent creation failed")):
+        args = argparse.Namespace(name="agent", role="general", description="desc", type="std", json=False)
+        assert handle_agent_create(args) == 1
+        captured = capsys.readouterr()
+        assert "Error creating agent: Agent creation failed" in captured.err
+
+    # 2. handle_memory_search empty results path (line 142) and exception path (lines 148-151)
+    args_empty = argparse.Namespace(query="nonexistent_word", limit=5, threshold=0.99, json=False)
+    assert handle_memory_search(args_empty) == 0
+    captured = capsys.readouterr()
+    assert "No matching memories found." in captured.out
+
+    with patch("knowledge_platform.semantic_search.Retriever.retrieve", side_effect=Exception("Memory search failed")):
+        args = argparse.Namespace(query="test", limit=5, threshold=0.7, json=False)
+        assert handle_memory_search(args) == 1
+        captured = capsys.readouterr()
+        assert "Error searching memory: Memory search failed" in captured.err
+
+    # 3. handle_security_check exception path (lines 195-198)
+    # Raising exception by mocking json.dumps when json output is enabled
+    with patch("json.dumps", side_effect=Exception("JSON dump failed")):
+        args = argparse.Namespace(json=True)
+        assert handle_security_check(args) == 1
+        captured = capsys.readouterr()
+        assert "Error checking security: JSON dump failed" in captured.err
+
+    # 4. handle_package_build exception path (lines 231-234)
+    with patch("developer_platform.package_builder.PackageBuilder.build_package", side_effect=Exception("Package build failed")):
+        args = argparse.Namespace(output="dist/", version="1.0.0", json=False)
+        assert handle_package_build(args) == 1
+        captured = capsys.readouterr()
+        assert "Error building package: Package build failed" in captured.err
+
+    # 5. main --json options logic (lines 329-330)
+    with patch("yasinai.cli.main.hasattr") as mock_hasattr:
+        # We mock hasattr to return False specifically for "json", but True otherwise
+        mock_hasattr.side_effect = lambda obj, name: False if name == "json" else (True if name == "func" else hasattr(obj, name))
+        with pytest.raises(SystemExit) as exc_info:
+            main(["status", "--json"])
+        assert exc_info.value.code == 0
+
+    # 6. main choice subcommand parser missing choice (lines 324-325)
+    # We mock subcommand choices get to return None
+    class CustomDict(dict):
+        def get(self, key, default=None):
+            return None
+
+    modified_parser = create_parser()
+    for action in modified_parser._subparsers._actions:
+        if isinstance(action, argparse._SubParsersAction):
+            custom_choices = CustomDict(action.choices)
+            action.choices = custom_choices
+    with patch("yasinai.cli.main.create_parser", return_value=modified_parser):
+        with pytest.raises(SystemExit) as exc_info:
+            main(["agent"])
+        assert exc_info.value.code == 0
+
+    # 7. main when args has no func attribute (lines 334-335)
+    with patch("argparse.ArgumentParser.parse_args", return_value=argparse.Namespace(command="status", json=False)):
+        with pytest.raises(SystemExit) as exc_info:
+            main(["status"])
+        assert exc_info.value.code == 0
+
+    # 8. Run as main script via subprocess to execute lines 302 and 339
+    import subprocess
+    import os
+    env = os.environ.copy()
+    env["PYTHONPATH"] = "."
+    res = subprocess.run([sys.executable, "yasinai/cli/main.py", "--help"], capture_output=True, text=True, env=env)
+    assert res.returncode == 0
+    assert "YasinAI Command Line management interface" in res.stdout
+
+    # Run module main
+    res_mod = subprocess.run([sys.executable, "-m", "yasinai.cli", "--help"], capture_output=True, text=True, env=env)
+    assert res_mod.returncode == 0
+
+    # 9. Call main(None) to execute line 302 in current process
+    with patch("sys.argv", ["yasin", "status"]):
+        with pytest.raises(SystemExit) as exc_info:
+            main(None)
+        assert exc_info.value.code == 0

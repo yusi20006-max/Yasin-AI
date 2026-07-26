@@ -7,3 +7,4 @@ yasinai.egg-info/
 dist/
 build/
 *.egg-info/
+.coverage

@@ -287,3 +287,91 @@ def test_knowledge_reasoner_deductions():
     symmetric_deductions = reasoner.deduce_symmetric_relations("partner_of", "partner_of")
     assert len(symmetric_deductions) == 1
     assert symmetric_deductions[0] == ("ModuleB", "partner_of", "ModuleA")
+
+
+def test_additional_knowledge_platform_coverage():
+    # 1. ConversationMemory.get_formatted_history & clear
+    conv_mem = ConversationMemory()
+    conv_mem.add_message("user", "Hello")
+    assert conv_mem.get_formatted_history() == "User: Hello"
+    conv_mem.clear()
+    assert conv_mem.get_history() == []
+
+    # 2. ReasoningEngine empty rules
+    engine = ReasoningEngine()
+    assert engine.evaluate_and_refine("raw", []) == "raw"
+
+    # 3. Entity and Relation __repr__
+    ent = Entity("TestName", "TestType")
+    assert repr(ent) == "Entity(name='TestName', type='TestType')"
+    rel = Relation("TestRel")
+    assert repr(rel) == "Relation(name='TestRel')"
+
+    # 4. KnowledgeGraph add existing entity/relation, delete non-existent, clear
+    graph = KnowledgeGraph()
+    graph.add_entity("E1", "Type1", {"p1": "v1"})
+    # Adding again with new properties
+    e_updated = graph.add_entity("E1", "Type1", {"p2": "v2"})
+    assert e_updated.get_property("p2") == "v2"
+    assert e_updated.get_property("p1") == "v1"
+
+    graph.add_relation("R1", "Desc1", {"p1": "v1"})
+    # Adding again
+    r_updated = graph.add_relation("R1", "Desc2", {"p2": "v2"})
+    assert r_updated.description == "Desc2"
+    assert r_updated.properties["p2"] == "v2"
+
+    assert graph.delete_entity("nonexistent") is False
+    graph.clear()
+    assert len(graph.entities) == 0
+
+    # 5. MemoryManager delete_long_term, consolidate_short_to_long out of bounds
+    mgr = MemoryManager()
+    mgr.add_long_term("k1", "content1")
+    assert mgr.delete_long_term("k1") is True
+    assert mgr.delete_long_term("nonexistent") is False
+    assert mgr.consolidate_short_to_long("new_k", 99) is None
+
+    # 6. RuleEngine exceptions
+    rule_engine = RuleEngine()
+    def broken_condition(x):
+        raise ValueError("Broken")
+    rule_engine.add_rule("broken", broken_condition, lambda x: x)
+    # This should not raise but log error and return empty triggered results
+    res = rule_engine.evaluate("some_facts")
+    assert res == []
+
+    # 7. EmbeddingEngine empty/missing fit and get_embedding empty token/vocab
+    emb = EmbeddingEngine()
+    emb.fit([])
+    assert emb.get_embedding("hello") == [0.0]
+    emb.fit(["hello"])
+    assert emb.get_embedding("") == [0.0]
+
+    # 8. SemanticSearch cosine_similarity edge cases
+    search = SemanticSearch()
+    assert search.cosine_similarity([], []) == 0.0
+    assert search.cosine_similarity([1.0], [2.0, 3.0]) == 0.0
+    assert search.cosine_similarity([0.0], [0.0]) == 0.0
+
+    # 9. Retriever.clear and empty query search
+    retriever = Retriever()
+    retriever.add_document("mem_001", "text1")
+    retriever.add_document("mem_002", "text2")
+    # Empty query retrieval
+    empty_results = retriever.retrieve("", threshold=0.0)
+    assert len(empty_results) == 2
+    # Empty query retrieval with high threshold
+    empty_results_high = retriever.retrieve("", threshold=0.9)
+    assert len(empty_results_high) == 1
+
+    retriever.clear()
+    assert len(retriever.vector_store.records) == 0
+
+    # 10. TripleStore existing triple, clear
+    store = TripleStore()
+    store.add_triple("A", "B", "C")
+    store.add_triple("A", "B", "C") # duplicate
+    assert len(store.list_all()) == 1
+    store.clear()
+    assert len(store.list_all()) == 0
