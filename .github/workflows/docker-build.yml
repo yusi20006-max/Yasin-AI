@@ -1,0 +1,28 @@
+name: Docker Build & Smoke Test
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build and Smoke Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Workaround pyproject.toml setuptools flat-layout discovery
+        run: |
+          echo -e '\n[tool.setuptools]\npackages = ["yasinai", "yasinai.core", "yasinai.cli", "yasinai.deployment", "security_platform", "developer_platform", "knowledge_platform"]' >> pyproject.toml
+
+      - name: Build Docker Image
+        run: |
+          docker build -t yasinai:latest .
+
+      - name: Run Smoke Test
+        run: |
+          docker run --rm yasinai:latest yasin status
