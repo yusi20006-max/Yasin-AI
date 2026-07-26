@@ -177,3 +177,84 @@ def test_runtime_orchestrated_start():
     runtime.start()
     assert runtime.state == "READY"
     assert runtime.system_info.status == "ready"
+
+
+def test_additional_runtime_coverage(tmp_path, monkeypatch):
+    # 1. Config.load_from_file edge cases
+    config = Config()
+
+    # Nonexistent file
+    assert config.load_from_file("nonexistent.json") is False
+
+    # Invalid JSON file (corrupted)
+    invalid_file = tmp_path / "invalid.json"
+    with open(invalid_file, "w") as f:
+        f.write("{invalid")
+    assert config.load_from_file(str(invalid_file)) is False
+
+    # Valid JSON file but contains a JSON list instead of a dict
+    list_file = tmp_path / "list.json"
+    with open(list_file, "w") as f:
+        f.write("[1, 2, 3]")
+    assert config.load_from_file(str(list_file)) is False
+
+    # 2. Config._load_from_env type casting and error handling
+    # To test casting we first need keys with appropriate default types
+    config_defaults = {
+        "some_int": 10,
+        "some_float": 1.5,
+        "some_bool": False,
+        "some_list": ["a"],
+    }
+    config = Config(defaults=config_defaults)
+
+    # Casting to int fails
+    monkeypatch.setenv("YASINAI_SOME_INT", "abc")
+    # Casting to float fails
+    monkeypatch.setenv("YASINAI_SOME_FLOAT", "xyz")
+    # Parsing to list fails
+    monkeypatch.setenv("YASINAI_SOME_LIST", "[abc]")
+    config._load_from_env()
+    # Values should remain as defaults
+    assert config.get("some_int") == 10
+    assert config.get("some_float") == 1.5
+    assert config.get("some_list") == ["a"]
+
+    # Success list override with [...] syntax
+    monkeypatch.setenv("YASINAI_SOME_LIST", "[\"x\", \"y\"]")
+    config._load_from_env()
+    assert config.get("some_list") == ["x", "y"]
+
+    # 3. Config.set
+    config.set("dynamic_key", "dynamic_val")
+    assert config.get("dynamic_key") == "dynamic_val"
+    # Config.get default val
+    assert config.get("nonexistent_key", "fallback") == "fallback"
+
+    # 4. Config.to_dict
+    cfg_dict = config.to_dict()
+    assert cfg_dict["dynamic_key"] == "dynamic_val"
+
+    # 5. Runtime incorrect state transitions
+    runtime = Runtime()
+
+    # State is STOPPED, calling initialize should raise RuntimeError
+    with pytest.raises(RuntimeError):
+        runtime.initialize()
+
+    # State is STOPPED, calling register_modules should raise RuntimeError
+    with pytest.raises(RuntimeError):
+        runtime.register_modules()
+
+    # State is STOPPED, calling ready should raise RuntimeError
+    with pytest.raises(RuntimeError):
+        runtime.ready()
+
+    # 6. SystemInfo.get_info exception block
+    sys_info = SystemInfo()
+    # Mock platform.platform to raise Exception
+    with patch("platform.platform", side_effect=Exception("platform error")):
+        info = sys_info.get_info()
+        assert info["platform"] == "Unknown"
+        assert info["os"] == "Unknown"
+        assert info["architecture"] == "Unknown"
