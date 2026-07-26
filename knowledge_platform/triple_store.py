@@ -2,7 +2,10 @@
 Triple Store for YasinAI Knowledge Graph.
 """
 
+import logging
 from typing import List, Tuple, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class TripleStore:
@@ -20,20 +23,25 @@ class TripleStore:
         triple = (subject, predicate, obj)
         if triple not in self._triples:
             self._triples.append(triple)
+            logger.debug(f"Added triple to store: {triple}")
+        else:
+            logger.debug(f"Triple already exists in store: {triple}")
 
     def remove_triple(self, subject: str, predicate: str, obj: str) -> bool:
         """Remove a triple from the store. Returns True if found and removed."""
         triple = (subject, predicate, obj)
         if triple in self._triples:
             self._triples.remove(triple)
+            logger.info(f"Removed triple from store: {triple}")
             return True
+        logger.warning(f"Attempted to remove non-existent triple: {triple}")
         return False
 
     def query_triples(self, subject: Optional[str] = None, predicate: Optional[str] = None, obj: Optional[str] = None) -> List[Tuple[str, str, str]]:
         """
         Query the triple store using wildcards. None acts as a wildcard.
         """
-        results = []
+        results: List[Tuple[str, str, str]] = []
         for s, p, o in self._triples:
             if subject is not None and s != subject:
                 continue
@@ -50,4 +58,5 @@ class TripleStore:
 
     def clear(self) -> None:
         """Clear all stored triples."""
+        logger.info("Clearing TripleStore.")
         self._triples.clear()

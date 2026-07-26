@@ -1,8 +1,11 @@
 import argparse
 import json
+import logging
 import sys
 from typing import Any, Dict, List, Optional
 from yasinai.core.runtime import Runtime
+
+logger = logging.getLogger(__name__)
 
 
 def handle_status(args: argparse.Namespace) -> int:
@@ -10,6 +13,7 @@ def handle_status(args: argparse.Namespace) -> int:
     Handle the 'yasin status' command.
     Boots the Core Runtime and prints system details.
     """
+    logger.debug("Executing CLI command: status")
     try:
         runtime = Runtime()
         runtime.start()
@@ -28,10 +32,12 @@ def handle_status(args: argparse.Namespace) -> int:
             print(f"OS:           {info.get('os')}")
             print(f"Platform:     {info.get('platform')}")
             print(f"Architecture: {info.get('architecture')}")
-            print(f"Python Ver:   {info.get('python_version').split()[0]}")
+            print(f"Python Ver:   {info.get('python_version', '').split()[0] if info.get('python_version') else ''}")
             print("=========================================")
+        logger.info("Successfully displayed status.")
         return 0
     except Exception as e:
+        logger.error(f"Error checking status: {e}", exc_info=True)
         print(f"Error checking status: {e}", file=sys.stderr)
         return 1
 
@@ -41,41 +47,49 @@ def handle_agent_create(args: argparse.Namespace) -> int:
     Handle the 'yasin agent create' command.
     Creates a new AI Agent using the Developer Platform.
     """
-    name = args.name
-    role = getattr(args, "role", "general")
-    description = getattr(args, "description", "A helpful AI agent")
-    agent_type = getattr(args, "type", "standard")
+    name: str = args.name
+    role: str = getattr(args, "role", "general")
+    description: str = getattr(args, "description", "A helpful AI agent")
+    agent_type: str = getattr(args, "type", "standard")
 
-    from developer_platform.agent import AgentSDK
+    logger.debug(f"Executing CLI command: agent create with name={name}, role={role}, type={agent_type}")
 
-    sdk = AgentSDK()
-    agent = sdk.create_agent(name=name, role=role, description=description, type=agent_type)
-    agent.start()
+    try:
+        from developer_platform.agent import AgentSDK
 
-    result = {
-        "success": True,
-        "message": f"Agent '{agent.name}' created successfully.",
-        "agent": {
-            "name": agent.name,
-            "role": agent.role,
-            "description": agent.description,
-            "type": agent.type,
-            "status": agent.status
+        sdk = AgentSDK()
+        agent = sdk.create_agent(name=name, role=role, description=description, type=agent_type)
+        agent.start()
+
+        result = {
+            "success": True,
+            "message": f"Agent '{agent.name}' created successfully.",
+            "agent": {
+                "name": agent.name,
+                "role": agent.role,
+                "description": agent.description,
+                "type": agent.type,
+                "status": agent.status
+            }
         }
-    }
 
-    if args.json:
-        print(json.dumps(result, indent=2))
-    else:
-        print("-----------------------------------------")
-        print(f"Creating agent '{agent.name}'...")
-        print("-----------------------------------------")
-        print(f"Role:        {agent.role}")
-        print(f"Description: {agent.description}")
-        print(f"Type:        {agent.type}")
-        print("-----------------------------------------")
-        print(f"SUCCESS: Agent '{agent.name}' is ready to deploy.")
-    return 0
+        if args.json:
+            print(json.dumps(result, indent=2))
+        else:
+            print("-----------------------------------------")
+            print(f"Creating agent '{agent.name}'...")
+            print("-----------------------------------------")
+            print(f"Role:        {agent.role}")
+            print(f"Description: {agent.description}")
+            print(f"Type:        {agent.type}")
+            print("-----------------------------------------")
+            print(f"SUCCESS: Agent '{agent.name}' is ready to deploy.")
+        logger.info(f"Successfully created agent: {agent.name}")
+        return 0
+    except Exception as e:
+        logger.error(f"Error creating agent: {e}", exc_info=True)
+        print(f"Error creating agent: {e}", file=sys.stderr)
+        return 1
 
 
 def handle_memory_search(args: argparse.Namespace) -> int:
@@ -83,50 +97,58 @@ def handle_memory_search(args: argparse.Namespace) -> int:
     Handle the 'yasin memory search' command.
     Searches semantic memory using the Knowledge Platform.
     """
-    query = args.query
-    limit = getattr(args, "limit", 5)
-    threshold = getattr(args, "threshold", 0.7)
+    query: str = args.query
+    limit: int = getattr(args, "limit", 5)
+    threshold: float = getattr(args, "threshold", 0.7)
 
-    from knowledge_platform.semantic_search import Retriever
+    logger.debug(f"Executing CLI command: memory search with query='{query}', limit={limit}, threshold={threshold}")
 
-    retriever = Retriever()
-    # Populate the retriever with mock data to maintain backward compatibility and support real semantic indexing
-    retriever.add_document("mem_001", "YasinAI configuration loading rules.")
-    retriever.add_document("mem_002", "How to register custom modules in Core Runtime.")
-    retriever.add_document("mem_003", "Security platform and identity management specs.")
+    try:
+        from knowledge_platform.semantic_search import Retriever
 
-    # Execute search
-    search_results = retriever.retrieve(query or "", limit=limit, threshold=threshold)
+        retriever = Retriever()
+        # Populate the retriever with mock data to maintain backward compatibility and support real semantic indexing
+        retriever.add_document("mem_001", "YasinAI configuration loading rules.")
+        retriever.add_document("mem_002", "How to register custom modules in Core Runtime.")
+        retriever.add_document("mem_003", "Security platform and identity management specs.")
 
-    # Map output format for CLI output
-    results = []
-    for r in search_results:
-        results.append({
-            "id": r["id"],
-            "content": r["metadata"]["text"],
-            "score": round(r["score"], 2)
-        })
+        # Execute search
+        search_results = retriever.retrieve(query or "", limit=limit, threshold=threshold)
 
-    output = {
-        "query": query,
-        "limit": limit,
-        "threshold": threshold,
-        "results": results
-    }
+        # Map output format for CLI output
+        results = []
+        for r in search_results:
+            results.append({
+                "id": r["id"],
+                "content": r["metadata"]["text"],
+                "score": round(r["score"], 2)
+            })
 
-    if args.json:
-        print(json.dumps(output, indent=2))
-    else:
-        print("-----------------------------------------")
-        print(f"Searching memory for query: '{query or '(all)'}'")
-        print(f"Limit: {limit} | Threshold: {threshold}")
-        print("-----------------------------------------")
-        if not results:
-            print("No matching memories found.")
-        for i, res in enumerate(results, start=1):
-            print(f"{i}. [{res['score']:.2f}] {res['content']} ({res['id']})")
-        print("-----------------------------------------")
-    return 0
+        output = {
+            "query": query,
+            "limit": limit,
+            "threshold": threshold,
+            "results": results
+        }
+
+        if args.json:
+            print(json.dumps(output, indent=2))
+        else:
+            print("-----------------------------------------")
+            print(f"Searching memory for query: '{query or '(all)'}'")
+            print(f"Limit: {limit} | Threshold: {threshold}")
+            print("-----------------------------------------")
+            if not results:
+                print("No matching memories found.")
+            for i, res in enumerate(results, start=1):
+                print(f"{i}. [{res['score']:.2f}] {res['content']} ({res['id']})")
+            print("-----------------------------------------")
+        logger.info("Successfully searched memory.")
+        return 0
+    except Exception as e:
+        logger.error(f"Error searching memory: {e}", exc_info=True)
+        print(f"Error searching memory: {e}", file=sys.stderr)
+        return 1
 
 
 def handle_security_check(args: argparse.Namespace) -> int:
@@ -134,38 +156,46 @@ def handle_security_check(args: argparse.Namespace) -> int:
     Handle the 'yasin security check' command.
     Simulates security vulnerability scan and audit check.
     """
-    # Simulated check items
-    checks = [
-        {"id": "SEC_001", "name": "Environment Secrets Check", "passed": True, "details": "No plain-text credentials found in codebase."},
-        {"id": "SEC_002", "name": "File Permissions", "passed": True, "details": "Repository files are properly restricted."},
-        {"id": "SEC_003", "name": "Encryption Engines", "passed": True, "details": "SHA-256 and AES configuration validated."},
-        {"id": "SEC_004", "name": "Policy Engine Health", "passed": True, "details": "Role-Based Access Control policies loaded."},
-    ]
+    logger.debug("Executing CLI command: security check")
 
-    failed_checks = [c for c in checks if not c["passed"]]
-    overall_status = "SECURE" if not failed_checks else "VULNERABLE"
+    try:
+        # Simulated check items
+        checks = [
+            {"id": "SEC_001", "name": "Environment Secrets Check", "passed": True, "details": "No plain-text credentials found in codebase."},
+            {"id": "SEC_002", "name": "File Permissions", "passed": True, "details": "Repository files are properly restricted."},
+            {"id": "SEC_003", "name": "Encryption Engines", "passed": True, "details": "SHA-256 and AES configuration validated."},
+            {"id": "SEC_004", "name": "Policy Engine Health", "passed": True, "details": "Role-Based Access Control policies loaded."},
+        ]
 
-    output = {
-        "status": overall_status,
-        "scanned_items": len(checks),
-        "failed_items": len(failed_checks),
-        "checks": checks
-    }
+        failed_checks = [c for c in checks if not c["passed"]]
+        overall_status = "SECURE" if not failed_checks else "VULNERABLE"
 
-    if args.json:
-        print(json.dumps(output, indent=2))
-    else:
-        print("=========================================")
-        print(f"YasinAI Security Platform - Audit Check")
-        print(f"Status: {overall_status}")
-        print("=========================================")
-        for check in checks:
-            status_str = "[ PASS ]" if check["passed"] else "[ FAIL ]"
-            print(f"{status_str} {check['name']}")
-            print(f"         Details: {check['details']}")
-        print("=========================================")
-        print(f"Scan complete. {len(checks)} checks performed.")
-    return 0
+        output = {
+            "status": overall_status,
+            "scanned_items": len(checks),
+            "failed_items": len(failed_checks),
+            "checks": checks
+        }
+
+        if args.json:
+            print(json.dumps(output, indent=2))
+        else:
+            print("=========================================")
+            print("YasinAI Security Platform - Audit Check")
+            print(f"Status: {overall_status}")
+            print("=========================================")
+            for check in checks:
+                status_str = "[ PASS ]" if check["passed"] else "[ FAIL ]"
+                print(f"{status_str} {check['name']}")
+                print(f"         Details: {check['details']}")
+            print("=========================================")
+            print(f"Scan complete. {len(checks)} checks performed.")
+        logger.info("Successfully executed security check.")
+        return 0
+    except Exception as e:
+        logger.error(f"Error checking security: {e}", exc_info=True)
+        print(f"Error checking security: {e}", file=sys.stderr)
+        return 1
 
 
 def handle_package_build(args: argparse.Namespace) -> int:
@@ -173,27 +203,35 @@ def handle_package_build(args: argparse.Namespace) -> int:
     Handle the 'yasin package build' command.
     Packages modules and extensions using the Developer Platform PackageBuilder.
     """
-    output_dir = getattr(args, "output", "dist/")
-    version = getattr(args, "version", "1.0.0")
+    output_dir: str = getattr(args, "output", "dist/")
+    version: str = getattr(args, "version", "1.0.0")
 
-    from developer_platform.package_builder import PackageBuilder
+    logger.debug(f"Executing CLI command: package build with output_dir={output_dir}, version={version}")
 
-    builder = PackageBuilder()
-    result = builder.build_package(name="yasinai", version=version, output_directory=output_dir)
+    try:
+        from developer_platform.package_builder import PackageBuilder
 
-    if args.json:
-        print(json.dumps(result, indent=2))
-    else:
-        print("-----------------------------------------")
-        print(f"Building YasinAI deployment package v{version}...")
-        print(f"Target directory: {output_dir}")
-        print("-----------------------------------------")
-        print("Adding modules to package:")
-        for f in result["files_included"]:
-            print(f"  + {f}")
-        print("-----------------------------------------")
-        print(f"SUCCESS: Created build artifact: {output_dir}{result['package_name']}")
-    return 0
+        builder = PackageBuilder()
+        result = builder.build_package(name="yasinai", version=version, output_directory=output_dir)
+
+        if args.json:
+            print(json.dumps(result, indent=2))
+        else:
+            print("-----------------------------------------")
+            print(f"Building YasinAI deployment package v{version}...")
+            print(f"Target directory: {output_dir}")
+            print("-----------------------------------------")
+            print("Adding modules to package:")
+            for f in result["files_included"]:
+                print(f"  + {f}")
+            print("-----------------------------------------")
+            print(f"SUCCESS: Created build artifact: {output_dir}{result['package_name']}")
+        logger.info(f"Successfully built package v{version}")
+        return 0
+    except Exception as e:
+        logger.error(f"Error building package: {e}", exc_info=True)
+        print(f"Error building package: {e}", file=sys.stderr)
+        return 1
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -290,7 +328,7 @@ def main(argv: Optional[List[str]] = None) -> None:
         # Propagate the top-level --json option to nested args if not present
         if args.json and not hasattr(args, "json"):
             setattr(args, "json", True)
-        exit_code = args.func(args)
+        exit_code: int = args.func(args)
         sys.exit(exit_code)
     else:
         parser.print_help()

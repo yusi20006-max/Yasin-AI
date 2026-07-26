@@ -3,7 +3,10 @@ Debugging and Execution Tracer for YasinAI Developer Platform.
 Tracks agent steps, inputs, outputs, and status.
 """
 
+import logging
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class Debugger:
@@ -19,6 +22,7 @@ class Debugger:
         """
         Start a new debugging/tracing session for the given agent.
         """
+        logger.info(f"Starting developer debugger tracing session for agent: '{agent_name}'")
         self.current_agent = agent_name
         self.logs = []
 
@@ -27,8 +31,10 @@ class Debugger:
         Record an execution step inside the active session.
         """
         if not self.current_agent:
+            logger.error("Failed to log step: No active debugging session.")
             raise RuntimeError("No active debugging session. Call start_session() first.")
 
+        logger.debug(f"Debugging log step: '{step_name}' on agent '{self.current_agent}'")
         self.logs.append({
             "agent": self.current_agent,
             "step": step_name,
@@ -46,5 +52,6 @@ class Debugger:
         """
         Reset and clear the current debug session.
         """
+        logger.info("Clearing active debugger session.")
         self.current_agent = None
         self.logs = []

@@ -3,9 +3,12 @@ Application SDK for YasinAI Developer Platform.
 Provides building blocks for creating AI-powered applications.
 """
 
+import logging
 from typing import Any, Dict, List, Optional
 from developer_platform.agent import Agent
 from developer_platform.plugin import Plugin
+
+logger = logging.getLogger(__name__)
 
 
 class AIApplication:
@@ -24,16 +27,20 @@ class AIApplication:
         Add an AI agent to the application.
         """
         if agent.name in self._agents:
+            logger.error(f"Cannot add agent '{agent.name}': already added to application '{self.name}'.")
             raise ValueError(f"Agent '{agent.name}' already added to this application.")
         self._agents[agent.name] = agent
+        logger.info(f"Agent '{agent.name}' added to application '{self.name}'.")
 
     def add_plugin(self, plugin: Plugin) -> None:
         """
         Add a plugin to the application.
         """
         if plugin.name in self._plugins:
+            logger.error(f"Cannot add plugin '{plugin.name}': already added to application '{self.name}'.")
             raise ValueError(f"Plugin '{plugin.name}' already added to this application.")
         self._plugins[plugin.name] = plugin
+        logger.info(f"Plugin '{plugin.name}' added to application '{self.name}'.")
 
     def list_agents(self) -> List[Agent]:
         """
@@ -51,8 +58,9 @@ class AIApplication:
         """
         Run the application pipeline, invoking agents and plugins to answer the input query.
         """
-        steps_executed = []
-        result_payload = {}
+        logger.info(f"Running AI Application '{self.name}' with query: '{input_query}'")
+        steps_executed: List[str] = []
+        result_payload: Dict[str, Any] = {}
 
         # Simulating workflow execution:
         # 1. Initialize and execute plugins if any
@@ -64,7 +72,7 @@ class AIApplication:
             result_payload[f"plugin_{name}"] = plugin_res
 
         # 2. Run agents to answer query
-        agent_responses = []
+        agent_responses: List[str] = []
         for name, agent in self._agents.items():
             if agent.status != "active":
                 agent.start()
@@ -73,6 +81,7 @@ class AIApplication:
             agent_responses.append(res)
             result_payload[f"agent_{name}"] = res
 
+        logger.info(f"AI Application '{self.name}' pipeline run completed successfully.")
         return {
             "application": self.name,
             "query": input_query,
@@ -99,9 +108,11 @@ class AppSDK:
         Create and register a new AI Application.
         """
         if name in self._applications:
+            logger.error(f"Cannot create application: '{name}' already exists.")
             raise ValueError(f"AI Application '{name}' already exists.")
         app = AIApplication(name, config)
         self._applications[name] = app
+        logger.info(f"Successfully registered AI Application: '{name}'")
         return app
 
     def get_application(self, name: str) -> Optional[AIApplication]:
@@ -116,7 +127,9 @@ class AppSDK:
         """
         if name in self._applications:
             del self._applications[name]
+            logger.info(f"Successfully deleted AI Application: '{name}'")
             return True
+        logger.warning(f"Attempted to delete non-existent AI Application: '{name}'")
         return False
 
     def list_applications(self) -> List[AIApplication]:

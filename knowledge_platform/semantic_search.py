@@ -6,8 +6,11 @@ we implement a lightweight TF-IDF or key-term similarity based embedding engine 
 """
 
 import math
+import logging
 import re
 from typing import Dict, List, Tuple, Any, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class EmbeddingEngine:
@@ -28,6 +31,7 @@ class EmbeddingEngine:
 
     def fit(self, texts: List[str]) -> None:
         """Fit vocabulary and calculate IDF weights from a corpus of texts."""
+        logger.debug(f"Fitting EmbeddingEngine on {len(texts)} documents.")
         self.documents = list(texts)
         self.vocabulary.clear()
         self.idf.clear()
@@ -51,6 +55,7 @@ class EmbeddingEngine:
         # Calculate IDF
         for term, occurrences in term_doc_occurrences.items():
             self.idf[term] = math.log((1 + doc_count) / (1 + occurrences)) + 1
+        logger.debug(f"EmbeddingEngine vocabulary size: {len(self.vocabulary)}")
 
     def get_embedding(self, text: str) -> List[float]:
         """
@@ -96,6 +101,7 @@ class VectorStore:
 
     def store_vector(self, text_id: str, vector: List[float], metadata: Optional[Dict[str, Any]] = None) -> None:
         """Store a vector entry with metadata."""
+        logger.debug(f"Storing vector for text_id='{text_id}' in VectorStore.")
         # Overwrite if ID already exists
         self.records = [r for r in self.records if r["id"] != text_id]
 
@@ -111,6 +117,7 @@ class VectorStore:
 
     def clear(self) -> None:
         """Clear all records."""
+        logger.info("Clearing VectorStore records.")
         self.records.clear()
 
 
@@ -139,6 +146,7 @@ class SemanticSearch:
         Rank records based on cosine similarity to the query vector.
         Only returns results above threshold.
         """
+        logger.debug(f"Performing search across {len(records)} records (limit={limit}, threshold={threshold}).")
         scored_records = []
         for rec in records:
             score = self.cosine_similarity(query_vector, rec["vector"])
@@ -166,6 +174,7 @@ class Retriever:
 
     def add_document(self, doc_id: str, text: str, metadata: Optional[Dict[str, Any]] = None) -> None:
         """Add a document to retriever, automatically updates vocabulary & fits weights."""
+        logger.info(f"Adding document doc_id='{doc_id}' to Retriever.")
         meta = metadata or {}
         meta["text"] = text
 
@@ -187,6 +196,7 @@ class Retriever:
 
     def retrieve(self, query: str, limit: int = 5, threshold: float = 0.0) -> List[Dict[str, Any]]:
         """Retrieve documents semantically similar to the search query."""
+        logger.debug(f"Retriever retrieving for query='{query}' (limit={limit}, threshold={threshold}).")
         # Special handling for backward-compatible empty query or keyword match behavior in CLI context
         if not query or not query.strip():
             # Retrieve all with predefined / placeholder scores for backward compatibility
@@ -228,4 +238,5 @@ class Retriever:
 
     def clear(self) -> None:
         """Clear the complete search engine."""
+        logger.info("Clearing Retriever components.")
         self.vector_store.clear()

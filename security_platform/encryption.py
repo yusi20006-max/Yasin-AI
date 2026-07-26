@@ -6,9 +6,12 @@ Provides secure SHA-256 hashing, symmetric encryption/decryption, and a secure s
 import base64
 import hashlib
 import hmac
+import logging
 import os
 import secrets
-from typing import Dict, Optional
+from typing import Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class EncryptionEngine:
@@ -37,6 +40,7 @@ class EncryptionEngine:
         Encrypt a string using HMAC-SHA256 in CTR mode, with Encrypt-then-MAC authentication.
         Returns a base64-encoded string.
         """
+        logger.debug("Encrypting plaintext string...")
         plaintext_bytes = plaintext.encode("utf-8")
 
         # Strengthen key derivation using PBKDF2 with HMAC-SHA256 and a random 16-byte salt
@@ -73,8 +77,10 @@ class EncryptionEngine:
         """
         Decrypt a base64-encoded CTR encrypted string after verifying the MAC.
         """
+        logger.debug("Decrypting ciphertext string...")
         combined = base64.b64decode(ciphertext_b64.encode("utf-8"))
         if len(combined) < 16 + 32 + 16:
+            logger.error("Decryption failed: Ciphertext is too short for salt, MAC, and IV.")
             raise ValueError("Invalid ciphertext: too short for salt, MAC, and IV.")
 
         salt = combined[:16]
@@ -91,6 +97,7 @@ class EncryptionEngine:
         # Verify HMAC before decrypting (Encrypt-then-MAC verification)
         expected_mac = hmac.digest(mac_key, iv + ciphertext, hashlib.sha256)
         if not hmac.compare_digest(mac, expected_mac):
+            logger.error("Decryption failed: HMAC validation mismatch.")
             raise ValueError("Ciphertext verification failed: HMAC mismatch.")
 
         # Re-generate keystream
@@ -120,8 +127,10 @@ class SecretStore:
         """
         Encrypts and stores a secret key-value.
         """
+        logger.debug(f"Storing encrypted secret under name: '{name}'")
         expected_key = os.environ.get("YASINAI_MASTER_KEY")
         if not expected_key or master_key != expected_key:
+            logger.error("SecretStore: master key validation failed.")
             raise ValueError("Master key must be loaded strictly from an OS environment variable (specifically YASINAI_MASTER_KEY).")
         encrypted = self.engine.encrypt(secret_value, master_key)
         self._secrets[name] = encrypted
@@ -130,15 +139,19 @@ class SecretStore:
         """
         Decrypts and retrieves a stored secret.
         """
+        logger.debug(f"Retrieving decrypted secret for name: '{name}'")
         expected_key = os.environ.get("YASINAI_MASTER_KEY")
         if not expected_key or master_key != expected_key:
+            logger.error("SecretStore: master key validation failed.")
             raise ValueError("Master key must be loaded strictly from an OS environment variable (specifically YASINAI_MASTER_KEY).")
         encrypted = self._secrets.get(name)
         if not encrypted:
+            logger.warning(f"Secret '{name}' not found in store.")
             return None
         try:
             return self.engine.decrypt(encrypted, master_key)
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error decrypting secret '{name}': {e}", exc_info=True)
             return None
 
     def delete_secret(self, name: str) -> bool:
@@ -147,10 +160,12 @@ class SecretStore:
         """
         if name in self._secrets:
             del self._secrets[name]
+            logger.info(f"Successfully deleted secret: '{name}'")
             return True
+        logger.warning(f"Attempted to delete non-existent secret: '{name}'")
         return False
 
-    def list_secrets(self) -> list:
+    def list_secrets(self) -> List[str]:
         """
         List the names of stored secrets (values remain hidden/encrypted).
         """

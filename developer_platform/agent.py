@@ -3,7 +3,10 @@ Agent SDK for YasinAI Developer Platform.
 Manages AI agent definitions, task execution, and agent lifecycle.
 """
 
+import logging
 from typing import Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class Agent:
@@ -29,23 +32,28 @@ class Agent:
         """
         Transition the agent status to active.
         """
+        logger.info(f"Starting agent: '{self.name}'")
         self.status = "active"
 
     def stop(self) -> None:
         """
         Transition the agent status to inactive.
         """
+        logger.info(f"Stopping agent: '{self.name}'")
         self.status = "inactive"
 
     def execute_task(self, task: str) -> str:
         """
         Execute a given task. Returns execution result details.
         """
+        logger.debug(f"Agent '{self.name}' requested to execute task: '{task}'")
         if self.status != "active":
+            logger.error(f"Cannot execute task: Agent '{self.name}' is inactive.")
             raise RuntimeError(f"Agent '{self.name}' must be active to execute tasks.")
 
         # Simple task simulation
         result = f"Agent '{self.name}' (Role: {self.role}) successfully completed task: '{task}'"
+        logger.info(f"Agent '{self.name}' successfully completed task.")
         return result
 
     def __repr__(self) -> str:
@@ -71,10 +79,12 @@ class AgentSDK:
         Create and register a new AI Agent.
         """
         if name in self._agents:
+            logger.error(f"Cannot create agent: '{name}' already exists.")
             raise ValueError(f"Agent '{name}' already exists.")
 
         agent = Agent(name, role, description, type)
         self._agents[name] = agent
+        logger.info(f"Successfully registered agent: '{name}'")
         return agent
 
     def get_agent(self, name: str) -> Optional[Agent]:
@@ -89,7 +99,9 @@ class AgentSDK:
         """
         if name in self._agents:
             del self._agents[name]
+            logger.info(f"Successfully deleted agent registration: '{name}'")
             return True
+        logger.warning(f"Attempted to delete non-existent agent: '{name}'")
         return False
 
     def list_agents(self) -> List[Agent]:

@@ -2,8 +2,11 @@
 Query Engine for YasinAI Knowledge Graph.
 """
 
+import logging
 from typing import Any, List, Dict, Tuple, Optional
 from knowledge_platform.triple_store import TripleStore
+
+logger = logging.getLogger(__name__)
 
 
 class QueryEngine:
@@ -19,12 +22,15 @@ class QueryEngine:
         Find direct neighbors of an entity.
         Returns a list of tuples containing (relation_name, target_entity_name).
         """
-        neighbors = []
-        # Incoming/Outgoing triples
+        logger.debug(f"QueryEngine: Finding direct neighbors of entity: '{entity_name}'")
+        neighbors: List[Tuple[str, str]] = []
+
+        # Outgoing triples
         outgoing = self.triple_store.query_triples(subject=entity_name)
         for _, p, o in outgoing:
             neighbors.append((p, o))
 
+        # Incoming triples
         incoming = self.triple_store.query_triples(obj=entity_name)
         for s, p, _ in incoming:
             neighbors.append((f"inverse_{p}", s))
@@ -36,6 +42,7 @@ class QueryEngine:
         Find a path of relations and entities between start and end entity names.
         Returns a list of (relation, entity) showing the path, or None if not found.
         """
+        logger.debug(f"QueryEngine: Pathfinding from '{start}' to '{end}' (max_depth={max_depth})...")
         if visited is None:
             visited = set()
 
