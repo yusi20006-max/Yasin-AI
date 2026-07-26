@@ -29,6 +29,114 @@ def test_create_parser():
     assert "memory" in choices
     assert "security" in choices
     assert "package" in choices
+    assert "serve" in choices
+
+
+# Test 'serve' subcommand parser options
+def test_serve_parser_options():
+    parser = create_parser()
+    args = parser.parse_args(["serve", "--interval", "10", "--json"])
+    assert args.command == "serve"
+    assert args.interval == 10
+    assert args.json is True
+
+
+def test_handle_serve_invalid_interval(capsys):
+    from yasinai.cli.main import handle_serve
+    args = argparse.Namespace(interval=0, json=False)
+    exit_code = handle_serve(args)
+    assert exit_code == 1
+    captured = capsys.readouterr()
+    assert "Error: Interval must be a positive integer." in captured.err
+
+
+@patch("time.sleep")
+@patch("yasinai.deployment.health_check.HealthCheck.run_all_checks")
+def test_serve_command_loop(mock_run_all, mock_sleep, capsys):
+    import os
+    import signal
+    from yasinai.cli.main import handle_serve
+    mock_run_all.return_value = {"success": True, "status": "HEALTHY"}
+    args = argparse.Namespace(interval=5, json=False)
+
+    # Simulate SIGINT signal inside time.sleep
+    def sleep_side_effect(secs):
+        os.kill(os.getpid(), signal.SIGINT)
+
+    mock_sleep.side_effect = sleep_side_effect
+
+    exit_code = handle_serve(args)
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "YasinAI Foreground Serve" in captured.out
+    assert "YasinAI Core Runtime started in foreground supervisor mode" in captured.out
+    assert "Health Check Status: HEALTHY" in captured.out
+    assert "Shutting down YasinAI Core Runtime cleanly..." in captured.out
+
+
+@patch("time.sleep")
+@patch("yasinai.deployment.health_check.HealthCheck.run_all_checks")
+def test_serve_command_json_output(mock_run_all, mock_sleep, capsys):
+    import os
+    import signal
+    from yasinai.cli.main import handle_serve
+    mock_run_all.return_value = {"success": True, "status": "HEALTHY"}
+    args = argparse.Namespace(interval=1, json=True)
+
+    # Simulate SIGTERM signal inside time.sleep
+    def sleep_side_effect(secs):
+        os.kill(os.getpid(), signal.SIGTERM)
+
+    mock_sleep.side_effect = sleep_side_effect
+
+    exit_code = handle_serve(args)
+    assert exit_code == 0
+    captured = capsys.readouterr()
+
+    lines = [json.loads(line) for line in captured.out.strip().split("\n")]
+    assert len(lines) >= 3
+    assert lines[0]["event"] == "startup"
+    assert lines[0]["status"] == "running"
+    assert lines[1]["event"] == "health_check"
+    assert lines[1]["status"] == "HEALTHY"
+    assert lines[1]["success"] is True
+    assert lines[-1]["event"] == "shutdown"
+    assert lines[-1]["status"] == "stopped"
+
+
+@patch("time.sleep")
+@patch("yasinai.deployment.health_check.HealthCheck.run_all_checks")
+def test_serve_command_graceful_shutdown(mock_run_all, mock_sleep, capsys):
+    import os
+    import signal
+    from yasinai.cli.main import handle_serve
+    mock_run_all.return_value = {"success": False, "status": "DEGRADED"}
+    args = argparse.Namespace(interval=5, json=False)
+
+    def sleep_side_effect(secs):
+        os.kill(os.getpid(), signal.SIGINT)
+
+    mock_sleep.side_effect = sleep_side_effect
+
+    exit_code = handle_serve(args)
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "Health Check Status: DEGRADED" in captured.out
+    assert "Shutting down YasinAI Core Runtime cleanly..." in captured.out
+
+
+def test_handle_serve_exception_path(capsys):
+    from yasinai.cli.main import handle_serve
+    args = argparse.Namespace(interval=5, json=False)
+    with patch("yasinai.cli.main.Runtime") as mock_runtime_class:
+        mock_instance = MagicMock()
+        mock_instance.start.side_effect = Exception("Runtime startup failure")
+        mock_runtime_class.return_value = mock_instance
+
+        exit_code = handle_serve(args)
+        assert exit_code == 1
+        captured = capsys.readouterr()
+        assert "Error in serve loop: Runtime startup failure" in captured.err
 
 
 # Test 'status' handler (text and JSON mode)

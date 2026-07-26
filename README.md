@@ -81,11 +81,17 @@ yasin security check [--json]
 
 # Build deployment artifacts and packages
 yasin package build --output [directory] --version [version] [--json]
+
+# Keep Core Runtime alive as a long-running foreground supervisor
+yasin serve [--interval SECONDS] [--json]
 ```
 
 #### Detailed CLI Commands and Options:
 
 *   **`yasin status`**: Orchestrates the Core Runtime, boots the services and displays environment/runtime diagnostics.
+*   **`yasin serve`**: Launches the Core Runtime in foreground supervisor mode, performing periodic health checks.
+    *   `--interval`: Periodic health check interval in seconds (defaults to `300` / 5 minutes).
+    *   `--json`: Consistent with the global flag, logs status updates and health check reports as JSON lines.
 *   **`yasin agent create`**: Scaffolds a new agent using the `AgentSDK`.
     *   `[name]`: Positional argument (defaults to `default_agent`).
     *   `--role`: Role of the agent (e.g. `general`, `security`, `knowledge`; defaults to `general`).
@@ -99,6 +105,23 @@ yasin package build --output [directory] --version [version] [--json]
 *   **`yasin package build`**: Triggers `PackageBuilder` to build deployable artifacts.
     *   `--output`: Target directory (defaults to `dist/`).
     *   `--version`: Target release version (defaults to `1.0.0`).
+
+### Android Termux & background keeping
+
+For maintaining the YasinAI Core Runtime long-running on Android devices using **Termux**, you can use **tmux** combined with `termux-wake-lock` to prevent the OS from killing or putting the CPU to sleep:
+
+```bash
+# Acquire Termux Wake Lock to keep CPU active
+termux-wake-lock
+
+# Start or attach to a tmux session
+tmux new -s yasin-session
+
+# Run the long-running foregound YasinAI supervisor with a custom health check interval (e.g. 5 minutes)
+yasin serve --interval 300
+```
+
+To detach from the tmux session and keep it running in the background, press `Ctrl+B` then `D`.
 
 ### Development Rules (summary)
 
@@ -190,11 +213,17 @@ yasin security check [--json]
 
 # ساخت بسته‌ها و محصولات استقرار
 yasin package build --output [directory] --version [version] [--json]
+
+# زنده نگه داشتن هسته اجرایی YasinAI به عنوان ناظر پیش زمینه
+yasin serve [--interval SECONDS] [--json]
 ```
 
 #### جزئیات دستورات و گزینه‌های خط فرمان:
 
 *   **`yasin status`**: هسته اجرایی را لود و مدیریت کرده و عیب‌یابی‌ها و جزییات وضعیت سیستم را نمایش می‌دهد.
+*   **`yasin serve`**: هسته اجرایی را در حالت ناظر پیش‌زمینه به همراه بررسی‌های دوره‌ای سلامت آغاز می‌کند.
+    *   `--interval`: دوره زمانی بررسی‌های سلامت بر حسب ثانیه (پیش‌فرض: `300` ثانیه یا ۵ دقیقه).
+    *   `--json`: خروجی گزارش‌ها و رویدادها را به صورت خطوط JSON تولید می‌کند.
 *   **`yasin agent create`**: یک عامل جدید مبتنی بر `AgentSDK` ایجاد می‌کند.
     *   `[name]`: آرگومان موقعیتی نام عامل (به طور پیش‌فرض `default_agent`).
     *   `--role`: نقش عامل (مانند `general`, `security`, `knowledge`؛ پیش‌فرض: `general`).
@@ -208,6 +237,23 @@ yasin package build --output [directory] --version [version] [--json]
 *   **`yasin package build`**: پکیج استقرار را از طریق `PackageBuilder` آماده می‌سازد.
     *   `--output`: دایرکتوری خروجی (پیش‌فرض: `dist/`).
     *   `--version`: نسخه هدف پکیج (پیش‌فرض: `1.0.0`).
+
+### استفاده در اندروید (Termux) و زنده نگه‌داشتن فرآیند
+
+برای اجرای مداوم و طولانی‌مدت هسته اجرایی YasinAI در سیستم‌عامل اندروید با استفاده از **Termux**، می‌توانید از **tmux** و ابزار `termux-wake-lock` برای جلوگیری از خواب رفتن CPU یا بسته شدن فرآیند توسط سیستم‌عامل استفاده کنید:
+
+```bash
+# فعال‌سازی قفل بیدارباش Termux برای فعال نگه‌داشتن پردازنده
+termux-wake-lock
+
+# ایجاد یا متصل شدن به یک جلسه tmux
+tmux new -s yasin-session
+
+# اجرای دستور سرویس پیش‌زمینه YasinAI با بازه زمانی دلخواه (مثلاً ۵ دقیقه)
+yasin serve --interval 300
+```
+
+برای خروج موقت (Detach) از جلسه tmux بدون توقف فرآیند، کلیدهای `Ctrl+B` و سپس `D` را فشار دهید.
 
 ### قوانین توسعه (خلاصه)
 
