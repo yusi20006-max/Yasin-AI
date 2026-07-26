@@ -60,10 +60,6 @@ YasinAI/
 │
 ├── knowledge_platform/
 │
-├── marketplace/
-│
-├── docs/
-│
 ├── tests/
 │
 ├── MASTER_PLAN.md
@@ -160,14 +156,16 @@ Modules:
 
 # Testing Status
 
-| Test | Status |
-|------|--------|
-| Runtime Tests | ✅ Passed |
-| Unit Tests | ✅ Passed |
-| Integration Tests | Planned |
-| CLI Tests | Planned |
-| Security Tests | Planned |
-| Memory Tests | ✅ Passed |
+| Test Suite | Status | Description |
+|---|---|---|
+| Runtime Tests | ✅ Passed | Verifies config loading, service registry, dynamic bootstrap loading, and state transition flow (`tests/test_runtime.py`). |
+| Unit Tests | ✅ Passed | Comprehensive unit tests across all systems. |
+| Integration Tests | ✅ Passed | Integration flows for all primary modules and APIs verified. |
+| CLI Tests | ✅ Passed | Tests command routing, execution, argument passing, and formatting (`tests/test_cli.py`). |
+| Security Tests | ✅ Passed | Validates encryption, identity management, authentication, and authorization (`tests/test_security_platform.py`). |
+| Memory/Knowledge Platform Tests | ✅ Passed | Validates MemoryManager, KnowledgeGraph, semantic retrieval, context builder, and reasoning (`tests/test_knowledge_platform.py`). |
+| Developer Platform Tests | ✅ Passed | Verifies SDKs, plugin loading, generator, and debugger capabilities (`tests/test_developer_platform.py`). |
+| Deployment Tests | ✅ Passed | Verifies Installer setup, Docker configuration checks, and packaging actions (`tests/test_deployment.py`). |
 
 ---
 
