@@ -188,11 +188,14 @@ def test_encryption_engine_tampering():
         engine.decrypt(tampered_ciphertext, key)
 
 
-def test_secret_store():
+def test_secret_store(monkeypatch):
     engine = EncryptionEngine()
     store = SecretStore(engine)
 
     master_key = "secure_master_password"
+    # Ensure master_key is set in environment so SecretStore permits it
+    monkeypatch.setenv("YASINAI_MASTER_KEY", master_key)
+
     store.set_secret("DATABASE_URL", "postgresql://db_user:password@localhost/yasin", master_key)
     store.set_secret("OPENAI_API_KEY", "sk-proj-12345abcdef", master_key)
 
@@ -204,7 +207,8 @@ def test_secret_store():
     assert store.get_secret("OPENAI_API_KEY", master_key) == "sk-proj-12345abcdef"
 
     # Failed retrieval with wrong master key
-    assert store.get_secret("DATABASE_URL", "wrong_master_password") is None
+    with pytest.raises(ValueError, match="Master key must be loaded strictly from an OS environment variable"):
+        store.get_secret("DATABASE_URL", "wrong_master_password")
 
     # Delete secret
     assert store.delete_secret("DATABASE_URL") is True

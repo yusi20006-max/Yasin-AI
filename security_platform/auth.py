@@ -48,7 +48,7 @@ class AuthManager:
 
         salt = secrets.token_bytes(16)
         # Use PBKDF2 with HMAC-SHA256
-        pwd_hash = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100000)
+        pwd_hash = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 600000)
 
         self._user_secrets[username] = salt
         self._password_hashes[username] = pwd_hash
@@ -57,6 +57,10 @@ class AuthManager:
         """
         Authenticate user and return a secure session token if successful.
         """
+        # Enforce maximum session duration of 24 hours (86400 seconds)
+        if session_duration > 86400:
+            raise ValueError("Session duration exceeds maximum limit of 24 hours.")
+
         user = self.identity_manager.get_user(username)
         if not user or not user.active:
             return None
@@ -68,7 +72,7 @@ class AuthManager:
             return None
 
         # Verify password hash
-        test_hash = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100000)
+        test_hash = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 600000)
         if not hmac.compare_digest(stored_hash, test_hash):
             return None
 
