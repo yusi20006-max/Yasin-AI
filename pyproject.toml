@@ -8,6 +8,9 @@ version = "1.0.0"
 description = "YasinAI Modular AI Platform"
 readme = "README.md"
 requires-python = ">=3.8"
+dependencies = [
+    "cryptography>=42,<47",
+]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
