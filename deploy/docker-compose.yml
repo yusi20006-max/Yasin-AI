@@ -1,0 +1,28 @@
+services:
+  yasinai:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    environment:
+      YASINAI_ENV: production
+      YASINAI_VECTOR_PATH: /data/vectors.db
+    volumes:
+      - yasinai-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0) if __import__('yasinai').__name__ else sys.exit(1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp
+
+volumes:
+  yasinai-data:
