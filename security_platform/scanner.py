@@ -1,4 +1,9 @@
-"""Repository and runtime security checks for YasinAI."""
+"""Repository and runtime security checks for YasinAI.
+
+The scanner is deliberately deterministic and conservative. It reports only
+checks that can be evaluated locally and does not claim external vulnerability
+intelligence.
+"""
 
 from __future__ import annotations
 
