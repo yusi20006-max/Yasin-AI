@@ -17,7 +17,7 @@ Handler = Callable[[Mapping[str, Any]], Mapping[str, Any]]
 class APIService:
     name: str = "yasinai"
     version: str = "0.1.0"
-    _routes: Dict[str, Handler] | None = None
+    _routes: Optional[Dict[str, Handler]] = None
 
     def __post_init__(self) -> None:
         self._routes = dict(self._routes or {})
@@ -54,6 +54,7 @@ class APIService:
         if len(path) > 1:
             path = path.rstrip("/")
         return path
+
 
 def create_service(name: str = "yasinai", version: str = "0.1.0") -> APIService:
     return APIService(name=name, version=version)
