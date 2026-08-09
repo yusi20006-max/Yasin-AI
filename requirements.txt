@@ -1,1 +1,2 @@
+cryptography>=42,<47
 pytest==9.0.2
