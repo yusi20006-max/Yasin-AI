@@ -31,6 +31,7 @@ include = [
     "security_platform*",
     "developer_platform*",
     "knowledge_platform*",
+    "api_service*",
 ]
 
 [tool.pytest.ini_options]
@@ -40,12 +41,12 @@ addopts = ["-ra", "--strict-markers"]
 
 [tool.coverage.run]
 branch = true
-source = ["yasinai", "security_platform", "developer_platform", "knowledge_platform"]
+source = ["yasinai", "security_platform", "developer_platform", "knowledge_platform", "api_service"]
 omit = ["tests/*"]
 
 [tool.coverage.report]
 exclude_also = [
-    "if __name__ == .__main__.:",
+    "if __name__ == .__main__:",
     "raise NotImplementedError",
 ]
 show_missing = true
