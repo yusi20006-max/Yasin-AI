@@ -6,35 +6,42 @@ logger = logging.getLogger(__name__)
 
 
 class Bootstrap:
-    """
-    Handles dynamic module discovery, loading, and registration.
-    """
+    """Discover and load configured modules exactly once per runtime."""
 
     def __init__(self, runtime: Any) -> None:
-        """
-        Initialize the Bootstrap with the runtime instance.
-        """
-        self.runtime: Any = runtime
+        self.runtime = runtime
         self.loaded_modules: List[str] = []
 
     def discover_and_load(self, module_names: List[str]) -> List[str]:
-        """
-        Dynamically import modules from a list of module names and execute
-        their registration hook if available (e.g., register_module(runtime)).
+        """Import modules and invoke their optional registration hook.
+
+        Duplicate module names are ignored while preserving configuration order.
+        If a module fails, the exception is wrapped with the module name and
+        modules successfully loaded before the failure remain recorded.
         """
         loaded: List[str] = []
+        seen = set(self.loaded_modules)
         for name in module_names:
+            if name in seen:
+                logger.debug("Module already bootstrapped: '%s'", name)
+                continue
             try:
-                logger.debug(f"Attempting to bootstrap module: '{name}'")
+                logger.debug("Attempting to bootstrap module: '%s'", name)
                 mod = importlib.import_module(name)
-                if hasattr(mod, "register_module") and callable(getattr(mod, "register_module")):
-                    logger.debug(f"Executing register_module for: '{name}'")
-                    mod.register_module(self.runtime)
-
+                register = getattr(mod, "register_module", None)
+                if register is not None:
+                    if not callable(register):
+                        raise TypeError("register_module is not callable")
+                    register(self.runtime)
                 loaded.append(name)
                 self.loaded_modules.append(name)
-                logger.info(f"Successfully bootstrapped and loaded module: '{name}'")
-            except Exception as e:
-                logger.error(f"Failed to bootstrap and load module '{name}': {e}", exc_info=True)
-                raise ImportError(f"Failed to bootstrap and load module '{name}': {e}") from e
+                seen.add(name)
+                logger.info("Successfully bootstrapped module: '%s'", name)
+            except Exception as exc:
+                logger.error("Failed to bootstrap module '%s'", name, exc_info=True)
+                raise ImportError(f"Failed to bootstrap and load module '{name}': {exc}") from exc
         return loaded
+
+    def reset(self) -> None:
+        """Clear the per-runtime bootstrap registry."""
+        self.loaded_modules.clear()
