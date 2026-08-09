@@ -1,23 +1,33 @@
-"""
-Semantic Search subsystem for YasinAI Knowledge Platform.
-Implements EmbeddingEngine, VectorStore, SemanticSearch, and Retriever.
-Since external dependencies (like numpy or scikit-learn) shouldn't be added blindly,
-we implement a lightweight TF-IDF or key-term similarity based embedding engine and cosine similarity in pure Python.
+"""Semantic retrieval for the YasinAI Knowledge Platform.
+
+The embedding implementation is intentionally dependency-free. Vector records
+can be kept in memory for library use or persisted through SQLite for durable
+application use.
 """
 
-import math
+from __future__ import annotations
+
 import logging
+import math
+import os
 import re
-from typing import Dict, List, Tuple, Any, Optional
+from typing import Any, Dict, List, Optional, Protocol
+
+from knowledge_platform.vector_store import SQLiteVectorStore
 
 logger = logging.getLogger(__name__)
 
 
+class VectorStoreProtocol(Protocol):
+    def store_vector(self, text_id: str, vector: List[float], metadata: Optional[Dict[str, Any]] = None) -> None: ...
+    def get_all_records(self) -> List[Dict[str, Any]]: ...
+    def clear(self) -> None: ...
+
+    def close(self) -> None: ...
+
+
 class EmbeddingEngine:
-    """
-    Generates numeric embeddings/vectors representing the semantic content of text in pure Python.
-    Uses TF-IDF-like weighted bag-of-words vectors over a vocabulary compiled from stored items.
-    """
+    """Generate TF-IDF-like vectors using only the Python standard library."""
 
     def __init__(self) -> None:
         self.vocabulary: Dict[str, int] = {}
@@ -25,218 +35,146 @@ class EmbeddingEngine:
         self.documents: List[str] = []
 
     def tokenize(self, text: str) -> List[str]:
-        """Convert text to a list of clean word tokens."""
         text_clean = re.sub(r"[^\w\s]", "", text.lower())
         return [word for word in text_clean.split() if word]
 
     def fit(self, texts: List[str]) -> None:
-        """Fit vocabulary and calculate IDF weights from a corpus of texts."""
-        logger.debug(f"Fitting EmbeddingEngine on {len(texts)} documents.")
         self.documents = list(texts)
         self.vocabulary.clear()
         self.idf.clear()
-
         if not texts:
             return
 
-        doc_count = len(texts)
-        term_doc_occurrences: Dict[str, int] = {}
-
-        # Build vocabulary & count doc frequencies
-        vocab_index = 0
+        occurrences: Dict[str, int] = {}
         for doc in texts:
-            tokens = set(self.tokenize(doc))
-            for token in tokens:
+            for token in set(self.tokenize(doc)):
                 if token not in self.vocabulary:
-                    self.vocabulary[token] = vocab_index
-                    vocab_index += 1
-                term_doc_occurrences[token] = term_doc_occurrences.get(token, 0) + 1
+                    self.vocabulary[token] = len(self.vocabulary)
+                occurrences[token] = occurrences.get(token, 0) + 1
 
-        # Calculate IDF
-        for term, occurrences in term_doc_occurrences.items():
-            self.idf[term] = math.log((1 + doc_count) / (1 + occurrences)) + 1
-        logger.debug(f"EmbeddingEngine vocabulary size: {len(self.vocabulary)}")
+        count = len(texts)
+        for term, frequency in occurrences.items():
+            self.idf[term] = math.log((1 + count) / (1 + frequency)) + 1
 
     def get_embedding(self, text: str) -> List[float]:
-        """
-        Produce a list representing the embedding vector for the given text.
-        Vector size is len(self.vocabulary).
-        """
         vector = [0.0] * max(len(self.vocabulary), 1)
         if not self.vocabulary:
             return vector
-
         tokens = self.tokenize(text)
         if not tokens:
             return vector
 
-        # Term frequency
         tf: Dict[str, int] = {}
         for token in tokens:
             if token in self.vocabulary:
                 tf[token] = tf.get(token, 0) + 1
-
-        # Compute TF-IDF
         for term, count in tf.items():
-            idx = self.vocabulary[term]
-            tf_weight = count / len(tokens)
-            idf_weight = self.idf.get(term, 1.0)
-            vector[idx] = tf_weight * idf_weight
+            vector[self.vocabulary[term]] = (count / len(tokens)) * self.idf.get(term, 1.0)
 
-        # L2 Normalize
-        norm = math.sqrt(sum(val ** 2 for val in vector))
-        if norm > 0:
-            vector = [val / norm for val in vector]
-
-        return vector
+        norm = math.sqrt(sum(value * value for value in vector))
+        return [value / norm for value in vector] if norm else vector
 
 
 class VectorStore:
-    """
-    Stores vector embeddings with associated metadata.
-    """
+    """In-memory vector store retained as the lightweight library backend."""
 
     def __init__(self) -> None:
         self.records: List[Dict[str, Any]] = []
 
     def store_vector(self, text_id: str, vector: List[float], metadata: Optional[Dict[str, Any]] = None) -> None:
-        """Store a vector entry with metadata."""
-        logger.debug(f"Storing vector for text_id='{text_id}' in VectorStore.")
-        # Overwrite if ID already exists
-        self.records = [r for r in self.records if r["id"] != text_id]
-
-        self.records.append({
-            "id": text_id,
-            "vector": vector,
-            "metadata": metadata or {}
-        })
+        self.records = [record for record in self.records if record["id"] != text_id]
+        self.records.append({"id": text_id, "vector": vector, "metadata": metadata or {}})
 
     def get_all_records(self) -> List[Dict[str, Any]]:
-        """Retrieve all records in the store."""
         return self.records
 
     def clear(self) -> None:
-        """Clear all records."""
-        logger.info("Clearing VectorStore records.")
         self.records.clear()
 
 
 class SemanticSearch:
-    """
-    Executes search calculations, matching query embeddings to stored vectors.
-    """
-
     @staticmethod
     def cosine_similarity(v1: List[float], v2: List[float]) -> float:
-        """Calculate the cosine similarity between two numeric lists."""
         if len(v1) != len(v2) or not v1:
             return 0.0
-
-        dot_product = sum(a * b for a, b in zip(v1, v2))
-        norm_a = math.sqrt(sum(a ** 2 for a in v1))
-        norm_b = math.sqrt(sum(b ** 2 for b in v2))
-
+        dot = sum(a * b for a, b in zip(v1, v2))
+        norm_a = math.sqrt(sum(value * value for value in v1))
+        norm_b = math.sqrt(sum(value * value for value in v2))
         if norm_a == 0.0 or norm_b == 0.0:
             return 0.0
-
-        return dot_product / (norm_a * norm_b)
+        return dot / (norm_a * norm_b)
 
     def search(self, query_vector: List[float], records: List[Dict[str, Any]], limit: int = 5, threshold: float = 0.0) -> List[Dict[str, Any]]:
-        """
-        Rank records based on cosine similarity to the query vector.
-        Only returns results above threshold.
-        """
-        logger.debug(f"Performing search across {len(records)} records (limit={limit}, threshold={threshold}).")
-        scored_records = []
-        for rec in records:
-            score = self.cosine_similarity(query_vector, rec["vector"])
+        scored = []
+        for record in records:
+            score = self.cosine_similarity(query_vector, record["vector"])
             if score >= threshold:
-                scored_records.append({
-                    "id": rec["id"],
-                    "score": score,
-                    "metadata": rec["metadata"]
-                })
-
-        # Sort by score descending
-        scored_records.sort(key=lambda x: x["score"], reverse=True)
-        return scored_records[:limit]
+                scored.append({"id": record["id"], "score": score, "metadata": record["metadata"]})
+        scored.sort(key=lambda result: result["score"], reverse=True)
+        return scored[:limit]
 
 
 class Retriever:
-    """
-    Integrates embedding, storage, and search calculations to retrieve relevant information.
-    """
+    """Persistent semantic retriever with a pluggable vector store."""
 
-    def __init__(self) -> None:
-        self.embedding_engine: EmbeddingEngine = EmbeddingEngine()
-        self.vector_store: VectorStore = VectorStore()
-        self.search_engine: SemanticSearch = SemanticSearch()
+    def __init__(self, store: Optional[VectorStoreProtocol] = None, path: Optional[str] = None) -> None:
+        self.embedding_engine = EmbeddingEngine()
+        if store is not None:
+            self.vector_store = store
+        else:
+            default_path = os.environ.get("YASINAI_VECTOR_PATH", "~/.yasinai/vectors.db")
+            self.vector_store = SQLiteVectorStore(path or default_path)
+        self.search_engine = SemanticSearch()
+        self._rebuild_embeddings()
+
+    def _rebuild_embeddings(self) -> None:
+        records = self.vector_store.get_all_records()
+        texts = [record["metadata"].get("text", "") for record in records]
+        self.embedding_engine.fit(texts)
+        for record in records:
+            record["vector"] = self.embedding_engine.get_embedding(record["metadata"].get("text", ""))
+            self.vector_store.store_vector(record["id"], record["vector"], record["metadata"])
 
     def add_document(self, doc_id: str, text: str, metadata: Optional[Dict[str, Any]] = None) -> None:
-        """Add a document to retriever, automatically updates vocabulary & fits weights."""
-        logger.info(f"Adding document doc_id='{doc_id}' to Retriever.")
-        meta = metadata or {}
+        meta = dict(metadata or {})
         meta["text"] = text
-
-        # Pull all existing texts + new text
-        texts = [r["metadata"]["text"] for r in self.vector_store.get_all_records() if r["id"] != doc_id]
-        texts.append(text)
-
-        # Re-fit embedding engine on all documents
-        self.embedding_engine.fit(texts)
-
-        # Generate and save vectors for all existing (since vocabs changed) + new
-        for r in list(self.vector_store.get_all_records()):
-            t = r["metadata"]["text"]
-            r["vector"] = self.embedding_engine.get_embedding(t)
-
-        # Store new vector
-        new_vec = self.embedding_engine.get_embedding(text)
-        self.vector_store.store_vector(doc_id, new_vec, meta)
+        self.vector_store.store_vector(doc_id, [], meta)
+        self._rebuild_embeddings()
 
     def retrieve(self, query: str, limit: int = 5, threshold: float = 0.0) -> List[Dict[str, Any]]:
-        """Retrieve documents semantically similar to the search query."""
-        logger.debug(f"Retriever retrieving for query='{query}' (limit={limit}, threshold={threshold}).")
-        # Special handling for backward-compatible empty query or keyword match behavior in CLI context
+        records = self.vector_store.get_all_records()
+        if not records or limit <= 0:
+            return []
         if not query or not query.strip():
-            # Retrieve all with predefined / placeholder scores for backward compatibility
-            results = []
-            records = self.vector_store.get_all_records()
-            default_scores = {"mem_001": 0.95, "mem_002": 0.88, "mem_003": 0.74}
-            for rec in records:
-                score = default_scores.get(rec["id"], 0.90)
-                if score >= threshold:
-                    results.append({
-                        "id": rec["id"],
-                        "score": score,
-                        "metadata": rec["metadata"]
-                    })
-            results.sort(key=lambda x: x["score"], reverse=True)
-            return results[:limit]
+            results = [
+                {"id": record["id"], "score": 0.0, "metadata": record["metadata"]}
+                for record in records
+            ]
+            return results[:limit] if threshold <= 0.0 else []
 
         query_vector = self.embedding_engine.get_embedding(query)
-        records = self.vector_store.get_all_records()
-
-        # Standard search
-        raw_results = self.search_engine.search(query_vector, records, limit=len(records), threshold=0.0)
-
-        # If standard search doesn't find any or returns low score, check for direct keyword match to boost
-        # This keeps pure semantic search but guarantees perfect backward-compatible exact search for the CLI tests
-        results = []
-        for res in raw_results:
-            score = res["score"]
-            text = res["metadata"]["text"]
+        results = self.search_engine.search(query_vector, records, limit=len(records), threshold=threshold)
+        for result in results:
+            text = result["metadata"].get("text", "")
             if query.lower() in text.lower():
-                # Boost score above the high threshold (e.g. 0.8) to guarantee match
-                score = max(score, 0.92 if res["id"] == "mem_001" else (0.85 if res["id"] == "mem_002" else 0.80))
-            if score >= threshold:
-                res["score"] = score
-                results.append(res)
-
-        results.sort(key=lambda x: x["score"], reverse=True)
+                result["score"] = max(result["score"], 1.0)
+        results.sort(key=lambda result: result["score"], reverse=True)
         return results[:limit]
 
+    def delete(self, doc_id: str) -> bool:
+        deleted = self.vector_store.delete(doc_id) if hasattr(self.vector_store, "delete") else False
+        if deleted:
+            self._rebuild_embeddings()
+        return deleted
+
     def clear(self) -> None:
-        """Clear the complete search engine."""
-        logger.info("Clearing Retriever components.")
         self.vector_store.clear()
+        self.embedding_engine.fit([])
+
+    def close(self) -> None:
+        close = getattr(self.vector_store, "close", None)
+        if close:
+            close()
+
+
+__all__ = ["EmbeddingEngine", "VectorStore", "SQLiteVectorStore", "SemanticSearch", "Retriever"]
