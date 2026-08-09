@@ -11,17 +11,10 @@ from developer_platform.generator import Generator
 from developer_platform.debugger import Debugger
 from developer_platform.profiler import Profiler
 from developer_platform.package_builder import PackageBuilder
+from developer_platform.sdk import PluginError, PluginRegistry, PluginSpec, SDKError, plugin
 
 __all__ = [
-    "Agent",
-    "AgentSDK",
-    "Plugin",
-    "PluginSDK",
-    "AIApplication",
-    "AppSDK",
-    "ExtensionAPI",
-    "Generator",
-    "Debugger",
-    "Profiler",
-    "PackageBuilder",
+    "Agent", "AgentSDK", "Plugin", "PluginSDK", "AIApplication", "AppSDK",
+    "ExtensionAPI", "Generator", "Debugger", "Profiler", "PackageBuilder",
+    "PluginError", "PluginRegistry", "PluginSpec", "SDKError", "plugin",
 ]
