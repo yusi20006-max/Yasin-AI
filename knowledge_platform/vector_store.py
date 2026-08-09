@@ -28,6 +28,11 @@ class SQLiteVectorStore:
         )
         self._connection.commit()
 
+    @property
+    def records(self) -> List[Dict[str, Any]]:
+        """Compatibility view matching the in-memory VectorStore API."""
+        return self.get_all_records()
+
     def store_vector(self, text_id: str, vector: List[float], metadata: Optional[Dict[str, Any]] = None) -> None:
         self._connection.execute(
             """INSERT INTO vectors(id, vector, metadata) VALUES (?, ?, ?)
