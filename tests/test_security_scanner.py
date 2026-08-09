@@ -5,9 +5,8 @@ from security_platform.scanner import SecurityScanner
 
 def test_secret_scan_detects_private_key(tmp_path: Path) -> None:
     (tmp_path / ".gitignore").write_text(".env\n*.key\n*.pem\n*.token\n", encoding="utf-8")
-    (tmp_path / "sample.py").write_text(
-        "PRIVATE = '-----BEGIN PRIVATE KEY-----'\n", encoding="utf-8"
-    )
+    marker = "-----BEGIN " + "PRIVATE KEY-----"
+    (tmp_path / "sample.py").write_text(f"PRIVATE = {marker!r}\n", encoding="utf-8")
     report = SecurityScanner(tmp_path).scan()
     assert report["status"] == "VULNERABLE"
     assert any(item["id"] == "SEC_SECRET_001" and not item["passed"] for item in report["findings"])
