@@ -1,3 +1,5 @@
+import pytest
+
 from api_service.app import create_service
 from api_service.errors import ValidationError
 
