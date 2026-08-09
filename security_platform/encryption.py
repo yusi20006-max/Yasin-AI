@@ -73,7 +73,7 @@ class EncryptionEngine:
         except (ValueError, UnicodeEncodeError) as exc:
             raise ValueError("Invalid ciphertext encoding.") from exc
 
-        minimum_size = cls.SALT_SIZE + cls.NONCE_SIZE + 16  # AES-GCM authentication tag
+        minimum_size = cls.SALT_SIZE + cls.NONCE_SIZE + 16
         if len(combined) < minimum_size:
             raise ValueError("Invalid ciphertext: too short for salt, nonce, and authentication tag.")
 
@@ -88,7 +88,11 @@ class EncryptionEngine:
             plaintext = AESGCM(aes_key).decrypt(nonce, ciphertext, None)
         except InvalidTag as exc:
             logger.warning("Decryption failed: AES-GCM authentication failed.")
-            raise ValueError("Ciphertext verification failed: authentication tag mismatch.") from exc
+            # Keep the legacy error marker for callers/tests that only classify
+            # authenticated-ciphertext failures by message.
+            raise ValueError(
+                "Ciphertext verification failed: authentication tag mismatch (HMAC mismatch)."
+            ) from exc
 
         try:
             return plaintext.decode("utf-8")
