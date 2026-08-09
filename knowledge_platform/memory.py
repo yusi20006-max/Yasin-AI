@@ -53,28 +53,25 @@ class LongTermMemory:
     """Persistent long-term memory using a pluggable store (SQLite by default)."""
 
     def __init__(self, store: Optional[LongTermStore] = None, path: Optional[str] = None) -> None:
-        self.store: LongTermStore = store or SQLiteMemoryStore(path or "~/.yasinai/memory.db")
-
-    def store_memory(self, key: str, content: Any, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        return self.store.store(key, content, time.time(), metadata or {})
+        self._store: LongTermStore = store or SQLiteMemoryStore(path or "~/.yasinai/memory.db")
 
     def store(self, key: str, content: Any, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        return self.store_memory(key, content, metadata)
+        return self._store.store(key, content, time.time(), metadata or {})
 
     def retrieve(self, key: str) -> Optional[Dict[str, Any]]:
-        return self.store.retrieve(key)
+        return self._store.retrieve(key)
 
     def delete(self, key: str) -> bool:
-        return self.store.delete(key)
+        return self._store.delete(key)
 
     def list_all(self) -> List[Dict[str, Any]]:
-        return self.store.list_all()
+        return self._store.list_all()
 
     def clear(self) -> None:
-        self.store.clear()
+        self._store.clear()
 
     def close(self) -> None:
-        close = getattr(self.store, "close", None)
+        close = getattr(self._store, "close", None)
         if close:
             close()
 
