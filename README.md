@@ -1,273 +1,170 @@
-<div align="center">
+# Yasin-AI
 
-# YasinAI
+Production-ready AI platform focused on modular runtime services, persistent memory, knowledge retrieval, developer extensions, observability, and secure deployment.
 
-**Modular AI Platform** — runtime, agents, memory, security, developer tools, and deployment.
+**Current release: v1.1.0**
 
-[English](#english) | [فارسی](#فارسی)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-</div>
+## Status
 
----
+Yasin-AI has completed its initial architecture and production-hardening cycle.
 
-<a name="english"></a>
-## English
+- Production release: **v1.1.0**
+- Security audit: completed
+- Release candidate verification: completed
+- Performance/reliability baseline: completed
+- Production deployment baseline: completed
+- Post-release maintenance policy: established
 
-### What is YasinAI?
+See the [latest release](https://github.com/yusi20006-max/Yasin-AI/releases/tag/v1.1.0).
 
-YasinAI is a modular artificial intelligence ecosystem built to support AI agents, developer extensions, knowledge management, long-term memory, secure execution, application development, and automation — all as independent, composable platforms sitting on top of a shared core runtime.
+## Architecture
 
-For the full architecture and vision, see [`MASTER_PLAN.md`](./MASTER_PLAN.md). For technical/module-level detail, see [`ARCHITECTURE.md`](./ARCHITECTURE.md). If you are an AI coding agent (Codex, Jules, Aider, Claude Code, etc.) working on this repo, read [`AGENTS.md`](./AGENTS.md) first.
+The project is organized around clear boundaries between:
 
-### Status
+- Runtime orchestration
+- API/service layer
+- Knowledge and retrieval
+- Persistent memory
+- Developer/plugin platform
+- Observability
+- Deployment and infrastructure
 
-Target release: **v1.0.0** — GitHub production release in progress. See [`PROJECT_STATUS.md`](./PROJECT_STATUS.md) for live progress.
+See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for the current architecture and dependency boundaries.
 
-### Core Platforms
+## Core capabilities
 
-| Platform | Purpose | Location |
-|---|---|---|
-| Core Runtime | Module loading, service management, runtime lifecycle | `yasinai/core/` |
-| Developer Platform | Agent/Plugin/App SDKs, CLI tools, generator, debugger, profiler | `developer_platform/` |
-| Security Platform | Identity, auth, authorization, encryption, monitoring | `security_platform/` |
-| Knowledge Platform | Memory, knowledge graph, semantic search, reasoning | `knowledge_platform/` |
-| CLI System | Command-line management interface | `yasinai/cli/` |
-| Deployment System | Installer, Docker support, packaging, health checks | `yasinai/deployment/` |
+### Runtime
 
-### Installation & Setup
+- Modular runtime lifecycle
+- CLI-oriented operation
+- Explicit configuration and lifecycle management
+- Dependency-light core components
 
-You can install the YasinAI package locally or use Docker for containerized environments.
+### Memory and Knowledge
 
-#### Local installation:
-```bash
-# Clone the repository (if not already done)
-git clone https://github.com/yusi20006-max/Yasin-AI.git
-cd Yasin-AI
+- Persistent local memory
+- SQLite-backed storage
+- Semantic/knowledge-oriented components
+- Replaceable persistence boundaries
 
-# Install dependencies and package in editable mode
-pip install -e .
-```
+### Developer Platform
 
-#### Docker installation:
-```bash
-# Build and run with Docker Compose
-docker-compose up --build
-```
+- Extension/plugin interfaces
+- Narrow contracts for integrations
+- Developer-facing service boundaries
 
-### Running Tests
+### API and Services
 
-To verify that all modules are working correctly and the platform starts up flawlessly, run the complete `pytest` test suite:
+- Transport-neutral service layer
+- API-oriented request/response boundaries
+- Centralized error handling
 
-```bash
-pytest
-```
+### Observability
 
-### CLI Quick Reference
+- Dependency-free counters and timers
+- Runtime instrumentation primitives
+- Performance/reliability regression coverage
 
-The CLI entrypoint `yasin` is available globally after installation. It supports a global `--json` argument to output results in a structured format.
+### Security
 
-```bash
-# Check general platform/runtime status
-yasin status [--json]
+- Security policy and audit documentation
+- Dependency security auditing
+- Hardened production container baseline
+- Non-root container execution
+- Reduced Linux capabilities
+- no-new-privileges
+- Read-only root filesystem where supported
 
-# Create a custom AI Agent
-yasin agent create [name] --role [role] --description [description] --type [type] [--json]
+See [SECURITY.md](SECURITY.md) and [SECURITY_AUDIT_2026-08-09.md](SECURITY_AUDIT_2026-08-09.md).
 
-# Query the semantic memory store
-yasin memory search [query] --limit [limit] --threshold [threshold] [--json]
+## Installation
 
-# Run platform security checks and vulnerability scans
-yasin security check [--json]
+Clone the repository:
 
-# Build deployment artifacts and packages
-yasin package build --output [directory] --version [version] [--json]
+    git clone https://github.com/yusi20006-max/Yasin-AI.git
+    cd Yasin-AI
 
-# Keep Core Runtime alive as a long-running foreground supervisor
-yasin serve [--interval SECONDS] [--json]
-```
+For the current production version:
 
-#### Detailed CLI Commands and Options:
+    git checkout v1.1.0
 
-*   **`yasin status`**: Orchestrates the Core Runtime, boots the services and displays environment/runtime diagnostics.
-*   **`yasin serve`**: Launches the Core Runtime in foreground supervisor mode, performing periodic health checks.
-    *   `--interval`: Periodic health check interval in seconds (defaults to `300` / 5 minutes).
-    *   `--json`: Consistent with the global flag, logs status updates and health check reports as JSON lines.
-*   **`yasin agent create`**: Scaffolds a new agent using the `AgentSDK`.
-    *   `[name]`: Positional argument (defaults to `default_agent`).
-    *   `--role`: Role of the agent (e.g. `general`, `security`, `knowledge`; defaults to `general`).
-    *   `--description`: Description of the agent's intent (defaults to `A helpful AI agent`).
-    *   `--type`: Type of agent (e.g. `standard`, `specialist`; defaults to `standard`).
-*   **`yasin memory search`**: Queries semantic retriever in the Knowledge Platform.
-    *   `[query]`: Positional search string.
-    *   `--limit`: Maximum retrieval count (defaults to `5`).
-    *   `--threshold`: Similarity confidence cutoff (defaults to `0.7`).
-*   **`yasin security check`**: Performs comprehensive system configuration, file permissions, and cryptographic validation.
-*   **`yasin package build`**: Triggers `PackageBuilder` to build deployable artifacts.
-    *   `--output`: Target directory (defaults to `dist/`).
-    *   `--version`: Target release version (defaults to `1.0.0`).
+Install the project using the repository's supported Python packaging configuration.
 
-### Android Termux & background keeping
+## Verification
 
-For maintaining the YasinAI Core Runtime long-running on Android devices using **Termux**, you can use **tmux** combined with `termux-wake-lock` to prevent the OS from killing or putting the CPU to sleep:
+Before deploying a release, run:
 
-```bash
-# Acquire Termux Wake Lock to keep CPU active
-termux-wake-lock
+    python -m pytest -q
+    pip-audit
+    python -m build
 
-# Start or attach to a tmux session
-tmux new -s yasin-session
+Container deployments should additionally verify the production compose profile and healthcheck in the target environment.
 
-# Run the long-running foregound YasinAI supervisor with a custom health check interval (e.g. 5 minutes)
-yasin serve --interval 300
-```
+## Release history
 
-To detach from the tmux session and keep it running in the background, press `Ctrl+B` then `D`.
+- **v1.1.0** — Current production release
+- **v1.0.0** — Previous production release
 
-### Development Rules (summary)
+See the complete [release history](https://github.com/yusi20006-max/Yasin-AI/releases).
 
-- Keep components independent and modular.
-- Preserve backward compatibility; don't remove modules without approval.
-- Clean, clearly named, documented Python code. Tests required for core features.
-- Never commit API keys, passwords, tokens, private credentials, or backup files.
+## Security
 
-See `MASTER_PLAN.md` for the complete rule set, release process, and roadmap.
+Security issues should be reported according to the project's security policy rather than through public issue disclosure.
 
-### Roadmap
+See [SECURITY.md](SECURITY.md).
 
-Planned for v2.x: distributed AI network, advanced automation, robotics integration, self-improvement systems, and a broader global AI ecosystem.
+Important current security boundary:
 
-### License
+> Plugin execution is trusted and in-process. Untrusted remote plugin execution is not currently supported and requires a future sandbox/authorization layer.
 
-MIT
+## Persistence and availability
 
----
+The default persistence model is local SQLite-backed storage.
 
-<a name="فارسی"></a>
-## فارسی
+Yasin-AI does not currently claim:
 
-### YasinAI چیست؟
+- Distributed/high-availability storage
+- Automatic multi-node failover
+- Sandboxed execution of untrusted plugins
 
-YasinAI یک اکوسیستم هوش مصنوعی ماژولار است که برای پشتیبانی از عامل‌های هوش مصنوعی (AI Agents)، افزونه‌های توسعه‌دهنده، مدیریت دانش، حافظه بلندمدت، اجرای امن، توسعه اپلیکیشن و اتوماسیون ساخته شده است — همه به‌صورت پلتفرم‌های مستقل و ترکیب‌پذیر روی یک هسته اجرایی مشترک.
+These limitations are intentional and documented rather than hidden.
 
-برای دیدن معماری و چشم‌انداز کامل پروژه، فایل [`MASTER_PLAN.md`](./MASTER_PLAN.md) را ببینید. برای جزئیات فنی و سطح ماژول‌ها، به [`ARCHITECTURE.md`](./ARCHITECTURE.md) مراجعه کنید. اگر یک عامل کدنویسی هوش مصنوعی هستید (Codex، Jules، Aider، Claude Code و غیره) و روی این مخزن کار می‌کنید، ابتدا [`AGENTS.md`](./AGENTS.md) را بخوانید.
+## Production deployment
 
-### وضعیت پروژه
+Production deployment guidance and hardening are documented in the repository deployment configuration and release documentation.
 
-هدف انتشار: **v1.0.0** — نسخه تولیدی در حال آماده‌سازی برای گیت‌هاب است. برای مشاهده وضعیت لحظه‌ای پیشرفت به [`PROJECT_STATUS.md`](./PROJECT_STATUS.md) مراجعه کنید.
+The release candidate and production baseline are documented in:
 
-### پلتفرم‌های اصلی
+- [RELEASE_CANDIDATE.md](RELEASE_CANDIDATE.md)
+- [PRODUCTION_RELEASE.md](PRODUCTION_RELEASE.md)
+- [MAINTENANCE.md](MAINTENANCE.md)
 
-| پلتفرم | هدف | مسیر |
-|---|---|---|
-| Core Runtime | بارگذاری ماژول‌ها، مدیریت سرویس‌ها، چرخه اجرا | `yasinai/core/` |
-| Developer Platform | SDK های Agent/Plugin/App، ابزارهای CLI، Generator، Debugger، Profiler | `developer_platform/` |
-| Security Platform | هویت، احراز هویت، مجوزدهی، رمزنگاری، مانیتورینگ | `security_platform/` |
-| Knowledge Platform | حافظه، گراف دانش، جستجوی معنایی، استدلال | `knowledge_platform/` |
-| CLI System | رابط خط فرمان برای مدیریت سیستم | `yasinai/cli/` |
-| Deployment System | نصب‌کننده، پشتیبانی از Docker، بسته‌بندی، بررسی سلامت | `yasinai/deployment/` |
+## Development
 
-### نصب و راه‌اندازی
+Create a feature branch before making changes:
 
-شما می‌توانید پکیج YasinAI را به‌صورت محلی نصب کرده یا از Docker برای محیط‌های کانتینری استفاده کنید.
+    git checkout -b feat/my-change
 
-#### نصب محلی:
-```bash
-# کلون کردن مخزن (در صورتی که قبلاً انجام نشده باشد)
-git clone https://github.com/yusi20006-max/Yasin-AI.git
-cd Yasin-AI
+Run the verification suite:
 
-# نصب وابستگی‌ها و پکیج به صورت قابل ویرایش (Editable Mode)
-pip install -e .
-```
+    python -m pytest -q
+    pip-audit
+    python -m build
 
-#### نصب با Docker:
-```bash
-# ساخت و اجرای کانتینرها با Docker Compose
-docker-compose up --build
-```
+Then submit changes through a pull request.
 
-### اجرای تست‌ها
+## Versioning
 
-برای اطمینان از عملکرد صحیح تمام ماژول‌ها و اجرای بی‌نقص پلتفرم، کل مجموعه تست‌های `pytest` را اجرا کنید:
+Yasin-AI follows semantic versioning for releases.
 
-```bash
-pytest
-```
+- Patch releases: backward-compatible fixes
+- Minor releases: backward-compatible features
+- Major releases: breaking changes
 
-### مرجع سریع دستورات CLI
+Existing release tags are immutable. A new release receives a new version tag rather than moving an existing tag.
 
-پس از نصب، ابزار خط فرمان `yasin` به صورت سراسری در دسترس است. این ابزار از فلگ `--json` پشتیبانی می‌کند تا خروجی را با فرمت ساختاریافته ارائه دهد.
-
-```bash
-# بررسی وضعیت عمومی پلتفرم و زمان اجرا
-yasin status [--json]
-
-# ایجاد یک عامل هوش مصنوعی سفارشی
-yasin agent create [name] --role [role] --description [description] --type [type] [--json]
-
-# جستجو در مخزن حافظه معنایی
-yasin memory search [query] --limit [limit] --threshold [threshold] [--json]
-
-# اجرای ممیزی امنیتی پلتفرم و بررسی آسیب‌پذیری‌ها
-yasin security check [--json]
-
-# ساخت بسته‌ها و محصولات استقرار
-yasin package build --output [directory] --version [version] [--json]
-
-# زنده نگه داشتن هسته اجرایی YasinAI به عنوان ناظر پیش زمینه
-yasin serve [--interval SECONDS] [--json]
-```
-
-#### جزئیات دستورات و گزینه‌های خط فرمان:
-
-*   **`yasin status`**: هسته اجرایی را لود و مدیریت کرده و عیب‌یابی‌ها و جزییات وضعیت سیستم را نمایش می‌دهد.
-*   **`yasin serve`**: هسته اجرایی را در حالت ناظر پیش‌زمینه به همراه بررسی‌های دوره‌ای سلامت آغاز می‌کند.
-    *   `--interval`: دوره زمانی بررسی‌های سلامت بر حسب ثانیه (پیش‌فرض: `300` ثانیه یا ۵ دقیقه).
-    *   `--json`: خروجی گزارش‌ها و رویدادها را به صورت خطوط JSON تولید می‌کند.
-*   **`yasin agent create`**: یک عامل جدید مبتنی بر `AgentSDK` ایجاد می‌کند.
-    *   `[name]`: آرگومان موقعیتی نام عامل (به طور پیش‌فرض `default_agent`).
-    *   `--role`: نقش عامل (مانند `general`, `security`, `knowledge`؛ پیش‌فرض: `general`).
-    *   `--description`: توضیح و ماموریت عامل (پیش‌فرض: `A helpful AI agent`).
-    *   `--type`: نوع عامل (مانند `standard`, `specialist`؛ پیش‌فرض: `standard`).
-*   **`yasin memory search`**: جستجوی معنایی را در پلتفرم دانش اجرا می‌کند.
-    *   `[query]`: متن مورد جستجو.
-    *   `--limit`: حداکثر تعداد نتایج (پیش‌فرض: `5`).
-    *   `--threshold`: حد آستانه شباهت معنایی (پیش‌فرض: `0.7`).
-*   **`yasin security check`**: ممیزی جامع امنیتی، کنترل مجوزها و احراز هویت را بررسی می‌کند.
-*   **`yasin package build`**: پکیج استقرار را از طریق `PackageBuilder` آماده می‌سازد.
-    *   `--output`: دایرکتوری خروجی (پیش‌فرض: `dist/`).
-    *   `--version`: نسخه هدف پکیج (پیش‌فرض: `1.0.0`).
-
-### استفاده در اندروید (Termux) و زنده نگه‌داشتن فرآیند
-
-برای اجرای مداوم و طولانی‌مدت هسته اجرایی YasinAI در سیستم‌عامل اندروید با استفاده از **Termux**، می‌توانید از **tmux** و ابزار `termux-wake-lock` برای جلوگیری از خواب رفتن CPU یا بسته شدن فرآیند توسط سیستم‌عامل استفاده کنید:
-
-```bash
-# فعال‌سازی قفل بیدارباش Termux برای فعال نگه‌داشتن پردازنده
-termux-wake-lock
-
-# ایجاد یا متصل شدن به یک جلسه tmux
-tmux new -s yasin-session
-
-# اجرای دستور سرویس پیش‌زمینه YasinAI با بازه زمانی دلخواه (مثلاً ۵ دقیقه)
-yasin serve --interval 300
-```
-
-برای خروج موقت (Detach) از جلسه tmux بدون توقف فرآیند، کلیدهای `Ctrl+B` و سپس `D` را فشار دهید.
-
-### قوانین توسعه (خلاصه)
-
-- اجزای پروژه باید مستقل و ماژولار بمانند.
-- سازگاری با نسخه‌های قبلی حفظ شود؛ بدون تأیید هیچ ماژولی حذف نشود.
-- کد پایتون تمیز، با نام‌گذاری واضح و مستندسازی شده. ویژگی‌های اصلی نیازمند تست هستند.
-- هرگز کلیدهای API، رمزها، توکن‌ها، اطلاعات محرمانه یا فایل‌های بکاپ commit نشوند.
-
-برای مجموعه کامل قوانین، فرآیند انتشار و نقشه راه، فایل `MASTER_PLAN.md` را ببینید.
-
-### نقشه راه
-
-برنامه‌ریزی‌شده برای نسخه v2.x: شبکه هوش مصنوعی توزیع‌شده، اتوماسیون پیشرفته، یکپارچه‌سازی رباتیک، سیستم‌های خودبهبود‌دهنده، و اکوسیستم جهانی گسترده‌تر هوش مصنوعی.
-
-### مجوز
+## License
 
 MIT
