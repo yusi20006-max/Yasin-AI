@@ -4,6 +4,7 @@ Exposes public APIs for Memory System, Knowledge Graph, Semantic Search, Context
 """
 
 from knowledge_platform.memory import ShortTermMemory, LongTermMemory, MemoryManager
+from knowledge_platform.memory_store import SQLiteMemoryStore
 from knowledge_platform.entity import Entity
 from knowledge_platform.relation import Relation
 from knowledge_platform.triple_store import TripleStore
@@ -17,6 +18,7 @@ __all__ = [
     "ShortTermMemory",
     "LongTermMemory",
     "MemoryManager",
+    "SQLiteMemoryStore",
     "Entity",
     "Relation",
     "TripleStore",
