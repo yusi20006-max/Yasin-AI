@@ -7,6 +7,7 @@ pluggable durable store and defaults to SQLite for application use.
 from __future__ import annotations
 
 import logging
+import os
 import time
 from typing import Any, Dict, List, Optional, Protocol
 
@@ -53,7 +54,8 @@ class LongTermMemory:
     """Persistent long-term memory using a pluggable store (SQLite by default)."""
 
     def __init__(self, store: Optional[LongTermStore] = None, path: Optional[str] = None) -> None:
-        self._store: LongTermStore = store or SQLiteMemoryStore(path or "~/.yasinai/memory.db")
+        default_path = os.environ.get("YASINAI_MEMORY_PATH", "~/.yasinai/memory.db")
+        self._store: LongTermStore = store or SQLiteMemoryStore(path or default_path)
 
     def store(self, key: str, content: Any, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         return self._store.store(key, content, time.time(), metadata or {})
