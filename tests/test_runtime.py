@@ -1,13 +1,14 @@
 import json
 from unittest.mock import MagicMock, patch
+
 import pytest
-from yasinai.core.config import Config
-from yasinai.core.system import SystemInfo, ServiceRegistry
+
 from yasinai.core.bootstrap import Bootstrap
+from yasinai.core.config import Config
 from yasinai.core.runtime import Runtime
+from yasinai.core.system import ServiceRegistry, SystemInfo
 
 
-# 1. Tests for Config Loading
 def test_config_defaults():
     config = Config()
     assert config.get("app_name") == "YasinAI"
@@ -26,17 +27,10 @@ def test_config_custom_defaults():
 
 def test_config_load_from_file(tmp_path):
     config_file = tmp_path / "config.json"
-    config_data = {
-        "app_name": "FileYasin",
-        "debug": True,
-        "modules": ["mod1", "mod2"]
-    }
-    with open(config_file, "w") as f:
-        json.dump(config_data, f)
-
+    config_data = {"app_name": "FileYasin", "debug": True, "modules": ["mod1", "mod2"]}
+    config_file.write_text(json.dumps(config_data))
     config = Config()
-    success = config.load_from_file(str(config_file))
-    assert success is True
+    assert config.load_from_file(str(config_file)) is True
     assert config.get("app_name") == "FileYasin"
     assert config.get("debug") is True
     assert config.get("modules") == ["mod1", "mod2"]
@@ -46,14 +40,12 @@ def test_config_env_overrides(monkeypatch):
     monkeypatch.setenv("YASINAI_APP_NAME", "EnvYasin")
     monkeypatch.setenv("YASINAI_DEBUG", "True")
     monkeypatch.setenv("YASINAI_MODULES", "mod_env1,mod_env2")
-
     config = Config()
     assert config.get("app_name") == "EnvYasin"
     assert config.get("debug") is True
     assert config.get("modules") == ["mod_env1", "mod_env2"]
 
 
-# 2. Tests for System and Service Registry
 def test_system_info():
     sys_info = SystemInfo(app_name="TestSystem", version="2.0.0", status="active")
     info = sys_info.get_info()
@@ -67,26 +59,15 @@ def test_system_info():
 def test_service_registry():
     registry = ServiceRegistry()
     mock_service = MagicMock()
-
-    # Registration
     registry.register_service("test_service", mock_service)
     assert registry.has_service("test_service") is True
     assert registry.get_service("test_service") == mock_service
-
-    # Prevent duplicate registration without overwrite
     with pytest.raises(ValueError):
         registry.register_service("test_service", "new_service")
-
-    # Overwrite
     registry.register_service("test_service", "new_service", overwrite=True)
     assert registry.get_service("test_service") == "new_service"
-
-    # Listing
     services = registry.list_services()
-    assert "test_service" in services
     assert services["test_service"] == "new_service"
-
-    # Unregister
     assert registry.unregister_service("test_service") is True
     assert registry.has_service("test_service") is False
     assert registry.unregister_service("test_service") is False
@@ -94,165 +75,149 @@ def test_service_registry():
         registry.get_service("test_service")
 
 
-# 3. Tests for Bootstrap Module Discovery and Loading
 def test_bootstrap_load():
     runtime = MagicMock()
     bootstrap = Bootstrap(runtime)
-
     mock_module = MagicMock()
     mock_register = MagicMock()
     mock_module.register_module = mock_register
-
     with patch("importlib.import_module", return_value=mock_module) as mock_import:
         loaded = bootstrap.discover_and_load(["mock_mod"])
-        assert loaded == ["mock_mod"]
-        mock_import.assert_called_once_with("mock_mod")
-        mock_register.assert_called_once_with(runtime)
-        assert "mock_mod" in bootstrap.loaded_modules
+    assert loaded == ["mock_mod"]
+    mock_import.assert_called_once_with("mock_mod")
+    mock_register.assert_called_once_with(runtime)
+    assert bootstrap.loaded_modules == ["mock_mod"]
+
+
+def test_bootstrap_skips_duplicate_modules():
+    runtime = MagicMock()
+    bootstrap = Bootstrap(runtime)
+    mock_module = MagicMock()
+    mock_module.register_module = MagicMock()
+    with patch("importlib.import_module", return_value=mock_module) as mock_import:
+        assert bootstrap.discover_and_load(["mock_mod", "mock_mod"]) == ["mock_mod"]
+    mock_import.assert_called_once_with("mock_mod")
+    mock_module.register_module.assert_called_once_with(runtime)
+
+
+def test_bootstrap_rejects_non_callable_registration_hook():
+    runtime = MagicMock()
+    bootstrap = Bootstrap(runtime)
+    mock_module = MagicMock()
+    mock_module.register_module = "invalid"
+    with patch("importlib.import_module", return_value=mock_module):
+        with pytest.raises(ImportError, match="register_module is not callable"):
+            bootstrap.discover_and_load(["mock_mod"])
 
 
 def test_bootstrap_load_failure():
     runtime = MagicMock()
     bootstrap = Bootstrap(runtime)
-
     with patch("importlib.import_module", side_effect=ImportError("Module not found")):
-        with pytest.raises(ImportError):
+        with pytest.raises(ImportError, match="invalid_mod"):
             bootstrap.discover_and_load(["invalid_mod"])
 
 
-# 4. Tests for Runtime Lifecycle flow
 def test_runtime_lifecycle():
     runtime = Runtime(config_defaults={"modules": []})
-    assert runtime.state == "STOPPED"
+    assert runtime.state == Runtime.STOPPED
     assert runtime.system_info.status == "inactive"
-
-    # 1. Startup
     runtime.startup()
-    assert runtime.state == "STARTING"
+    assert runtime.state == Runtime.STARTING
     assert runtime.system_info.status == "starting"
     assert runtime.services.has_service("config") is True
     assert runtime.services.has_service("system_info") is True
-
-    # 2. Bootstrap
     runtime.bootstrap()
-    assert runtime.state == "BOOTSTRAPPING"
-
-    # 3. Initialize
+    assert runtime.state == Runtime.BOOTSTRAPPING
     runtime.initialize()
-    assert runtime.state == "INITIALIZING"
-
-    # 4. Register Modules
+    assert runtime.state == Runtime.INITIALIZING
     runtime.register_modules()
-    assert runtime.state == "REGISTERING_MODULES"
-
-    # 5. Ready
+    assert runtime.state == Runtime.REGISTERING_MODULES
     runtime.ready()
-    assert runtime.state == "READY"
+    assert runtime.state == Runtime.READY
     assert runtime.system_info.status == "ready"
     assert runtime.services.has_service("runtime") is True
-
-    # 6. Shutdown
     runtime.shutdown()
-    assert runtime.state == "STOPPED"
+    assert runtime.state == Runtime.STOPPED
     assert runtime.system_info.status == "shutdown"
-    # All services should have been unregistered
-    assert len(runtime.services.list_services()) == 0
+    assert runtime.services.list_services() == {}
 
 
 def test_runtime_invalid_lifecycle_transition():
     runtime = Runtime()
-    # Cannot bootstrap directly from STOPPED
     with pytest.raises(RuntimeError):
         runtime.bootstrap()
-
     runtime.startup()
-    # Cannot ready directly from STARTING
     with pytest.raises(RuntimeError):
         runtime.ready()
 
 
-def test_runtime_orchestrated_start():
-    # Test high-level start method
+def test_runtime_orchestrated_start_is_idempotent():
     runtime = Runtime(config_defaults={"modules": []})
     runtime.start()
-    assert runtime.state == "READY"
-    assert runtime.system_info.status == "ready"
+    assert runtime.state == Runtime.READY
+    runtime.start()
+    assert runtime.state == Runtime.READY
+    runtime.shutdown()
+    runtime.shutdown()
+    assert runtime.state == Runtime.STOPPED
+
+
+def test_runtime_start_failure_cleans_up():
+    runtime = Runtime(config_defaults={"modules": ["invalid_mod"]})
+    with patch("importlib.import_module", side_effect=ImportError("Module not found")):
+        with pytest.raises(RuntimeError, match="Runtime startup failed"):
+            runtime.start()
+    assert runtime.state == Runtime.FAILED
+    assert runtime.system_info.status == "failed"
+    assert runtime.services.list_services() == {}
+    assert runtime.last_error is not None
+
+
+def test_runtime_start_cannot_continue_from_partial_manual_state():
+    runtime = Runtime()
+    runtime.startup()
+    with pytest.raises(RuntimeError, match="Cannot start from state: STARTING"):
+        runtime.start()
+    runtime.shutdown()
+    assert runtime.state == Runtime.STOPPED
 
 
 def test_additional_runtime_coverage(tmp_path, monkeypatch):
-    # 1. Config.load_from_file edge cases
     config = Config()
-
-    # Nonexistent file
     assert config.load_from_file("nonexistent.json") is False
-
-    # Invalid JSON file (corrupted)
     invalid_file = tmp_path / "invalid.json"
-    with open(invalid_file, "w") as f:
-        f.write("{invalid")
+    invalid_file.write_text("{invalid")
     assert config.load_from_file(str(invalid_file)) is False
-
-    # Valid JSON file but contains a JSON list instead of a dict
     list_file = tmp_path / "list.json"
-    with open(list_file, "w") as f:
-        f.write("[1, 2, 3]")
+    list_file.write_text("[1, 2, 3]")
     assert config.load_from_file(str(list_file)) is False
 
-    # 2. Config._load_from_env type casting and error handling
-    # To test casting we first need keys with appropriate default types
-    config_defaults = {
-        "some_int": 10,
-        "some_float": 1.5,
-        "some_bool": False,
-        "some_list": ["a"],
-    }
-    config = Config(defaults=config_defaults)
-
-    # Casting to int fails
+    config = Config(defaults={"some_int": 10, "some_float": 1.5, "some_bool": False, "some_list": ["a"]})
     monkeypatch.setenv("YASINAI_SOME_INT", "abc")
-    # Casting to float fails
     monkeypatch.setenv("YASINAI_SOME_FLOAT", "xyz")
-    # Parsing to list fails
     monkeypatch.setenv("YASINAI_SOME_LIST", "[abc]")
     config._load_from_env()
-    # Values should remain as defaults
     assert config.get("some_int") == 10
     assert config.get("some_float") == 1.5
     assert config.get("some_list") == ["a"]
-
-    # Success list override with [...] syntax
     monkeypatch.setenv("YASINAI_SOME_LIST", "[\"x\", \"y\"]")
     config._load_from_env()
     assert config.get("some_list") == ["x", "y"]
-
-    # 3. Config.set
     config.set("dynamic_key", "dynamic_val")
     assert config.get("dynamic_key") == "dynamic_val"
-    # Config.get default val
     assert config.get("nonexistent_key", "fallback") == "fallback"
+    assert config.to_dict()["dynamic_key"] == "dynamic_val"
 
-    # 4. Config.to_dict
-    cfg_dict = config.to_dict()
-    assert cfg_dict["dynamic_key"] == "dynamic_val"
-
-    # 5. Runtime incorrect state transitions
     runtime = Runtime()
-
-    # State is STOPPED, calling initialize should raise RuntimeError
     with pytest.raises(RuntimeError):
         runtime.initialize()
-
-    # State is STOPPED, calling register_modules should raise RuntimeError
     with pytest.raises(RuntimeError):
         runtime.register_modules()
-
-    # State is STOPPED, calling ready should raise RuntimeError
     with pytest.raises(RuntimeError):
         runtime.ready()
 
-    # 6. SystemInfo.get_info exception block
     sys_info = SystemInfo()
-    # Mock platform.platform to raise Exception
     with patch("platform.platform", side_effect=Exception("platform error")):
         info = sys_info.get_info()
         assert info["platform"] == "Unknown"
