@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0.0"]
+requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -16,8 +16,22 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest==9.0.2",
+    "pytest-cov>=6,<8",
+]
+
 [project.scripts]
 yasin = "yasinai.cli.security_entrypoint:main"
+
+[tool.setuptools.packages.find]
+include = [
+    "yasinai*",
+    "security_platform*",
+    "developer_platform*",
+    "knowledge_platform*",
+]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
@@ -31,7 +45,7 @@ omit = ["tests/*"]
 
 [tool.coverage.report]
 exclude_also = [
-    "if __name__ == .__main__.:",
+    "if __name__ == .__main__:",
     "raise NotImplementedError",
 ]
 show_missing = true
