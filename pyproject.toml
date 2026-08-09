@@ -21,3 +21,18 @@ yasin = "yasinai.cli.security_entrypoint:main"
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers"]
+
+[tool.coverage.run]
+branch = true
+source = ["yasinai", "security_platform", "developer_platform", "knowledge_platform"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+exclude_also = [
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]
+show_missing = true
+skip_covered = false
