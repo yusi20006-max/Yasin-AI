@@ -11,6 +11,7 @@ from knowledge_platform.triple_store import TripleStore
 from knowledge_platform.query_engine import QueryEngine
 from knowledge_platform.graph import KnowledgeGraph
 from knowledge_platform.semantic_search import EmbeddingEngine, VectorStore, SemanticSearch, Retriever
+from knowledge_platform.vector_store import SQLiteVectorStore
 from knowledge_platform.context import ConversationMemory, ContextBuilder, ReasoningEngine
 from knowledge_platform.reasoning import KnowledgeReasoner, RuleEngine
 
@@ -26,6 +27,7 @@ __all__ = [
     "KnowledgeGraph",
     "EmbeddingEngine",
     "VectorStore",
+    "SQLiteVectorStore",
     "SemanticSearch",
     "Retriever",
     "ConversationMemory",
