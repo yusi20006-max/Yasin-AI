@@ -215,7 +215,7 @@ Before every release:
 
 1. Read MASTER_PLAN.md
 2. Read AGENTS.md
-3. Read ARCHITECTURE.md
+3. Read docs/ARCHITECTURE.md
 4. Execute this checklist
 5. Report failures
 6. Do not publish if any critical item fails
