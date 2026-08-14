@@ -30,3 +30,25 @@ Keep the previous known-good image/package available. If a production deployment
 ## Scope
 
 This release establishes the current stable production maintenance baseline of the modular YasinAI platform (`v1.1.0`). Distributed HA storage, untrusted plugin sandboxing, and vendor-specific observability exporters remain future infrastructure work.
+
+---
+
+## Phase 5.1 — Production profile verification (2026-08-14)
+
+Automated static gates live in `tests/test_production_profile.py`:
+
+| Gate | Check |
+|---|---|
+| Non-root image | Dockerfile `USER 10001` + `useradd` |
+| Image health | Dockerfile `HEALTHCHECK` → `yasin status` |
+| No secret bake-in | Dockerfile does not `COPY .env` |
+| Production compose | `read_only`, `cap_drop: ALL`, `no-new-privileges`, limits, volume |
+| Secret hygiene | `.env.example` present; `.gitignore` blocks `.env` / keys |
+
+Operators still must run the production compose profile in the target environment
+before exposing traffic:
+
+```bash
+docker compose -f deploy/compose.production.yml up --build -d
+docker compose -f deploy/compose.production.yml ps
+```
