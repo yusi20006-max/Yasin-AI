@@ -116,8 +116,8 @@ Covers cross-repo plugin invocation.
 The following capability contracts are **PLANNED** and will be added in Phase 3
 once the provider gateway exists:
 
-- `GenerationRequest / GenerationResponse` (requires LLM provider)
-- `ChatRequest / ChatResponse` (requires LLM provider)
+- `GenerationRequest / GenerationResult` — **available** (Phase 3.2; via GenerationService)
+- `ChatRequest / ChatResponse` (deferred; use GenerationRequest with system_prompt)
 - `SummarizationRequest / SummarizationResponse`
 - `ClassificationRequest / ClassificationResponse`
 - `RAGRequest / RAGResponse` (requires unified pipeline)
