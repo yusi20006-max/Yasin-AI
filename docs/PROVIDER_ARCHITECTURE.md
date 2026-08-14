@@ -1,7 +1,7 @@
 # Yasin-AI — Provider Architecture
 
 **Phase:** 2.6  
-**Status:** Boundary defined. Concrete providers: Phase 3.  
+**Status:** Phase 3.1 complete — OpenAI, Anthropic, Local adapters implemented.  
 **Date:** 2026-08-14
 
 ---
