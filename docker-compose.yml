@@ -1,4 +1,7 @@
-version: '3.8'
+version: "3.8"
+
+# Development-oriented compose. For production hardening use:
+#   docker compose -f deploy/compose.production.yml up
 
 services:
   yasinai:
@@ -7,4 +10,18 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - ENVIRONMENT=production
+      - ENVIRONMENT=development
+    # Local hardening baseline (production profile is stricter)
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: false
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    healthcheck:
+      test: ["CMD", "yasin", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
