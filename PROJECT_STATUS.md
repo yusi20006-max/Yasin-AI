@@ -252,3 +252,4 @@ End of Project Status
 | 15 Security audit closure (#51) | COMPLETED — re-verified 2026-08-14, residual risks documented |
 | 3.1 Concrete Provider Adapters (#68) | COMPLETED — OpenAI, Anthropic, Local + factory + tests |
 | 3.2 Generation Service Facade (#69) | COMPLETED — GenerationRequest/Result contracts + GenerationService |
+| 3.3 RAG Pipeline Orchestrator (#70) | COMPLETED — RagService + RagRequest/Result contracts |

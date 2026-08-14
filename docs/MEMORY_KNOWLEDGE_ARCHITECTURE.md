@@ -88,9 +88,8 @@ It does not own conversational history (that is Memory).
 
 ### 4. RAG (Retrieval-Augmented Generation)
 
-- **Orchestration** lives in the future `yasinai.services.rag_service`
-  (Phase 3). Phase 2.7 only defines the retrieval half and the memory /
-  knowledge boundaries that RAG will compose.
+- **Orchestration** lives in `yasinai.services.rag_service` (Phase 3.3).
+  Phase 2.7 defined the retrieval half and memory/knowledge boundaries that RAG composes.
 - RAG will call:
   1. Retrieval (semantic) → context chunks
   2. optionally Memory (conversation history)
@@ -125,7 +124,7 @@ Responsibilities:
 ## Explicit Non-Goals (Phase 2.7)
 
 - No concrete LLM provider implementations (Phase 3).
-- No full RAG orchestrator (Phase 3).
+- RAG orchestrator: implemented Phase 3.3 (`RagService`).
 - No namespace move of `knowledge_platform/` under `yasinai/` (deferred).
 - No change to the public contract shapes defined in Phase 2.5.
 
@@ -147,3 +146,4 @@ Responsibilities:
 | Date | Change |
 |---|---|
 | 2026-08-14 | Initial reconciliation (Phase 2.7). KnowledgeService facade added. |
+| 2026-08-14 | Phase 3.3: RagService orchestrator + RagRequest/RagResult contracts. |
