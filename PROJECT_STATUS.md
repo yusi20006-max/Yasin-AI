@@ -254,3 +254,4 @@ End of Project Status
 | 3.2 Generation Service Facade (#69) | COMPLETED — GenerationRequest/Result contracts + GenerationService |
 | 3.3 RAG Pipeline Orchestrator (#70) | COMPLETED — RagService + RagRequest/Result contracts |
 | 4.1 Yasin-Agent integration (#74) | COMPLETED — YasinAgentClient + INTEGRATION_YASIN_AGENT.md |
+| 4.2 YasinHub integration (#75) | COMPLETED — YasinHubClient + metrics snapshot + docs |

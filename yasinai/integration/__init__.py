@@ -7,7 +7,9 @@ These modules show how external Yasin products should consume Yasin-AI
 """
 
 from yasinai.integration.agent_client import YasinAgentClient
+from yasinai.integration.hub_client import YasinHubClient
 
 __all__ = [
     "YasinAgentClient",
+    "YasinHubClient",
 ]
