@@ -95,7 +95,7 @@ def handle_agent_create(args: argparse.Namespace) -> int:
 def handle_memory_search(args: argparse.Namespace) -> int:
     """
     Handle the 'yasin memory search' command.
-    Searches semantic memory using the Knowledge Platform.
+    Searches via YasinCLIClient (contracts/services boundary — Phase 4.3).
     """
     query: str = args.query
     limit: int = getattr(args, "limit", 5)
@@ -104,25 +104,16 @@ def handle_memory_search(args: argparse.Namespace) -> int:
     logger.debug(f"Executing CLI command: memory search with query='{query}', limit={limit}, threshold={threshold}")
 
     try:
-        from knowledge_platform.semantic_search import Retriever
+        from yasinai.integration.cli_client import YasinCLIClient
 
-        retriever = Retriever()
-        # Populate the retriever with mock data to maintain backward compatibility and support real semantic indexing
-        retriever.add_document("mem_001", "YasinAI configuration loading rules.")
-        retriever.add_document("mem_002", "How to register custom modules in Core Runtime.")
-        retriever.add_document("mem_003", "Security platform and identity management specs.")
-
-        # Execute search
-        search_results = retriever.retrieve(query or "", limit=limit, threshold=threshold)
-
-        # Map output format for CLI output
-        results = []
-        for r in search_results:
-            results.append({
-                "id": r["id"],
-                "content": r["metadata"]["text"],
-                "score": round(r["score"], 2)
-            })
+        client = YasinCLIClient()
+        client.seed_demo_documents()
+        search = client.search_memory(query or " ", top_k=limit)
+        if not search.success:
+            raise RuntimeError(search.error or "memory search failed")
+        # Empty query: show demo corpus (threshold only applies to non-empty queries)
+        effective_threshold = 0.0 if not (query or "").strip() else threshold
+        results = client.format_search_results(search, threshold=effective_threshold)
 
         output = {
             "query": query,

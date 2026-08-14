@@ -374,7 +374,10 @@ def test_additional_cli_coverage(capsys):
     captured = capsys.readouterr()
     assert "No matching memories found." in captured.out
 
-    with patch("knowledge_platform.semantic_search.Retriever.retrieve", side_effect=Exception("Memory search failed")):
+    with patch(
+        "yasinai.integration.cli_client.YasinCLIClient.search_memory",
+        side_effect=Exception("Memory search failed"),
+    ):
         args = argparse.Namespace(query="test", limit=5, threshold=0.7, json=False)
         assert handle_memory_search(args) == 1
         captured = capsys.readouterr()
