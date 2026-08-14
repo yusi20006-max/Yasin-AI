@@ -16,7 +16,7 @@ Handler = Callable[[Mapping[str, Any]], Mapping[str, Any]]
 @dataclass
 class APIService:
     name: str = "yasinai"
-    version: str = "1.1.0"
+    version: str = "1.1.1"
     _routes: Optional[Dict[str, Handler]] = None
 
     def __post_init__(self) -> None:
@@ -56,5 +56,5 @@ class APIService:
         return path
 
 
-def create_service(name: str = "yasinai", version: str = "1.1.0") -> APIService:
+def create_service(name: str = "yasinai", version: str = "1.1.1") -> APIService:
     return APIService(name=name, version=version)

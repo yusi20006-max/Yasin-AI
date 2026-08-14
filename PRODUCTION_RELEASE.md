@@ -1,13 +1,13 @@
 # Yasin-AI v1.1.0 Production Release
 
-Release target: `v1.1.0`
+Release target: `v1.1.1`
 
 ## Gate status
 
 - Security audit completed for both `v1.0.0` and the post-release maintenance `v1.1.0` branch.
 - Release-candidate checklist completed.
 - CI test, coverage, dependency-audit, repository-security, and Docker smoke-test gates are defined and fully passing.
-- Packaging metadata reports version `1.1.0` in `pyproject.toml` and runtime reports `1.1.0` in `yasinai/__init__.py`.
+- Packaging metadata reports version `1.1.1` in `pyproject.toml` and runtime reports `1.1.0` in `yasinai/__init__.py`.
 - Production deployment hardening is documented.
 - Known limitations are documented and intentionally accepted for this release.
 

@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project follows Semantic Versioning.
 
+## [1.1.1] - 2026-08-14
+
+### Added
+- Phase 2: capability catalog, contracts v1, provider architecture boundary, memory/knowledge service facade, CI coverage gate.
+- Phase 3: OpenAI/Anthropic/Local providers, GenerationService, RagService and public contracts.
+- Phase 4: ecosystem integration clients for Agent, Hub, CLI, Relay, Feed, Press.
+- Phase 5: production profile static gates, plugin trust policy (trusted-only registry), production readiness tests.
+
+### Security
+- PluginRegistry rejects untrusted plugins by default (`PluginTrustError`).
+- Production Dockerfile non-root + HEALTHCHECK; compose production hardening verified by tests.
+
+### Changed
+- `yasin memory search` routes through `YasinCLIClient` / services boundary.
+- Platform version bumped to 1.1.1.
+
 ## [1.1.0] - 2026-08-12
 
 ### Added

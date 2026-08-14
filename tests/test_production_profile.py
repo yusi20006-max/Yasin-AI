@@ -53,5 +53,5 @@ def test_env_example_exists_and_gitignore_blocks_secrets():
 
 def test_production_release_doc_present():
     text = (ROOT / "PRODUCTION_RELEASE.md").read_text(encoding="utf-8")
-    assert "v1.1.0" in text
+    assert "v1.1.1" in text
     assert "healthcheck" in text.lower() or "Health" in text

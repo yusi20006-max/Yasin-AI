@@ -19,7 +19,7 @@ class Config:
         """
         self._config: Dict[str, Any] = {
             "app_name": "YasinAI",
-            "version": "1.1.0",
+            "version": "1.1.1",
             "environment": "production",
             "debug": False,
             "modules": []

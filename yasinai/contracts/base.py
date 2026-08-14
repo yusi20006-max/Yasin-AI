@@ -52,5 +52,5 @@ class CapabilityMetadata:
 
     capability: str
     contract_version: str = "v1"
-    platform_version: str = "1.1.0"
+    platform_version: str = "1.1.1"
     provider: Optional[str] = None
