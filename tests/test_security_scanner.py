@@ -70,7 +70,7 @@ def test_scanner_skips_vcs_and_generated_directories(tmp_path: Path) -> None:
         directory = tmp_path / dirname
         directory.mkdir()
         (directory / "leak.py").write_text(
-            "TOKEN = 'ghp_abcdefghijklmnopqrstuvwxyz123456'\n", encoding="utf-8"
+            "TOKEN = 'ghp_" + "abcdefghijklmnopqrstuvwxyz123456'\n", encoding="utf-8"
         )
 
     report = SecurityScanner(tmp_path).scan()
