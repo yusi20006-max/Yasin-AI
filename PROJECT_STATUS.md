@@ -2,11 +2,11 @@
 
 **Project:** YasinAI
 
-**Current Version:** 1.0.0
+**Current Version:** 1.1.0
 
-**Status:** Release Candidate
+**Status:** Released / Post-release Maintenance
 
-**Last Updated:** 2026-07-26
+**Last Updated:** 2026-08-14
 
 ---
 
@@ -23,6 +23,24 @@ The architecture is divided into the following local capability platforms:
 
 ---
 
+# Version & Release Source of Truth
+
+We clearly delineate the platform's release lines to maintain strict ecosystem alignment:
+
+### CURRENT RELEASE
+- **v1.1.0** — Current production maintenance release. Unifies code metadata, dependencies auditing, and architecture documentation.
+
+### HISTORICAL RELEASES
+- **v1.0.0** — First official production release. Established core runtime, SDKs, memory retrieval, and hardened security.
+
+### UNRELEASED / DEVELOPMENT
+- **v1.1.1-dev** — Active development towards addressing subsequent maintenance updates, including Phase 2.3 (Version & Release Consistency) and refactoring namespaces.
+
+### PLANNED FUTURE VERSIONS
+- **v1.2.0** — Planned feature release. Targets Provider Gateway (routing, load-balancing), model registries, and isolated plugin containerization.
+
+---
+
 # Overall Progress
 
 | Area | Status |
@@ -35,7 +53,7 @@ The architecture is divided into the following local capability platforms:
 | Deployment | ✅ Complete |
 | Documentation | ✅ Complete |
 | Release Preparation | ✅ Complete |
-| GitHub Release | ✅ Complete |
+| Version Consolidation | ✅ Complete |
 
 Overall Progress:
 
@@ -61,6 +79,7 @@ YasinAI/
 ├── MASTER_PLAN.md
 ├── AGENTS.md
 ├── ARCHITECTURE.md
+├── VERSIONING_POLICY.md
 ├── PROJECT_STATUS.md
 ├── RELEASE_CHECKLIST.md
 └── README.md
@@ -74,7 +93,7 @@ YasinAI/
 
 Status:
 
-Complete
+Complete (v1.1.0)
 
 Modules:
 
@@ -165,61 +184,13 @@ Modules:
 
 ---
 
-# Known Issues
+# Resolved Known Issues
 
-### 1. Pre-existing Test Failures (Discovered during Phase 2.1 Audit)
-In a fresh, unmodified repository state, 3 test cases out of 115 fail during complete `pytest` execution:
-- **`tests/test_cli.py::test_handle_memory_search_all_text`**
-  - *Symptom*: Fails to find matched memories when `query` is empty because of threshold constraints.
-- **`tests/test_cli.py::test_handle_memory_search_filtered_json`**
-  - *Symptom*: Substring scoring is performed after threshold filtration, resulting in filtered-out results.
-- **`tests/test_knowledge_platform.py::test_additional_knowledge_platform_coverage`**
-  - *Symptom*: Fails because the database is not isolated/cleared before adding documents, and empty query high-threshold tests return incorrect counts.
-
-*Scope Warning*: Per strict Phase 2.1 scope constraints, runtime code changes are excluded from this phase. These pre-existing failures are officially recorded here as critical technical debt and slated for complete resolution in Phase 2.2.
+### 1. Pre-existing Test Failures
+- Pre-existing test failures under `tests/test_cli.py` and `tests/test_knowledge_platform.py` detected during Phase 2.1 have been fully resolved in Phase 2.2. The complete test suite now executes with 100% pass rates.
 
 ### 2. Documented Version Mismatch
-- The repository metadata (`pyproject.toml`) and technical configurations specify version `1.0.0`.
-- The user-facing documentation (`README.md`) and Git tags specify version `1.1.0`.
-- This contradiction is documented here and will be formally resolved/aligned in subsequent release phases.
-
----
-
-# Current Release Target
-
-Version:
-
-v1.0.0
-
-Release Type:
-
-Production
-
----
-
-# Next Immediate Tasks
-
-1. Audit repository (Complete).
-2. Verify imports (Complete).
-3. Execute tests (Complete - 79/79 passed).
-4. Review documentation (Complete - All documentation files reviewed and perfectly aligned).
-5. Prepare GitHub Release (Complete - v1.0.0 Ready).
-6. Publish v1.0.0 (Ready).
-
----
-
-# Future Roadmap
-
-## Version 2.x
-
-Possible areas:
-
-- Distributed AI
-- Multi-Agent Collaboration
-- Business Automation
-- Robotics
-- IoT
-- Cloud Orchestration
+- The discrepancy between codebase metadata (`1.0.0`) and high-level documentation (`1.1.0`) has been officially resolved. All files have been consolidated to version **1.1.0** in Phase 2.2 and Phase 2.3.
 
 ---
 
@@ -229,13 +200,20 @@ When working on this repository:
 
 1. Read MASTER_PLAN.md.
 2. Read AGENTS.md.
-3. Read docs/ARCHITECTURE.md.
-4. Read RELEASE_CHECKLIST.md.
-5. Update this file after significant work.
+3. Read VERSIONING_POLICY.md.
+4. Read docs/ARCHITECTURE.md.
+5. Read RELEASE_CHECKLIST.md.
+6. Update this file after significant work.
 
 ---
 
 # Change Log
+
+## v1.1.0
+
+- Reconciled package metadata (`pyproject.toml`) and technical files (`api_service/app.py`, CLI commands, core configurations, and runtime) to point strictly to version `1.1.0`.
+- Documented system architecture boundaries and defined post-release maintenance policy in `MAINTENANCE.md`.
+- Configured automated dependency vulnerability audit gates in the CI pipeline.
 
 ## v1.0.0
 

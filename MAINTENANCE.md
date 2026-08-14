@@ -22,6 +22,8 @@ This document defines the post-release maintenance contract for the Yasin-AI rep
 - Never move an existing release tag to a different commit.
 - A new release gets a new version tag.
 
+See the canonical [Versioning Policy & Compatibility Model](VERSIONING_POLICY.md) for official package and contract versioning rules.
+
 ## Incident and rollback policy
 
 For a production regression, first preserve evidence and identify the exact deployed commit. Prefer reverting the smallest offending change or rolling back to the last known-good release tag. Follow-up fixes must include a regression test where practical.

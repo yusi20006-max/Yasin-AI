@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project follows Semantic Versioning.
 
+## [1.1.0] - 2026-08-12
+
+### Added
+- Standardized post-release maintenance policy (`MAINTENANCE.md`).
+- Dependency vulnerability audit gate in the CI workflow.
+- High-level system architecture and ecosystem boundaries documentation (`docs/ARCHITECTURE.md`).
+- Unified metrics and instrumentation timer/counter checks in tests.
+- Reconciled code version and package metadata to `1.1.0` across the codebase.
+- Resolved and unified version contradiction across platform files.
+
 ## [1.0.0] - 2026-08-09
 
 ### Added
