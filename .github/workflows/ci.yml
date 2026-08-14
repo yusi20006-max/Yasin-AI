@@ -40,7 +40,7 @@ jobs:
         run: python -m pip install --upgrade pip && python -m pip install -e ".[test]"
 
       - name: Run tests with coverage
-        run: python -m pytest --cov=yasinai --cov=security_platform --cov=developer_platform --cov=knowledge_platform --cov-report=term-missing --cov-report=xml --cov-fail-under=70
+        run: python -m pytest --cov=yasinai --cov=security_platform --cov=developer_platform --cov=knowledge_platform --cov=api_service --cov=observability --cov-report=term-missing --cov-report=xml --cov-fail-under=85
 
       - name: Upload coverage report
         if: always()
