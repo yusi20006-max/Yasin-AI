@@ -246,6 +246,6 @@ End of Project Status
 | 2.3 Version & Release Consistency | COMPLETED — PR #60 merged 2026-08-14 |
 | 2.4 AI Capability Catalog | COMPLETED — AI_CAPABILITY_CATALOG.md 2026-08-14 |
 | 2.5 AI Capability Contracts v1 | COMPLETED — yasinai/contracts/ v1, 34 tests, 2026-08-14 |
-| 2.6 Provider Architecture Audit | NEXT |
-| 2.7 Memory & Knowledge Architecture Reconciliation | PENDING |
+| 2.6 Provider Architecture Audit | COMPLETED — yasinai/providers/ boundary, 23 tests, 2026-08-14 |
+| 2.7 Memory & Knowledge Architecture Reconciliation | NEXT |
 | 2.8 Foundation Tests, CI & Integration Readiness | PENDING |
