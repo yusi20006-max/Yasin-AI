@@ -250,3 +250,4 @@ End of Project Status
 | 2.7 Memory & Knowledge Architecture Reconciliation | COMPLETED — docs/MEMORY_KNOWLEDGE_ARCHITECTURE.md, yasinai/services/KnowledgeService, 14 tests |
 | 2.8 Foundation Tests, CI & Integration Readiness | COMPLETED — coverage 94%+, CI fail-under=85, sdk+entrypoint tests, observability in cov |
 | 15 Security audit closure (#51) | COMPLETED — re-verified 2026-08-14, residual risks documented |
+| 3.1 Concrete Provider Adapters (#68) | COMPLETED — OpenAI, Anthropic, Local + factory + tests |
