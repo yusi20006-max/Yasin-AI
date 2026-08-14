@@ -380,7 +380,7 @@ def create_parser() -> argparse.ArgumentParser:
 
     package_build_parser = package_subparsers.add_parser("build", help="Build deployment artifacts", parents=[parent_parser])
     package_build_parser.add_argument("--output", default="dist/", help="Output directory")
-    package_build_parser.add_argument("--version", default="1.1.0", help="Target package version")
+    package_build_parser.add_argument("--version", default="1.1.1", help="Target package version")
     package_build_parser.set_defaults(func=handle_package_build)
 
     # 6. 'serve' command

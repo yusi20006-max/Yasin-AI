@@ -27,7 +27,7 @@ def test_registry_register_list_invoke():
     def echo(msg: str) -> str:
         return msg
 
-    spec = PluginSpec(name="echo", handler=echo, version="1.1.0", description="Echo")
+    spec = PluginSpec(name="echo", handler=echo, version="1.1.1", description="Echo")
     registered = registry.register(spec)
     assert registered is spec
     assert [p.name for p in registry.list()] == ["echo"]

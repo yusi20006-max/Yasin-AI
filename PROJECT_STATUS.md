@@ -2,7 +2,7 @@
 
 **Project:** YasinAI
 
-**Current Version:** 1.1.0
+**Current Version:** 1.1.1
 
 **Status:** Released / Post-release Maintenance
 
@@ -28,7 +28,7 @@ The architecture is divided into the following local capability platforms:
 We clearly delineate the platform's release lines to maintain strict ecosystem alignment:
 
 ### CURRENT RELEASE
-- **v1.1.0** — Current production maintenance release. Unifies code metadata, dependencies auditing, and architecture documentation.
+- **v1.1.1** — Current production maintenance release (Phases 2–5 complete). Unifies code metadata, dependencies auditing, and architecture documentation.
 
 ### HISTORICAL RELEASES
 - **v1.0.0** — First official production release. Established core runtime, SDKs, memory retrieval, and hardened security.
@@ -211,7 +211,7 @@ When working on this repository:
 
 ## v1.1.0
 
-- Reconciled package metadata (`pyproject.toml`) and technical files (`api_service/app.py`, CLI commands, core configurations, and runtime) to point strictly to version `1.1.0`.
+- Reconciled package metadata (`pyproject.toml`) and technical files (`api_service/app.py`, CLI commands, core configurations, and runtime) to point strictly to version `1.1.1`.
 - Documented system architecture boundaries and defined post-release maintenance policy in `MAINTENANCE.md`.
 - Configured automated dependency vulnerability audit gates in the CI pipeline.
 
