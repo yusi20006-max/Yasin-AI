@@ -204,7 +204,7 @@ def handle_package_build(args: argparse.Namespace) -> int:
     Packages modules and extensions using the Developer Platform PackageBuilder.
     """
     output_dir: str = getattr(args, "output", "dist/")
-    version: str = getattr(args, "version", "1.0.0")
+    version: str = getattr(args, "version", "1.1.0")
 
     logger.debug(f"Executing CLI command: package build with output_dir={output_dir}, version={version}")
 
@@ -389,7 +389,7 @@ def create_parser() -> argparse.ArgumentParser:
 
     package_build_parser = package_subparsers.add_parser("build", help="Build deployment artifacts", parents=[parent_parser])
     package_build_parser.add_argument("--output", default="dist/", help="Output directory")
-    package_build_parser.add_argument("--version", default="1.0.0", help="Target package version")
+    package_build_parser.add_argument("--version", default="1.1.0", help="Target package version")
     package_build_parser.set_defaults(func=handle_package_build)
 
     # 6. 'serve' command

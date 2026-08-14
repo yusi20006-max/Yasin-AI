@@ -147,19 +147,24 @@ class Retriever:
             return []
         if not query or not query.strip():
             results = [
-                {"id": record["id"], "score": 0.0, "metadata": record["metadata"]}
+                {"id": record["id"], "score": 1.0, "metadata": record["metadata"]}
                 for record in records
             ]
-            return results[:limit] if threshold <= 0.0 else []
+            return results[:limit]
 
         query_vector = self.embedding_engine.get_embedding(query)
-        results = self.search_engine.search(query_vector, records, limit=len(records), threshold=threshold)
+        results = self.search_engine.search(query_vector, records, limit=len(records), threshold=0.0)
+        filtered_results = []
         for result in results:
             text = result["metadata"].get("text", "")
+            score = result["score"]
             if query.lower() in text.lower():
-                result["score"] = max(result["score"], 1.0)
-        results.sort(key=lambda result: result["score"], reverse=True)
-        return results[:limit]
+                score = max(score, 1.0)
+            if score >= threshold:
+                result["score"] = score
+                filtered_results.append(result)
+        filtered_results.sort(key=lambda result: result["score"], reverse=True)
+        return filtered_results[:limit]
 
     def delete(self, doc_id: str) -> bool:
         deleted = self.vector_store.delete(doc_id) if hasattr(self.vector_store, "delete") else False
