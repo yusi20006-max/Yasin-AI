@@ -256,3 +256,4 @@ End of Project Status
 | 4.1 Yasin-Agent integration (#74) | COMPLETED — YasinAgentClient + INTEGRATION_YASIN_AGENT.md |
 | 4.2 YasinHub integration (#75) | COMPLETED — YasinHubClient + metrics snapshot + docs |
 | 4.3 YasinCLI integration (#76) | COMPLETED — YasinCLIClient + memory search via services |
+| 4.4 Relay/Feed/Press integration (#77) | COMPLETED — clients + docs for Relay, Feed, Press |
