@@ -255,3 +255,4 @@ End of Project Status
 | 3.3 RAG Pipeline Orchestrator (#70) | COMPLETED — RagService + RagRequest/Result contracts |
 | 4.1 Yasin-Agent integration (#74) | COMPLETED — YasinAgentClient + INTEGRATION_YASIN_AGENT.md |
 | 4.2 YasinHub integration (#75) | COMPLETED — YasinHubClient + metrics snapshot + docs |
+| 4.3 YasinCLI integration (#76) | COMPLETED — YasinCLIClient + memory search via services |
