@@ -37,8 +37,8 @@ class GenerationService:
         *,
         default_capability: ProviderCapability = ProviderCapability.GENERATION,
     ) -> None:
-        self._registry = registry or build_default_registry()
-        self._router = router or ProviderRouter(self._registry)
+        self._registry = registry if registry is not None else build_default_registry()
+        self._router = router if router is not None else ProviderRouter(self._registry)
         self._default_capability = default_capability
 
     def generate(self, request: GenerationRequest) -> GenerationResult:

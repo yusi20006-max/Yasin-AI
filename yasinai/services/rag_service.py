@@ -1,0 +1,143 @@
+"""
+RagService — Retrieval-Augmented Generation orchestrator.
+
+Phase 3.3: composes KnowledgeService (semantic retrieval + optional memory)
+and GenerationService. No provider SDKs imported here.
+"""
+from __future__ import annotations
+
+import logging
+from typing import List, Optional
+
+from yasinai.contracts.base import CapabilityMetadata
+from yasinai.contracts.generation import GenerationRequest
+from yasinai.contracts.knowledge import (
+    KnowledgeEntry,
+    KnowledgeQuery,
+    KnowledgeQueryType,
+)
+from yasinai.contracts.memory import MemoryRequest, MemoryType
+from yasinai.contracts.rag import RagRequest, RagResult
+from yasinai.services.generation_service import GenerationService
+from yasinai.services.knowledge_service import KnowledgeService
+
+logger = logging.getLogger(__name__)
+
+
+class RagService:
+    """
+    Orchestrates: retrieve → (optional memory) → generate.
+
+    Consumers import this facade; they never touch knowledge_platform
+    or provider adapters directly.
+    """
+
+    def __init__(
+        self,
+        knowledge: Optional[KnowledgeService] = None,
+        generation: Optional[GenerationService] = None,
+    ) -> None:
+        self._knowledge = knowledge if knowledge is not None else KnowledgeService()
+        self._generation = generation if generation is not None else GenerationService()
+
+    def run(self, request: RagRequest) -> RagResult:
+        """Execute the full RAG pipeline; always returns RagResult."""
+        meta = CapabilityMetadata(capability="rag")
+        try:
+            sources = self._retrieve(request)
+            memory_bits = self._memory_context(request) if request.include_memory else []
+            prompt = self._build_prompt(request, sources, memory_bits)
+            system = request.system_prompt or (
+                "You are a helpful assistant. Answer using the provided context. "
+                "If the context is insufficient, say so clearly."
+            )
+            gen = self._generation.generate(
+                GenerationRequest(
+                    prompt=prompt,
+                    model=request.model,
+                    provider=request.provider,
+                    max_tokens=request.max_tokens,
+                    temperature=request.temperature,
+                    system_prompt=system,
+                    metadata=dict(request.metadata or {}),
+                    context=request.context,
+                )
+            )
+            if not gen.success:
+                return RagResult(
+                    success=False,
+                    sources=sources,
+                    error=gen.error or "generation failed",
+                    provider=gen.provider,
+                    model=gen.model,
+                    meta=CapabilityMetadata(
+                        capability="rag",
+                        provider=gen.provider,
+                    ),
+                )
+            return RagResult(
+                success=True,
+                answer=gen.text,
+                sources=sources,
+                model=gen.model,
+                provider=gen.provider,
+                input_tokens=gen.input_tokens,
+                output_tokens=gen.output_tokens,
+                meta=CapabilityMetadata(
+                    capability="rag",
+                    provider=gen.provider,
+                ),
+            )
+        except Exception as exc:  # noqa: BLE001 — facade boundary
+            logger.exception("RagService.run failed")
+            return RagResult(success=False, error=str(exc), meta=meta)
+
+    def _retrieve(self, request: RagRequest) -> List[KnowledgeEntry]:
+        result = self._knowledge.query(
+            KnowledgeQuery(
+                query_type=KnowledgeQueryType.SEMANTIC,
+                text=request.query,
+                top_k=request.top_k,
+                metadata=dict(request.metadata or {}),
+                context=request.context,
+            )
+        )
+        if not result.success:
+            logger.warning("RAG retrieval failed: %s", result.error)
+            return []
+        return list(result.entries or [])
+
+    def _memory_context(self, request: RagRequest) -> List[str]:
+        resp = self._knowledge.memory(
+            MemoryRequest(
+                operation="retrieve",
+                memory_type=MemoryType.SHORT_TERM,
+                limit=request.memory_limit or None,
+            )
+        )
+        if not resp.success:
+            return []
+        bits: List[str] = []
+        for entry in resp.entries or []:
+            bits.append(str(entry.content))
+        return bits
+
+    @staticmethod
+    def _build_prompt(
+        request: RagRequest,
+        sources: List[KnowledgeEntry],
+        memory_bits: List[str],
+    ) -> str:
+        sections: List[str] = []
+        if sources:
+            chunks = []
+            for i, src in enumerate(sources, start=1):
+                chunks.append(f"[{i}] {src.content}")
+            sections.append("Context:\n" + "\n".join(chunks))
+        if memory_bits:
+            sections.append(
+                "Recent memory:\n" + "\n".join(f"- {m}" for m in memory_bits)
+            )
+        sections.append(f"Question: {request.query}")
+        sections.append("Answer:")
+        return "\n\n".join(sections)

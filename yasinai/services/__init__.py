@@ -10,8 +10,10 @@ internal packages directly.
 
 from yasinai.services.knowledge_service import KnowledgeService
 from yasinai.services.generation_service import GenerationService
+from yasinai.services.rag_service import RagService
 
 __all__ = [
     "KnowledgeService",
     "GenerationService",
+    "RagService",
 ]

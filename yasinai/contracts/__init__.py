@@ -41,6 +41,10 @@ from yasinai.contracts.generation import (
     GenerationRequest,
     GenerationResult,
 )
+from yasinai.contracts.rag import (
+    RagRequest,
+    RagResult,
+)
 
 __all__ = [
     # base
@@ -70,6 +74,9 @@ __all__ = [
     # generation
     "GenerationRequest",
     "GenerationResult",
+    # rag
+    "RagRequest",
+    "RagResult",
 ]
 
 CONTRACT_VERSION = "v1"
