@@ -1,7 +1,7 @@
 # YasinAI Release Checklist
 
 Version:
-v1.0.0
+v1.1.0
 
 Status:
 Passed
@@ -19,6 +19,7 @@ Passed
 - [x] AGENTS.md exists
 - [x] ARCHITECTURE.md exists
 - [x] CHANGELOG.md exists
+- [x] VERSIONING_POLICY.md exists
 - [x] LICENSE exists
 
 ---
@@ -117,6 +118,7 @@ pytest
 - [x] SDK guide updated
 - [x] Security documentation updated
 - [x] API documentation updated
+- [x] Versioning policy documented
 
 ---
 
@@ -178,7 +180,7 @@ Verify that repository DOES NOT contain:
 
 Tag:
 
-v1.0.0
+v1.1.0
 
 ---
 
@@ -199,13 +201,13 @@ Before publishing verify:
 
 git add .
 
-git commit -m "Release v1.0.0"
+git commit -m "Release v1.1.0"
 
-git tag -a v1.0.0 -m "First Production Release"
+git tag -a v1.1.0 -m "v1.1.0 Release"
 
 git push origin main
 
-git push origin v1.0.0
+git push origin v1.1.0
 
 ---
 
@@ -215,17 +217,18 @@ Before every release:
 
 1. Read MASTER_PLAN.md
 2. Read AGENTS.md
-3. Read docs/ARCHITECTURE.md
-4. Execute this checklist
-5. Report failures
-6. Do not publish if any critical item fails
+3. Read VERSIONING_POLICY.md
+4. Read docs/ARCHITECTURE.md
+5. Execute this checklist
+6. Report failures
+7. Do not publish if any critical item fails
 
 ---
 
 Release Status
 
 Version:
-1.0.0
+1.1.0
 
 Project:
 YasinAI

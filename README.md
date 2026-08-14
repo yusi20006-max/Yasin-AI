@@ -205,9 +205,13 @@ To maintain strict source-of-truth accuracy, all Yasin-AI capabilities are organ
 
 Yasin-AI follows semantic versioning for releases.
 
-- Patch releases: backward-compatible fixes
-- Minor releases: backward-compatible features
-- Major releases: breaking changes
+See the complete [Versioning Policy & Compatibility Model](VERSIONING_POLICY.md) for details on:
+- Where the authoritative package version resides
+- Runtime version programmatic retrieval
+- DEC and Contract version mapping
+- Release tagging procedures
+- Release state classification (released, development, planned)
+- Platform compatibility guarantees (Python versions, SQLite schemas, and vendor routing)
 
 Existing release tags are immutable. A new release receives a new version tag rather than moving an existing tag.
 

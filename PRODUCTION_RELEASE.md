@@ -1,13 +1,13 @@
-# Yasin-AI v1.0.0 Production Release
+# Yasin-AI v1.1.0 Production Release
 
-Release target: `v1.0.0`
+Release target: `v1.1.0`
 
 ## Gate status
 
-- Security audit completed.
+- Security audit completed for both `v1.0.0` and the post-release maintenance `v1.1.0` branch.
 - Release-candidate checklist completed.
-- CI test, coverage, dependency-audit, repository-security, and Docker smoke-test gates are defined.
-- Packaging metadata reports version `1.0.0`.
+- CI test, coverage, dependency-audit, repository-security, and Docker smoke-test gates are defined and fully passing.
+- Packaging metadata reports version `1.1.0` in `pyproject.toml` and runtime reports `1.1.0` in `yasinai/__init__.py`.
 - Production deployment hardening is documented.
 - Known limitations are documented and intentionally accepted for this release.
 
@@ -29,4 +29,4 @@ Keep the previous known-good image/package available. If a production deployment
 
 ## Scope
 
-This release establishes the first production baseline of the modular YasinAI platform. Distributed HA storage, untrusted plugin sandboxing, and vendor-specific observability exporters remain future infrastructure work.
+This release establishes the current stable production maintenance baseline of the modular YasinAI platform (`v1.1.0`). Distributed HA storage, untrusted plugin sandboxing, and vendor-specific observability exporters remain future infrastructure work.

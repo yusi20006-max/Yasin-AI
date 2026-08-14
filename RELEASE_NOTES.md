@@ -1,4 +1,23 @@
-# YasinAI v1.0.0 Release Notes
+# YasinAI Release Notes
+
+## YasinAI v1.1.0 Release Notes
+
+We are pleased to announce the stable maintenance release of **YasinAI (v1.1.0)**.
+
+This release focuses on hardening package quality gates, clarifying system architectural boundaries in compliance with the target Yasin Ecosystem design, and establishing standard maintenance procedures.
+
+---
+
+### 🚀 Key Highlights & Enhancements in v1.1.0
+
+- **Dependency Audit Integration**: Automatically scans Python dependencies in the CI workflow to block vulnerabilities.
+- **Architectural Boundary Specification**: Fully documents system layers, inward private module coupling rules, and preferred dependency directions.
+- **Unified Observability Metrics Checks**: Added automated timer and counter tests to cover metric reporting mechanisms.
+- **Platform Packaging Consistency**: Synchronized metadata declarations across the Python ecosystem configs and codebase.
+
+---
+
+## YasinAI v1.0.0 Release Notes
 
 We are thrilled to present the first official production release of **YasinAI (v1.0.0)**.
 
@@ -6,7 +25,7 @@ YasinAI is a modular, high-performance, and secure artificial intelligence platf
 
 ---
 
-## 🚀 Key Highlights & Platforms
+### 🚀 Key Highlights & Platforms
 
 ### 1. Core Runtime (`yasinai/core/`)
 - **System Diagnostics & Diagnostics Info**: Full platform environment diagnostics and runtime checks.
@@ -44,7 +63,7 @@ Global `yasin` entrypoint supports structured `--json` output and command option
 
 ---
 
-## 🛠️ Verification & Quality Assurance
+### 🛠️ Verification & Quality Assurance
 
 - **Unit and Integration Tests**: 100% pass rate over **79 test cases** (`pytest` suite).
 - **Security Check**: Clean repository state. Zero API Keys, tokens, private keys, `.env` files, or configuration secrets committed.
@@ -52,7 +71,7 @@ Global `yasin` entrypoint supports structured `--json` output and command option
 
 ---
 
-## 📦 Getting Started
+### 📦 Getting Started
 
 ### Local Setup:
 ```bash

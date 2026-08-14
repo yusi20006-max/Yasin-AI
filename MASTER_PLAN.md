@@ -6,7 +6,7 @@ Name:
 YasinAI (Canonical AI Platform)
 
 Version Target:
-v1.0.0
+v1.1.0
 
 Type:
 Canonical AI Capability Platform of the Yasin Ecosystem (YASIN-DOCS ADR-001)
@@ -229,80 +229,20 @@ yasinai/deployment/
 
 ---
 
-# Development Phases
+# Development Phases & Release State
 
-## Completed
+We classify milestones to distinguish clearly between current stable baselines and active development lines:
 
-Phase 32:
-Developer Platform
+### CURRENT BASELINE
+- **v1.1.0 (Maintenance Release)**: Consolidates codebase versioning and adds automated dependency security auditing to CI.
+- **v1.0.0 (Production Release)**: Baseline production launch featuring memory pipelines, developer platforms, and core runtimes.
 
-Status:
-Completed
+### ACTIVE DEVELOPMENT
+- **Phase 2.3 (Version & Release Consistency)**: Align version sources of truth, establish standard versioning policies, and compatibility mappings.
 
-Phase 34:
-Advanced Security
-
-Status:
-Completed
-
-Phase 35:
-Knowledge Graph & Memory
-
-Status:
-Completed
-
----
-
-# Release Process
-
-## R1
-
-Integration Core
-
-Status:
-Completed
-
-## R2
-
-Integration Tests
-
-Status:
-Completed
-
-## R3
-
-CLI Finalization
-
-Status:
-Completed
-
-## R4
-
-Deployment Package
-
-Status:
-Completed
-
-## R5
-
-Documentation
-
-Status:
-Completed
-
-## R6
-
-GitHub Release Preparation
-
-Status:
-Completed
-
-## R7
-
-YasinAI v1.0.0 Launch
-
-Status:
-Ready
+### PLANNED FUTURE VERSIONS
+- **v1.2.0 (Minor Release)**: Provider Gateway routing, model registry, inference guardrails, and isolated plugin sandboxing.
+- **v2.0.0 (Major Release)**: Distributed AI Network, agent collaboration networks, and YasinHub telemetry endpoints.
 
 ---
 
@@ -336,29 +276,12 @@ Never commit:
 
 # Current Mission
 
-Prepare YasinAI for GitHub production release.
+Establish strict versioning and release source of truth.
 
 Tasks:
-1. Repository audit (Complete)
-2. Fix missing imports (Complete)
-3. Run tests (Complete - 79 tests passing)
-4. Improve documentation (Complete - All reference files updated for perfect codebase consistency)
-5. Prepare release (Complete - v1.0.0 Ready)
-6. Publish v1.0.0 (Ready)
-
----
-
-# Future Roadmap
-
-## YasinAI v2.x
-
-Possible Features:
-
-- Distributed AI Network
-- Advanced Automation
-- Robotics Integration
-- Self Improvement Systems
-- Global AI Ecosystem
+1. Reconcile version references across all docs to point to `1.1.0` (Active).
+2. Authorize standard versioning policy document (`VERSIONING_POLICY.md`) (Active).
+3. Ensure no version drift across package metadata and runtime (Active).
 
 ---
 
@@ -367,10 +290,11 @@ Possible Features:
 Any AI coding agent working on this project must:
 
 1. Read this file first.
-2. Understand architecture before editing.
-3. Create a report before major changes.
-4. Avoid destructive modifications.
-5. Keep changes documented.
+2. Read VERSIONING_POLICY.md.
+3. Understand architecture before editing.
+4. Create a report before major changes.
+5. Avoid destructive modifications.
+6. Keep changes documented.
 
 ---
 
