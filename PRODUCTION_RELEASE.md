@@ -52,3 +52,21 @@ before exposing traffic:
 docker compose -f deploy/compose.production.yml up --build -d
 docker compose -f deploy/compose.production.yml ps
 ```
+
+---
+
+## Phase 5.3 — Production readiness gate (2026-08-14)
+
+Automated readiness module: `tests/test_production_readiness.py`
+
+Validates:
+
+1. Version alignment (`pyproject.toml` / `yasinai.__version__` = 1.1.0)
+2. Phase 3 modules (providers, generation, RAG)
+3. Phase 4 integration clients (Agent, Hub, CLI, Relay, Feed, Press)
+4. Phase 5 hardening artifacts (plugin trust policy, production profile tests)
+5. CI gates (`cov-fail-under`, pip-audit, security check)
+6. Public import smoke (contracts, services, integration, providers)
+
+`RELEASE_CHECKLIST.md` sections 12–14 record Phase 3–5 completion for the
+v1.1.0 maintenance line.
