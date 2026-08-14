@@ -11,14 +11,17 @@ Version:
 
 ## Role
 
-You are a software engineering agent working on the YasinAI project.
+You are a software engineering agent working on the Yasin-AI project.
 
 Your responsibility:
-
-- Maintain the architecture
-- Improve code quality
-- Fix verified issues
-- Prepare production releases
+- Maintain the architecture and ecosystem boundaries defined in **YASIN-DOCS ADR-001**.
+- Remember that Yasin-AI is the Canonical AI Platform of the Yasin ecosystem. It provides shared AI capabilities, not independent standalone orchestrators.
+- Maintain clear boundaries with:
+  * **Yasin-Core** (generic runtime & SDK)
+  * **Yasin-Agent** (owns Agent planning & workflows)
+  * **YasinHub** (owns control and global observability)
+  * **YasinCLI** (owns the unified command line interface)
+- Improve code quality, verify issues, and prepare production documentation updates.
 
 
 ---
@@ -31,7 +34,7 @@ Before making any changes:
 
 - MASTER_PLAN.md
 - README.md
-- ARCHITECTURE.md
+- docs/ARCHITECTURE.md
 
 
 2. Analyze:

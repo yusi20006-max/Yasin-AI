@@ -1,6 +1,13 @@
 # Yasin-AI
 
-Production-ready AI platform focused on modular runtime services, persistent memory, knowledge retrieval, developer extensions, observability, and secure deployment.
+Canonical AI Platform of the Yasin Ecosystem.
+
+According to YASIN-DOCS ADR-001, Yasin-AI is the Canonical AI Capability Platform for the Yasin ecosystem. It provides shared AI capabilities—such as model/provider abstraction, provider routing, inference services, embeddings, semantic retrieval, knowledge/RAG, durable AI memory contracts, AI extension contracts, and AI observability—while maintaining clear architectural boundaries with:
+- **Yasin-Core**: Generic runtime and SDK foundation.
+- **Yasin-Agent**: Agent planning, workflow, and execution semantics. (Although Yasin-AI includes local in-process Agent execution contracts, ecosystem-level Agent planning resides in Yasin-Agent).
+- **YasinHub**: Ecosystem control, lifecycle, and observability.
+- **YasinCLI**: Unified user-facing command surface. (The CLI in `yasinai/cli/` is a local diagnostic helper; the unified command interface is owned by YasinCLI).
+- **YasinRelay / YasinFeed / YasinPress**: Domain, content, and business pipelines.
 
 **Current release: v1.1.0**
 
@@ -154,6 +161,43 @@ Run the verification suite:
     python -m build
 
 Then submit changes through a pull request.
+
+## Capability Categorization & Project Boundaries
+
+To maintain strict source-of-truth accuracy, all Yasin-AI capabilities are organized into clear lifecycle categories:
+
+### IMPLEMENTED
+- **Modular Runtime & Lifecycle**: In-process module bootstrapping and runtime lifecycle manager (in `yasinai/core/`).
+- **Local SQLite Persistence**: SQLite-backed semantic vector storage for memory retrieval (in `knowledge_platform/`).
+- **In-process Plugin Extension**: SDK contracts enabling hot-toggling and execution of trusted, local plugins (in `developer_platform/`).
+- **Local CLI Commands**: Diagnostics, local status verification, and semantic search CLI helpers (in `yasinai/cli/`).
+- **API Service Layer**: Transport-neutral service interface and model schemas (in `api_service/`).
+- **Metrics Observability**: Cross-cutting instrumentation timer and counter primitives (in `observability/`).
+
+### CURRENT ARCHITECTURE
+- Single-process focus with clear internal component layering.
+- Configurable data directories and SQLite database paths.
+- Trusted plugin model (assumes running plugin code is safe).
+
+### PLANNED
+- **Remote Plugin Sandboxing**: Isolated, secure container/sandbox execution of untrusted third-party code.
+- **Multi-provider Routing**: Intelligent provider-routing, automatic LLM load-balancing, and fallback across cloud model vendors.
+- **Inference Guardrails**: Dynamic safety, cost-control, and latency-budget policies applied prior to inference.
+
+### FUTURE ECOSYSTEM CONTRACT
+- **Ecosystem Observability**: Exposing platform metrics and latency records directly to `YasinHub`.
+- **Ecosystem Agent Orchestration**: Delegating multi-step planning and runtime workflows to `Yasin-Agent`.
+- **Unified Command Center**: Porting and integrating local diagnostic commands (`status`, `memory`, etc.) directly into `YasinCLI`.
+
+---
+
+## Known Platform Limitations & Truths
+
+- **No HA/Distribution**: The default local SQLite storage is a single-node database. It is not designed for multi-node clusters or high availability.
+- **In-process Trust**: The execution environment does not sandbox third-party plugin code. Only run trusted plugins.
+- **Identified Version Contradiction**: The user-facing documentation (`README.md`) and Git tags reference `v1.1.0` as the current production release. However, the package metadata (`pyproject.toml`), test expectations, and internal status files still declare version `1.0.0`. This discrepancy is a known source-of-truth contradiction and is slated to be resolved in subsequent release-alignment tasks (Phase 2.2). Until then, build systems and dependencies should refer to package version `1.0.0`.
+
+---
 
 ## Versioning
 

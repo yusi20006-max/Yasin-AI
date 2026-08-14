@@ -3,16 +3,16 @@
 ## Project Identity
 
 Name:
-YasinAI
+YasinAI (Canonical AI Platform)
 
 Version Target:
 v1.0.0
 
 Type:
-Modular AI Platform
+Canonical AI Capability Platform of the Yasin Ecosystem (YASIN-DOCS ADR-001)
 
 Goal:
-Build an extensible AI ecosystem with runtime, agents, memory, security, developer tools and deployment capabilities.
+Provide shared AI capabilities (embeddings, provider routing, inference, semantic retrieval, RAG, and durable memory contracts) for the Yasin ecosystem while preserving strict boundaries with Yasin-Core, Yasin-Agent, YasinHub, YasinCLI, YasinRelay, YasinFeed, and YasinPress.
 
 ---
 

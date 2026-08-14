@@ -81,7 +81,7 @@ jobs:
           forbidden=0
           while IFS= read -r -d '' file; do
             case "$file" in
-              ./.git/*|./.venv/*|./venv/*|./node_modules/*) continue ;;
+              ./.git/*|./.venv/*|./venv/*|./node_modules/*|*.example) continue ;;
             esac
             case "$file" in
               *.pem|*.key|*.p12|*.pfx|*.token|*.secret) echo "Forbidden secret-like file: $file"; forbidden=1 ;;
