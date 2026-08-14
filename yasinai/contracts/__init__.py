@@ -37,6 +37,10 @@ from yasinai.contracts.plugin import (
     PluginInvokeRequest,
     PluginInvokeResponse,
 )
+from yasinai.contracts.generation import (
+    GenerationRequest,
+    GenerationResult,
+)
 
 __all__ = [
     # base
@@ -63,6 +67,9 @@ __all__ = [
     "PluginContract",
     "PluginInvokeRequest",
     "PluginInvokeResponse",
+    # generation
+    "GenerationRequest",
+    "GenerationResult",
 ]
 
 CONTRACT_VERSION = "v1"
