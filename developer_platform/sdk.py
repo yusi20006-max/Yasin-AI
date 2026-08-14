@@ -14,28 +14,48 @@ class PluginError(SDKError):
     """Raised when a plugin cannot be registered or invoked."""
 
 
+class PluginTrustError(PluginError):
+    """Raised when an untrusted plugin is rejected by production policy."""
+
+
 @dataclass(frozen=True)
 class PluginSpec:
-    """Metadata and callable contract for a YasinAI plugin."""
+    """Metadata and callable contract for a YasinAI plugin.
+
+    Plugins execute in-process. Production policy requires ``trusted=True``
+    unless the registry is explicitly constructed with ``allow_untrusted=True``.
+    """
 
     name: str
     handler: Callable[..., Any]
     version: str = "1.0.0"
     description: str = ""
     metadata: Dict[str, Any] = field(default_factory=dict)
+    trusted: bool = True
 
 
 class PluginRegistry:
-    """Deterministic in-process registry for developer plugins."""
+    """Deterministic in-process registry for developer plugins.
 
-    def __init__(self) -> None:
+    Default posture: trusted plugins only (production-safe default).
+    Untrusted remote plugin execution is explicitly unsupported.
+    """
+
+    def __init__(self, *, allow_untrusted: bool = False) -> None:
         self._plugins: Dict[str, PluginSpec] = {}
+        self.allow_untrusted = allow_untrusted
 
     def register(self, plugin: PluginSpec) -> PluginSpec:
         if not plugin.name or not plugin.name.strip():
             raise PluginError("plugin name must not be empty")
         if plugin.name in self._plugins:
             raise PluginError(f"plugin already registered: {plugin.name}")
+        if not plugin.trusted and not self.allow_untrusted:
+            raise PluginTrustError(
+                f"refusing untrusted plugin '{plugin.name}': "
+                "in-process plugins must be trusted code; "
+                "set allow_untrusted=True only for isolated non-production use"
+            )
         self._plugins[plugin.name] = plugin
         return plugin
 
@@ -61,6 +81,7 @@ def plugin(
     version: str = "1.0.0",
     description: str = "",
     metadata: Optional[Dict[str, Any]] = None,
+    trusted: bool = True,
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Declare plugin metadata without coupling the handler to the registry."""
 
@@ -68,11 +89,25 @@ def plugin(
         setattr(
             handler,
             "__yasinai_plugin__",
-            PluginSpec(name, handler, version, description, dict(metadata or {})),
+            PluginSpec(
+                name,
+                handler,
+                version,
+                description,
+                dict(metadata or {}),
+                trusted=trusted,
+            ),
         )
         return handler
 
     return decorator
 
 
-__all__ = ["PluginError", "PluginRegistry", "PluginSpec", "SDKError", "plugin"]
+__all__ = [
+    "PluginError",
+    "PluginTrustError",
+    "PluginRegistry",
+    "PluginSpec",
+    "SDKError",
+    "plugin",
+]
