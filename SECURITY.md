@@ -10,7 +10,7 @@ Please do not disclose exploitable vulnerabilities in public issues. Use GitHub'
 
 ## Security boundaries
 
-Yasin-AI is not certified as secure. Plugins currently execute in-process and must be treated as trusted code. Do not load untrusted plugins into a production process.
+Yasin-AI is not certified as secure. Plugins currently execute in-process and must be treated as trusted code. Do not load untrusted plugins into a production process. See [Plugin Trust Policy](docs/PLUGIN_TRUST_POLICY.md) — `PluginRegistry` rejects `trusted=False` by default (Phase 5.2).
 
 Secrets must be supplied through runtime configuration or a secret manager and must never be committed to the repository.
 
