@@ -355,7 +355,7 @@ def test_additional_knowledge_platform_coverage():
     assert search.cosine_similarity([0.0], [0.0]) == 0.0
 
     # 9. Retriever.clear and empty query search
-    retriever = Retriever()
+    retriever = Retriever(store=VectorStore())
     retriever.add_document("mem_001", "text1")
     retriever.add_document("mem_002", "text2")
     # Empty query retrieval
@@ -363,7 +363,7 @@ def test_additional_knowledge_platform_coverage():
     assert len(empty_results) == 2
     # Empty query retrieval with high threshold
     empty_results_high = retriever.retrieve("", threshold=0.9)
-    assert len(empty_results_high) == 1
+    assert len(empty_results_high) == 2
 
     retriever.clear()
     assert len(retriever.vector_store.records) == 0

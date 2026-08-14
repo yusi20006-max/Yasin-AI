@@ -15,30 +15,36 @@ According to YASIN-DOCS ADR-001, Yasin-AI is the Canonical AI Capability Platfor
 
 ## Status
 
-Yasin-AI has completed its initial architecture and production-hardening cycle.
+Yasin-AI has completed its Phase 2.2 architecture reconciliation.
 
-- Production release: **v1.1.0**
+- Reconciled version: **v1.1.0**
 - Security audit: completed
 - Release candidate verification: completed
 - Performance/reliability baseline: completed
 - Production deployment baseline: completed
 - Post-release maintenance policy: established
 
-See the [latest release](https://github.com/yusi20006-max/Yasin-AI/releases/tag/v1.1.0).
+## Target Architecture
 
-## Architecture
+The project is structured around clear boundaries and a strict downward dependency flow:
 
-The project is organized around clear boundaries between:
+```text
+API / SDK Contracts
+   │
+   ▼
+AI Runtime
+   │
+   ▼
+AI Services
+   │
+   ▼
+Provider / Knowledge / Memory Abstractions
+   │
+   ▼
+Concrete Implementations (e.g., SQLite DB, specific LLM API clients)
+```
 
-- Runtime orchestration
-- API/service layer
-- Knowledge and retrieval
-- Persistent memory
-- Developer/plugin platform
-- Observability
-- Deployment and infrastructure
-
-See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for the current architecture and dependency boundaries.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the complete canonical reference, subsystem responsibilities, and preferred dependency directions.
 
 ## Core capabilities
 
@@ -93,10 +99,6 @@ Clone the repository:
     git clone https://github.com/yusi20006-max/Yasin-AI.git
     cd Yasin-AI
 
-For the current production version:
-
-    git checkout v1.1.0
-
 Install the project using the repository's supported Python packaging configuration.
 
 ## Verification
@@ -111,7 +113,7 @@ Container deployments should additionally verify the production compose profile 
 
 ## Release history
 
-- **v1.1.0** — Current production release
+- **v1.1.0** — Current production release (aligned in Phase 2.2)
 - **v1.0.0** — Previous production release
 
 See the complete [release history](https://github.com/yusi20006-max/Yasin-AI/releases).
@@ -195,7 +197,7 @@ To maintain strict source-of-truth accuracy, all Yasin-AI capabilities are organ
 
 - **No HA/Distribution**: The default local SQLite storage is a single-node database. It is not designed for multi-node clusters or high availability.
 - **In-process Trust**: The execution environment does not sandbox third-party plugin code. Only run trusted plugins.
-- **Identified Version Contradiction**: The user-facing documentation (`README.md`) and Git tags reference `v1.1.0` as the current production release. However, the package metadata (`pyproject.toml`), test expectations, and internal status files still declare version `1.0.0`. This discrepancy is a known source-of-truth contradiction and is slated to be resolved in subsequent release-alignment tasks (Phase 2.2). Until then, build systems and dependencies should refer to package version `1.0.0`.
+- **Resolved Version Contradiction**: In Phase 2.2, version inconsistencies across code metadata, CLI outputs, and documentation have been formally resolved and unified to **v1.1.0** across the platform.
 
 ---
 

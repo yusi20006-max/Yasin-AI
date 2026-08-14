@@ -1,163 +1,119 @@
 # Yasin-AI Canonical Architecture Reference
 
-Version: 1.0.0 (Metadata) / 1.1.0 (Release)
+Version: 1.1.0
 Status: Reconciled
 
 ## 1. Overview
 
-Yasin-AI is organized as a layered Python platform. Core runtime behavior is kept independent from transports, persistence backends, observability exporters, and deployment tooling.
+Yasin-AI is structured as the Canonical AI Platform of the Yasin ecosystem. It is organized around clear layers to keep core runtime execution independent of specific transport endpoints, storage backends, telemetry exporters, and third-party AI models.
 
+### Target Canonical Layered Architecture
 ```text
                     Clients / Operators
-                           |
-                    API / CLI / SDK
-                           |
-                    API Service Layer
-                           |
-             +-------------+-------------+
-             |                           |
-          Runtime                  Developer Platform
-             |                           |
-      +------+-------+              Plugin SDK
-      |              |
- Knowledge       Memory
- Platform        Platform
-      |              |
- Retrieval       Persistence
-      |
- Observability (cross-cutting)
-      |
- Deployment / Infrastructure
+                           │
+             ┌─────────────▼─────────────┐
+             │     API / SDK Contracts   │  (External integration contracts)
+             └─────────────┬─────────────┘
+                           ▼
+             ┌───────────────────────────┐
+             │         AI Runtime        │  (Request orchestration & lifecycle)
+             └─────────────┬─────────────┘
+                           ▼
+             ┌───────────────────────────┐
+             │        AI Services        │  (Text generation, structured output)
+             └─────────────┬─────────────┘
+                           ▼
+             ┌───────────────────────────┐
+             │     Provider Gateway      │  (Model registry, routing, fallback)
+             └─────┬─────────────┬───────┘
+                   ▼             ▼
+             ┌───────────┐ ┌───────────┐
+             │ Knowledge │ │  Memory   │  (Semantic store vs episodic memory)
+             └───────────┘ └───────────┘
 ```
 
 ---
 
 ## 2. Ecosystem Roles & Ownership Boundaries (YASIN-DOCS ADR-001)
 
-Yasin-AI is defined as the **Canonical AI Platform** of the Yasin ecosystem according to YASIN-DOCS ADR-001. It must not be treated as an isolated or standalone project; instead, it provides shared AI capabilities while maintaining strict boundaries with other ecosystem repositories:
+Yasin-AI provides shared, reusable AI capabilities for all other platforms in the Yasin ecosystem. It adheres to strict ownership boundaries:
 
-- **Yasin-Core**: Generic runtime and SDK foundation.
-- **Yasin-Agent**: Agent planning, workflow, and execution semantics.
-  *Boundary Note*: While Yasin-AI contains a local in-process `developer_platform/agent.py` implementation for library-level execution, the ecosystem-level agent planning and workflow orchestrator belongs strictly to **Yasin-Agent**.
-- **YasinHub**: Ecosystem control, lifecycle, and observability.
-- **YasinCLI**: Unified user-facing command surface.
-  *Boundary Note*: The CLI commands in `yasinai/cli/` are local management helpers. The unified end-user command line is owned by **YasinCLI**.
-- **Yasin-AI**: Canonical AI capability platform.
-- **YasinRelay / YasinFeed / YasinPress**: Domain, content, and business pipelines.
-
-### Shared AI Capabilities Owned by Yasin-AI
-- Model/provider abstraction & provider routing
-- Inference services
-- Embeddings generation
-- Semantic retrieval & Knowledge/RAG
-- Durable AI memory contracts
-- AI extension/plugin contracts
-- AI observability hooks
-- AI API/SDK contracts
-- Provider reliability and fallback policies
+- **Yasin-Core**: Standard runtime environment and general SDK foundations. Yasin-AI integrates with Yasin-Core during bootstrap, but does not duplicate general execution features.
+- **Yasin-Agent**: Governs multi-step agent planning, reasoning-loop orchestration, and workflow semantics.
+  *Boundary Note*: While Yasin-AI contains a local in-process `developer_platform/agent.py` to expose capability hook endpoints for libraries, all complex multi-step orchestrators belong strictly to **Yasin-Agent**.
+- **YasinHub**: Governs global ecosystem control, runtime lifecycles, and cross-cutting telemetry.
+  *Boundary Note*: Telemetry structures in `observability/` are local instrumentations. They will expose hooks to integrate directly with **YasinHub** in future phases.
+- **YasinCLI**: Represents the unified, user-facing control CLI.
+  *Boundary Note*: The local command runner `yasinai/cli/` is purely for local platform diagnostics; end-user commands will be ported into **YasinCLI**.
 
 ---
 
-## 3. Subsystem Breakdown & Key Classes
+## 3. Preferred Dependency Direction
+
+To maintain stability and enforce system boundaries, components must strictly adhere to the downward dependency direction:
+
+```text
+API / SDK Contracts
+   │
+   ▼
+AI Runtime
+   │
+   ▼
+AI Services
+   │
+   ▼
+Provider / Knowledge / Memory Abstractions
+   │
+   ▼
+Concrete Implementations (e.g., SQLite DB, specific LLM API clients)
+```
+
+### Prohibited Patterns
+* **No Direct Implementation Leaks**: Applications or external agents must never import low-level driver or SQLite-specific logic directly. They must interact only with stable public contracts.
+* **No Circular Imports**: Runtime engines must never depend on the CLI or specific adapters.
+
+---
+
+## 4. Current Subsystem Breakdown & Reconciled Boundaries
+
+Currently, the platform's codebase is divided into several local capability packages:
 
 ### A. Core Runtime (`yasinai/core/`)
-The central execution layer orchestrating the system lifecycle.
-- **`runtime.py`**: Orchestrates `Runtime` flow (Startup -> Bootstrap -> Initialization -> Module Registration -> Ready).
-- **`system.py`**: Manages system state (`SystemInfo`) and service discovery (`ServiceRegistry`).
-- **`bootstrap.py`**: Dynamically discovers and loads configured system modules via `Bootstrap`.
-- **`config.py`**: Processes runtime settings, configuration options, and system defaults via `Config`.
+Manages startup, settings, and graceful system shutdowns.
+* **`runtime.py`**: Manages runtime state transitions.
+* **`bootstrap.py`**: Discovers and instantiates platform modules.
+* **`config.py`**: Coordinates platform settings and defaults.
 
-### B. Developer Platform (`developer_platform/`)
-Provides extension points and local SDK interfaces.
-- **`agent.py`**: Houses the local `Agent` and `AgentSDK` (manages registration and lifecycles of local agents).
-- **`app.py`**: Houses `AIApplication` (chains agents and plugins) and `AppSDK`.
-- **`plugin.py`**: Implements the extensible `Plugin` and `PluginSDK`.
-- **`debugger.py`**: Implements runtime tracing and logging via `Debugger`.
-- **`profiler.py`**: Benchmarking utility `Profiler` for execution times.
-- **`generator.py`**: Generates scaffolding for local plugins/agents.
-- **`package_builder.py`**: Local package/plugin distribution helpers.
+### B. API Service (`api_service/`)
+Implements transport-neutral request-dispatch interfaces to prevent core modules from coupling with web or IPC frameworks.
 
-### C. CLI System (`yasinai/cli/`)
-Local CLI management interface (command surface is `yasin`).
-- **`main.py`**: Command routing, argument parsing, output formatters (including `--json`), and runtime binding.
-- **Commands**:
-  - `yasin status`: Runtime diagnostics.
-  - `yasin agent create`: Local agent scaffolding.
-  - `yasin memory search`: Local semantic search over Retriever.
-  - `yasin security check`: Local security policy validation.
-  - `yasin package build`: Deployment artifact generation.
+### C. Developer Platform (`developer_platform/`)
+Exposes integration surfaces and extension SDKs:
+* **`agent.py` & `app.py`**: Local in-process wrapper APIs.
+* **`plugin.py` & `extension.py`**: Hot-toggling and local execution of trusted user plugins.
+* **`debugger.py` & `profiler.py`**: Performance analysis tools.
 
-### D. Security Platform (`security_platform/`)
-Hardens the platform identity, credentials, and message validation.
-- **`identity.py`**: Manages profile and RBAC schemas (`IdentityManager`).
-- **`auth.py`**: Implements session state validation (`AuthManager`).
-- **`authorization.py`**: Implements access policies (`PolicyEngine`, `PermissionManager`).
-- **`encryption.py`**: Implements cryptographic functions (custom HMAC-SHA256 stream/XOR construction).
-- **`monitoring.py`**: Audits runtime threats and events (`SecurityMonitor`).
-- **`scanner.py`**: Performs local vulnerability scans (`SecurityScanner`).
+### D. Knowledge Platform (`knowledge_platform/`)
+* **`semantic_search.py`**: Implements dependency-free TF-IDF vector math and retriever pipelines (`Retriever`, `EmbeddingEngine`).
+* **`memory.py` & `memory_store.py`**: SQLite-backed conversational persistence and episodic managers.
+* **`graph.py` & `triple_store.py`**: Constructs relational networks.
+* **`reasoning.py`**: Simple logical deduction rules.
 
-### E. Knowledge Platform (`knowledge_platform/`)
-Underpins local memory, knowledge retrieval, and rule execution.
-- **`memory.py`**: Manages process memory (`MemoryManager`).
-- **`triple_store.py`**: Indexes semantic relationships (`TripleStore`).
-- **`graph.py`**: Coordinates concept linkages (`KnowledgeGraph`).
-- **`query_engine.py`**: Runs structured queries over graphs (`QueryEngine`).
-- **`semantic_search.py`**: Implements TF-IDF vector math and retrieval pipelines (`Retriever`, `EmbeddingEngine`, `VectorStore`).
-- **`context.py`**: Dynamically assembles context for LLM execution (`ContextBuilder`).
-- **`reasoning.py`**: Applies logical deductions on triples (`KnowledgeReasoner`, `RuleEngine`).
+### E. Security Platform (`security_platform/`)
+Hardens local platform identity, permissions, custom AES/HMAC encryption, and audit events.
 
-### F. Deployment System (`yasinai/deployment/`)
-Generates deployment bundles and manages container smoke verifications.
-- **`installer.py`**: Directs environment prerequisite checks and templates setup (`Installer`).
-- **`docker_manager.py`**: Validates container compose files (`DockerManager`).
-- **`package_builder.py`**: Bundles runtime source into deployable archives.
-- **`health_check.py`**: Periodic diagnostics check (`HealthCheck`).
+### F. Observability (`observability/`)
+Contains internal timer and counter telemetry.
 
 ---
 
-## 4. Capability Categorization & Project Boundaries
+## 5. Planned & Future Architecture Corrections (Deferred Refactoring)
 
-To maintain source-of-truth accuracy, capabilities are strictly categorized to avoid confusing working components with future contracts:
+As a result of the Phase 2.2 reconciliation, structural re-organizations are deferred to subsequent phases to maintain safe, incremental progress:
 
-### IMPLEMENTED
-- **Modular Runtime & Lifecycle**: Dynamic module bootstrapping and graceful state transitions.
-- **Local SQLite Persistence**: SQLite-backed semantic vector storage for stable local memory retrieval.
-- **In-process Plugin Extension**: Explicit registration and hot-toggling of trusted code in-process.
-- **Local CLI Commands**: Diagnosis, status verification, and semantic search helpers.
-- **API Service Layer**: Transport-neutral service interface and model definitions.
-- **Metrics Observability**: Cross-cutting instrumentation timers and counters.
-
-### CURRENT ARCHITECTURE
-- Single-process focus with clear internal component layering.
-- Configurable data directories and SQLite paths.
-- Trusted plugin model (assumes running code is secure).
-
-### PLANNED
-- **Remote Plugin Sandboxing**: Isolated execution of untrusted external plugins.
-- **Multi-provider Routing**: Automatic routing, retries, and fallback across cloud LLM providers.
-- **Advanced Guardrails**: Dynamic safety policies run before model inference.
-
-### FUTURE ECOSYSTEM CONTRACT
-- **Ecosystem Observability**: Exposing metrics to `YasinHub`.
-- **Ecosystem Agent Orchestration**: Delegating planning and workflow semantics to `Yasin-Agent`.
-- **Unified Command Center**: Integrating local subcommands into `YasinCLI`.
-
----
-
-## 5. Security Boundary & Limitations
-
-- **Secrets Management**: Secrets are runtime configurations and must never be committed to source control.
-- **In-process Trust**: The execution environment does not sandbox third-party plugin code. Only run trusted plugins.
-- **No HA/Distribution**: The local SQLite storage is not designed as a highly available multi-node store.
-
----
-
-## 6. Testing Architecture
-
-Testing layers (implemented in `tests/`):
-- `test_runtime.py`: Verifies configuration and bootstrap orchestration.
-- `test_cli.py`: Verifies command options and JSON/text printing.
-- `test_developer_platform.py`: Tests SDK plugin loading, generator, and debugger tracking.
-- `test_security_platform.py`: Verifies encryption, identity management, and RBAC policies.
-- `test_knowledge_platform.py`: Tests semantic search, knowledge graphs, and reasoning.
-- `test_deployment.py`: Tests automated installers and docker configuration checks.
+1. **Namespace Consolidation (Phase 2.3)**:
+   * Move standalone directories (`api_service/`, `developer_platform/`, `security_platform/`, `observability/`) inside the main `yasinai/` package to resolve public/private boundary ambiguities.
+2. **Provider Gateway Construction (Phase 2.4)**:
+   * Introduce a centralized Provider Gateway layer containing a model registry, retry/fallback handling, and active provider health checks.
+3. **Module Splitting (Phase 2.5)**:
+   * Separate `knowledge_platform/` into distinct `knowledge/` (ingestion, RAG, triple store) and `memory/` (durable session histories, memory policies) packages.
