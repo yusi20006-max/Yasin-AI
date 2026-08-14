@@ -197,6 +197,36 @@ Before publishing verify:
 
 ---
 
+
+---
+
+# 12. Phase 3 — Core AI Platform
+
+- [x] Concrete providers (OpenAI, Anthropic, Local)
+- [x] GenerationService + Generation contracts
+- [x] RagService + RAG contracts
+- [x] Provider credentials from environment only
+
+---
+
+# 13. Phase 4 — Ecosystem Integration
+
+- [x] Yasin-Agent integration client + docs
+- [x] YasinHub integration client + metrics
+- [x] YasinCLI integration client (memory search via services)
+- [x] YasinRelay / YasinFeed / YasinPress clients + docs
+
+---
+
+# 14. Phase 5 — Production Hardening
+
+- [x] Production deploy profile static gates
+- [x] Plugin trust boundary policy (trusted-only default)
+- [x] Production readiness pytest module
+- [x] CI coverage + pip-audit + security check gates
+
+---
+
 # Release Commands
 
 git add .
