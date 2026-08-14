@@ -42,8 +42,18 @@ addopts = ["-ra", "--strict-markers"]
 
 [tool.coverage.run]
 branch = true
-source = ["yasinai", "security_platform", "developer_platform", "knowledge_platform", "api_service", "observability"]
-omit = ["tests/*"]
+source = [
+    "yasinai",
+    "security_platform",
+    "developer_platform",
+    "knowledge_platform",
+    "api_service",
+    "observability",
+]
+omit = [
+    "tests/*",
+    "developer_platform/sdk_tests.py",
+]
 
 [tool.coverage.report]
 exclude_also = [
