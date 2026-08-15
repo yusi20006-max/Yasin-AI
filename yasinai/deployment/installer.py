@@ -85,9 +85,17 @@ class Installer:
         config_path = os.path.join(self.target_directory, "config", "config.json")
         config_created = False
         if not os.path.exists(config_path):
+            try:
+                from yasinai import __version__ as _pkg_version
+            except Exception:
+                try:
+                    from importlib.metadata import version as _meta_version
+                    _pkg_version = _meta_version("yasinai")
+                except Exception:
+                    _pkg_version = "0.0.0"
             default_config = {
                 "app_name": "YasinAI",
-                "version": "1.0.0",
+                "version": _pkg_version,
                 "debug": False,
                 "modules": []
             }

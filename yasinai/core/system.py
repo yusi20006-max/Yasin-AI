@@ -11,7 +11,7 @@ class SystemInfo:
     Provides key information about the running YasinAI system and its environment.
     """
 
-    def __init__(self, app_name: str = "YasinAI", version: str = "1.1.1", status: str = "unknown") -> None:
+    def __init__(self, app_name: str = "YasinAI", version: str = "1.1.2", status: str = "unknown") -> None:
         self.app_name: str = app_name
         self.version: str = version
         self.status: str = status

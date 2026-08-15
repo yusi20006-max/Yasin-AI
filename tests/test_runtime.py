@@ -12,7 +12,7 @@ from yasinai.core.system import ServiceRegistry, SystemInfo
 def test_config_defaults():
     config = Config()
     assert config.get("app_name") == "YasinAI"
-    assert config.get("version") == "1.1.1"
+    assert config.get("version") == "1.1.2"
     assert config.get("debug") is False
     assert config.get("modules") == []
 

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project follows Semantic Versioning.
 
+## [1.1.2] - 2026-08-15
+
+### Fixed
+- Release tag/README version drift: official release now includes Docker hardening (#89), persistent memory/vector storage (#90), and Python version contract fix (#91).
+- Installer default config no longer hardcodes `version = "1.0.0"`; reads package version dynamically.
+- README current-release claims aligned with `pyproject.toml` (**v1.1.2**).
+
 ## [1.1.1] - 2026-08-14
 
 ### Added
