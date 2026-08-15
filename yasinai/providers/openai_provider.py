@@ -4,14 +4,21 @@ OpenAIProvider — OpenAI Chat Completions adapter.
 Credentials: OPENAI_API_KEY only (never hardcoded).
 SDK libraries are imported inside call methods, not at module level.
 HTTP transport is injectable for unit tests (no live API required).
+
+Exception messages must never contain raw provider HTTP bodies or full
+response payloads. Log raw details at logger.error/debug only; raise a
+safe generic ProviderError message for callers / GenerationResult.error.
 """
 from __future__ import annotations
 
 import json
+import logging
 import os
 import urllib.error
 import urllib.request
 from typing import Any, Callable, Dict, Optional
+
+logger = logging.getLogger(__name__)
 
 from yasinai.providers.base import (
     GenerationRequest,
@@ -39,9 +46,23 @@ def _default_http_transport(
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
-        raise ProviderError("openai", f"HTTP {exc.code}: {detail}", retryable=exc.code >= 500) from exc
+        logger.error(
+            "OpenAI HTTP %s error (raw body withheld from exception): %s",
+            exc.code,
+            detail,
+        )
+        raise ProviderError(
+            "openai",
+            f"OpenAI request failed with HTTP {exc.code}",
+            retryable=exc.code >= 500,
+        ) from exc
     except urllib.error.URLError as exc:
-        raise ProviderError("openai", f"Network error: {exc}", retryable=True) from exc
+        logger.error("OpenAI network error: %s", exc)
+        raise ProviderError(
+            "openai",
+            "OpenAI network error",
+            retryable=True,
+        ) from exc
 
 
 class OpenAIProvider(ProviderBase):
@@ -122,7 +143,12 @@ class OpenAIProvider(ProviderBase):
         except ProviderError:
             raise
         except Exception as exc:  # noqa: BLE001 — boundary: never leak transport errors
-            raise ProviderError("openai", str(exc), retryable=True) from exc
+            logger.error("OpenAI transport error: %s", exc)
+            raise ProviderError(
+                "openai",
+                "OpenAI request failed",
+                retryable=True,
+            ) from exc
 
         try:
             choice = payload["choices"][0]
@@ -130,9 +156,13 @@ class OpenAIProvider(ProviderBase):
             usage = payload.get("usage") or {}
             finish = choice.get("finish_reason")
         except (KeyError, IndexError, TypeError) as exc:
+            logger.error(
+                "OpenAI unexpected response shape (payload withheld from exception): %r",
+                payload,
+            )
             raise ProviderError(
                 "openai",
-                f"Unexpected response shape: {payload!r}",
+                "unexpected response format from provider",
                 retryable=False,
             ) from exc
 

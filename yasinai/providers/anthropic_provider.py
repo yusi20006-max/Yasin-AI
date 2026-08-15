@@ -3,10 +3,15 @@ AnthropicProvider — Anthropic Messages API adapter.
 
 Credentials: ANTHROPIC_API_KEY only (never hardcoded).
 SDK libraries are not required at import time; HTTP transport is injectable.
+
+Exception messages must never contain raw provider HTTP bodies or full
+response payloads. Log raw details at logger.error/debug only; raise a
+safe generic ProviderError message for callers / GenerationResult.error.
 """
 from __future__ import annotations
 
 import json
+import logging
 import os
 import urllib.error
 import urllib.request
@@ -23,6 +28,8 @@ from yasinai.providers.base import (
 
 HttpTransport = Callable[[str, Dict[str, str], Dict[str, Any]], Dict[str, Any]]
 
+logger = logging.getLogger(__name__)
+
 DEFAULT_BASE_URL = "https://api.anthropic.com"
 DEFAULT_MODEL = "claude-3-5-haiku-latest"
 ANTHROPIC_VERSION = "2023-06-01"
@@ -38,11 +45,23 @@ def _default_http_transport(
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
+        logger.error(
+            "Anthropic HTTP %s error (raw body withheld from exception): %s",
+            exc.code,
+            detail,
+        )
         raise ProviderError(
-            "anthropic", f"HTTP {exc.code}: {detail}", retryable=exc.code >= 500
+            "anthropic",
+            f"Anthropic request failed with HTTP {exc.code}",
+            retryable=exc.code >= 500,
         ) from exc
     except urllib.error.URLError as exc:
-        raise ProviderError("anthropic", f"Network error: {exc}", retryable=True) from exc
+        logger.error("Anthropic network error: %s", exc)
+        raise ProviderError(
+            "anthropic",
+            "Anthropic network error",
+            retryable=True,
+        ) from exc
 
 
 class AnthropicProvider(ProviderBase):
@@ -118,7 +137,12 @@ class AnthropicProvider(ProviderBase):
         except ProviderError:
             raise
         except Exception as exc:  # noqa: BLE001
-            raise ProviderError("anthropic", str(exc), retryable=True) from exc
+            logger.error("Anthropic transport error: %s", exc)
+            raise ProviderError(
+                "anthropic",
+                "Anthropic request failed",
+                retryable=True,
+            ) from exc
 
         try:
             blocks = payload.get("content") or []
@@ -129,9 +153,13 @@ class AnthropicProvider(ProviderBase):
             usage = payload.get("usage") or {}
             finish = payload.get("stop_reason")
         except (TypeError, AttributeError) as exc:
+            logger.error(
+                "Anthropic unexpected response shape (payload withheld from exception): %r",
+                payload,
+            )
             raise ProviderError(
                 "anthropic",
-                f"Unexpected response shape: {payload!r}",
+                "unexpected response format from provider",
                 retryable=False,
             ) from exc
 
