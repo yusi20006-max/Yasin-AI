@@ -1,0 +1,36 @@
+# Never send local credentials or Git metadata to the Docker daemon.
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+
+# Local Python environments and caches
+.venv
+venv
+__pycache__
+.pytest_cache
+.mypy_cache
+.ruff_cache
+*.pyc
+*.pyo
+
+# Test/build artifacts
+.coverage
+coverage.xml
+htmlcov
+build
+dist
+*.egg-info
+
+# Local databases, logs, and runtime state
+*.db
+*.sqlite
+*.sqlite3
+*.log
+/data
+
+# Editor/OS metadata
+.vscode
+.idea
+.DS_Store
