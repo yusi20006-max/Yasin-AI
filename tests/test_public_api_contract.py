@@ -1,8 +1,8 @@
 """#130 — automated verification of the frozen Public API Contract."""
 from __future__ import annotations
 
-import importlib
 import ast
+import importlib
 from pathlib import Path
 
 import pytest
