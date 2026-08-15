@@ -48,13 +48,29 @@ class RagRequest:
     metadata: Dict[str, Any] = field(default_factory=dict)
     context: Optional[ObservabilityContext] = None
 
+    TOP_K_LIMIT = 100
+    MEMORY_LIMIT_LIMIT = 1000
+    MAX_TOKENS_LIMIT = 32000
+
     def __post_init__(self) -> None:
         if not self.query or not str(self.query).strip():
             raise ContractViolationError("RagRequest: 'query' must not be empty")
         if self.top_k < 1:
             raise ContractViolationError("RagRequest: 'top_k' must be >= 1")
+        if self.top_k > self.TOP_K_LIMIT:
+            raise ContractViolationError(f"RagRequest: 'top_k' must be <= {self.TOP_K_LIMIT}")
         if self.memory_limit < 0:
             raise ContractViolationError("RagRequest: 'memory_limit' must be >= 0")
+        if self.memory_limit > self.MEMORY_LIMIT_LIMIT:
+            raise ContractViolationError(
+                f"RagRequest: 'memory_limit' must be <= {self.MEMORY_LIMIT_LIMIT}"
+            )
+        if self.max_tokens < 1:
+            raise ContractViolationError("RagRequest: 'max_tokens' must be >= 1")
+        if self.max_tokens > self.MAX_TOKENS_LIMIT:
+            raise ContractViolationError(
+                f"RagRequest: 'max_tokens' must be <= {self.MAX_TOKENS_LIMIT}"
+            )
 
 
 @dataclass(frozen=True)

@@ -49,7 +49,15 @@ class KnowledgeQuery:
     metadata: Dict[str, Any] = field(default_factory=dict)
     context: Optional[ObservabilityContext] = None
 
+    TOP_K_LIMIT = 100
+
     def __post_init__(self) -> None:
+        if self.top_k < 1:
+            raise ContractViolationError("KnowledgeQuery: 'top_k' must be >= 1")
+        if self.top_k > self.TOP_K_LIMIT:
+            raise ContractViolationError(
+                f"KnowledgeQuery: 'top_k' must be <= {self.TOP_K_LIMIT}"
+            )
         if self.query_type == KnowledgeQueryType.SEMANTIC and not self.text:
             raise ContractViolationError(
                 "KnowledgeQuery: SEMANTIC query requires 'text'"
