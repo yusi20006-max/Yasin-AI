@@ -7,17 +7,11 @@ from pathlib import Path
 import pytest
 
 from yasinai.contracts import (
-    GenerationRequest,
     GenerationResult,
-    KnowledgeQuery,
-    KnowledgeQueryType,
-    MemoryRequest,
-    MemoryType,
 )
 from yasinai.integration import YasinAgentClient
 from yasinai.providers import LocalProvider, ProviderRegistry
 from yasinai.services import GenerationService, KnowledgeService
-
 
 ROOT = Path(__file__).resolve().parents[1]
 PRIVATE = ("knowledge_platform", "developer_platform", "security_platform")
@@ -29,8 +23,8 @@ def agent(tmp_path, monkeypatch):
     monkeypatch.setenv("YASINAI_VECTOR_PATH", str(tmp_path / "vec.db"))
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    from knowledge_platform.memory import MemoryManager
     from knowledge_platform.graph import KnowledgeGraph
+    from knowledge_platform.memory import MemoryManager
     from knowledge_platform.semantic_search import Retriever
 
     knowledge = KnowledgeService(
