@@ -2,7 +2,7 @@
 
 **Project:** YasinAI
 
-**Current Version:** 1.1.1
+**Current Version:** 1.1.2
 
 **Status:** Released / Post-release Maintenance
 
@@ -28,7 +28,7 @@ The architecture is divided into the following local capability platforms:
 We clearly delineate the platform's release lines to maintain strict ecosystem alignment:
 
 ### CURRENT RELEASE
-- **v1.1.1** — Current production maintenance release (Phases 2–5 complete). Unifies code metadata, dependencies auditing, and architecture documentation.
+- **v1.1.2** — Current production maintenance release (Phases 2–5 complete). Unifies code metadata, dependencies auditing, and architecture documentation.
 
 ### HISTORICAL RELEASES
 - **v1.0.0** — First official production release. Established core runtime, SDKs, memory retrieval, and hardened security.

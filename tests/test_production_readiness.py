@@ -8,9 +8,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_version_sources_aligned():
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    assert 'version = "1.1.1"' in pyproject
+    assert 'version = "1.1.2"' in pyproject
     init = (ROOT / "yasinai" / "__init__.py").read_text(encoding="utf-8")
-    assert "1.1.1" in init
+    assert "1.1.2" in init
 
 
 def test_phase3_capability_modules_present():
@@ -69,7 +69,7 @@ def test_ci_coverage_gate_configured():
 
 def test_release_checklist_mentions_phase_gates():
     text = (ROOT / "RELEASE_CHECKLIST.md").read_text(encoding="utf-8")
-    assert "v1.1.1" in text
+    assert "v1.1.2" in text
     assert any(token in text for token in ("Provider", "Generation", "RAG", "Integration", "Phase 5"))
 
 
