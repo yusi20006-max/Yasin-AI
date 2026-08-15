@@ -28,7 +28,7 @@ from yasinai.providers.factory import build_default_registry, register_default_p
 from yasinai.providers.local_provider import LocalProvider
 from yasinai.providers.openai_provider import OpenAIProvider
 from yasinai.providers.registry import ProviderRegistry
-from yasinai.providers.router import ProviderRouter
+from yasinai.providers.router import ProviderRouter, ProviderUnavailableError
 
 __all__ = [
     "AnthropicProvider",
@@ -42,6 +42,7 @@ __all__ = [
     "ProviderInfo",
     "ProviderRegistry",
     "ProviderRouter",
+    "ProviderUnavailableError",
     "build_default_registry",
     "register_default_providers",
 ]
