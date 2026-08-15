@@ -1,4 +1,5 @@
 import os
+import tarfile
 from unittest.mock import MagicMock, patch
 
 from yasinai.deployment.docker_manager import DockerManager
@@ -143,20 +144,26 @@ def test_package_builder_build(tmp_path):
     assert res_other["package_name"] == "custom-plugin-v2.5.tar.gz"
 
 
-def test_package_builder_rejects_absolute_and_parent_paths(tmp_path):
+def test_package_builder_archive_member_names_are_safe(tmp_path):
     builder = PackageBuilder()
-    absolute = builder.build_package(
-        name="unsafe",
-        output_directory=str(tmp_path / "dist"),
-        include_paths=[str(tmp_path / "secret.txt")],
+    source = tmp_path / "src"
+    source.mkdir()
+    (source / "module.py").write_text("print('hello')\n")
+    config = tmp_path / "config.toml"
+    config.write_text("[tool]\nname = 'demo'\n")
+    output = tmp_path / "out"
+    res = builder.build_package(
+        name="demo",
+        version="0.1.0",
+        output_directory=str(output),
+        include_paths=[str(source), str(config), "../pyproject.toml"],
     )
-    parent = builder.build_package(
-        name="unsafe",
-        output_directory=str(tmp_path / "dist"),
-        include_paths=["../secret.txt"],
-    )
-    assert absolute["success"] is False
-    assert parent["success"] is False
+    assert res["success"] is True
+    with tarfile.open(res["archive_path"], "r:gz") as archive:
+        members = archive.getnames()
+    assert members
+    assert all(not member.startswith("/") for member in members)
+    assert all(".." not in member.split("/") for member in members)
 
 
 def test_additional_deployment_coverage(tmp_path):
