@@ -2,220 +2,148 @@
 
 Canonical AI Platform of the Yasin Ecosystem.
 
-According to YASIN-DOCS ADR-001, Yasin-AI is the Canonical AI Capability Platform for the Yasin ecosystem. It provides shared AI capabilities—such as model/provider abstraction, provider routing, inference services, embeddings, semantic retrieval, knowledge/RAG, durable AI memory contracts, AI extension contracts, and AI observability—while maintaining clear architectural boundaries with:
-- **Yasin-Core**: Generic runtime and SDK foundation.
-- **Yasin-Agent**: Agent planning, workflow, and execution semantics. (Although Yasin-AI includes local in-process Agent execution contracts, ecosystem-level Agent planning resides in Yasin-Agent).
-- **YasinHub**: Ecosystem control, lifecycle, and observability.
-- **YasinCLI**: Unified user-facing command surface. (The CLI in `yasinai/cli/` is a local diagnostic helper; the unified command interface is owned by YasinCLI).
-- **YasinRelay / YasinFeed / YasinPress**: Domain, content, and business pipelines.
+Yasin-AI v1.1.4 provides shared AI capabilities while maintaining explicit boundaries with Yasin-Core, Yasin-Agent, YasinHub, YasinCLI and the Relay/Feed/Press domain platforms.
 
-**Current release: v1.1.4**
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+**Current code line: v1.1.4**
 
 ## Status
 
-Yasin-AI has completed its Phase 2.2 architecture reconciliation.
+**Stable foundation / READY FOR CONTROLLED INTEGRATION.**
 
-- Reconciled version: **v1.1.4**
-- Security audit: completed
-- Release candidate verification: completed
-- Performance/reliability baseline: completed
-- Production deployment baseline: completed
-- Post-release maintenance policy: established
+The current line includes runtime, provider abstraction and concrete adapters, bounded retry/fallback, generation and RAG service boundaries, persistent local memory/knowledge, security, observability, packaging, CI and production container hardening.
 
-## Target Architecture
+This is not a distributed HA platform and does not sandbox untrusted plugins.
 
-The project is structured around clear boundaries and a strict downward dependency flow:
-
-```text
-API / SDK Contracts
-   │
-   ▼
-AI Runtime
-   │
-   ▼
-AI Services
-   │
-   ▼
-Provider / Knowledge / Memory Abstractions
-   │
-   ▼
-Concrete Implementations (e.g., SQLite DB, specific LLM API clients)
-```
-
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the complete canonical reference, subsystem responsibilities, and preferred dependency directions.
-
-## Core capabilities
+## Current capabilities
 
 ### Runtime
+- Modular lifecycle/bootstrap/configuration
+- Service registration and controlled shutdown
 
-- Modular runtime lifecycle
-- CLI-oriented operation
-- Explicit configuration and lifecycle management
-- Dependency-light core components
+### Providers and AI services
+- Provider abstraction
+- OpenAI, Anthropic and Local adapters
+- Provider factory
+- Bounded retry/fallback
+- Explicit provider/model selection with model-constraint preservation
+- GenerationService and public request/result contracts
+- RagService and public RAG contracts
 
-### Memory and Knowledge
+### Knowledge and Memory
+- Semantic search and retrieval
+- Knowledge graph/reasoning
+- SQLite-backed vector and memory persistence
+- WAL/busy-timeout concurrency hardening
 
-- Persistent local memory
-- SQLite-backed storage
-- Semantic/knowledge-oriented components
-- Replaceable persistence boundaries
-
-### Developer Platform
-
-- Extension/plugin interfaces
-- Narrow contracts for integrations
-- Developer-facing service boundaries
-
-### API and Services
-
-- Transport-neutral service layer
-- API-oriented request/response boundaries
-- Centralized error handling
-
-### Observability
-
-- Dependency-free counters and timers
-- Runtime instrumentation primitives
-- Performance/reliability regression coverage
+**Contract distinction:** Knowledge is information/content about the world or corpus. Memory is state associated with an interaction, entity or agent.
 
 ### Security
+- Authentication and authorization
+- Encryption/key handling
+- Repository security scanner
+- Input/path safety limits
+- Provider credential environment isolation
+- Internal error redaction
+- Trusted in-process plugin boundary
+- Canonical scanner-backed `security check`
 
-- Security policy and audit documentation
-- Dependency security auditing
-- Hardened production container baseline
-- Non-root container execution
-- Reduced Linux capabilities
-- no-new-privileges
-- Read-only root filesystem where supported
+### Deployment and quality
+- Production Docker hardening
+- Non-root execution, reduced capabilities and read-only production profile where supported
+- Python 3.9–3.12 CI matrix
+- Ruff
+- pip-audit
+- Security gate
+- Docker build/smoke validation
 
-See [SECURITY.md](SECURITY.md) and [SECURITY_AUDIT_2026-08-09.md](SECURITY_AUDIT_2026-08-09.md).
+## Provider routing: implemented vs planned
+
+**Implemented:** provider abstraction, provider selection, concrete adapters, bounded retry/fallback, explicit provider pinning and model-constraint preservation.
+
+**Planned:** cost-aware routing, health-aware load balancing, policy-aware orchestration and automatic multi-node failover.
+
+## Architecture boundaries
+
+```text
+Public API / SDK Contracts
+          │
+          ▼
+      AI Runtime
+          │
+          ▼
+      AI Services
+          │
+          ▼
+Provider / Knowledge / Memory abstractions
+          │
+          ▼
+Concrete storage/provider implementations
+```
+
+Consumers must not depend on private implementation modules, SQLite internals, provider-specific clients or local CLI internals.
 
 ## Installation
 
-Clone the repository:
-
-    git clone https://github.com/yusi20006-max/Yasin-AI.git
-    cd Yasin-AI
-
-Install the project using the repository's supported Python packaging configuration.
+```bash
+git clone https://github.com/yusi20006-max/Yasin-AI.git
+cd Yasin-AI
+python -m pip install -e .
+```
 
 ## Verification
 
-Before deploying a release, run:
+```bash
+python -m pytest -q
+pip-audit
+python -m build
+```
 
-    python -m pytest -q
-    pip-audit
-    python -m build
+Canonical security verification:
 
-Container deployments should additionally verify the production compose profile and healthcheck in the target environment.
+```bash
+yasin security check
+python -m yasinai.cli security check
+```
 
-## Release history
-
-- **v1.1.4** — Current production release (P1/P2 audit fixes + CI hardening) (includes Docker hardening + persistent storage + Python contract fixes)
-- **v1.1.1** — Phases 2–5 complete (contracts, providers, services, ecosystem integration)
-- **v1.1.0** — Maintenance baseline (aligned in Phase 2.2)
-- **v1.0.0** — First production release
-
-See the complete [release history](https://github.com/yusi20006-max/Yasin-AI/releases).
-
-## Security
-
-Security issues should be reported according to the project's security policy rather than through public issue disclosure.
-
-See [SECURITY.md](SECURITY.md).
-
-Important current security boundary:
-
-> Plugin execution is trusted and in-process. Untrusted remote plugin execution is not currently supported and requires a future sandbox/authorization layer.
+Both paths use the same canonical `SecurityScanner` semantics.
 
 ## Persistence and availability
 
-The default persistence model is local SQLite-backed storage.
-
-Yasin-AI does not currently claim:
+The default persistence model is local SQLite. Yasin-AI does not currently claim:
 
 - Distributed/high-availability storage
 - Automatic multi-node failover
 - Sandboxed execution of untrusted plugins
 
-These limitations are intentional and documented rather than hidden.
+These are explicit product boundaries, not hidden failures.
 
-## Production deployment
+## Ecosystem integration
 
-Production deployment guidance and hardening are documented in the repository deployment configuration and release documentation.
+v1.1.4 is suitable for controlled integration. Before broad migration, consuming repositories must verify public capability contracts and architecture boundaries. The integration target is Yasin-AI's public contracts, not its private implementation tree.
 
-The release candidate and production baseline are documented in:
+## Planned
 
-- [RELEASE_CANDIDATE.md](RELEASE_CANDIDATE.md)
-- [PRODUCTION_RELEASE.md](PRODUCTION_RELEASE.md)
-- [MAINTENANCE.md](MAINTENANCE.md)
+- Untrusted plugin sandboxing
+- Advanced provider routing and load balancing
+- Distributed/HA persistence
+- Advanced inference guardrails
+- Ecosystem observability adapters
+- Unified command-center integration through YasinCLI
 
-## Development
+## Release history
 
-Create a feature branch before making changes:
+- **v1.1.4** — Current code line; security/correctness/CI hardening
+- **v1.1.3** — Provider, RAG, Docker, plugin, input, SQLite and CI hardening
+- **v1.1.2** — Packaging, persistence and version-contract fixes
+- **v1.1.1** — Capability contracts, providers/services and ecosystem integration clients
+- **v1.1.0** — Architecture/documentation maintenance baseline
+- **v1.0.0** — Initial production baseline
 
-    git checkout -b feat/my-change
+See `CHANGELOG.md`, `VERSIONING_POLICY.md`, `docs/ARCHITECTURE.md` and `AI_CAPABILITY_CATALOG.md` for canonical detail.
 
-Run the verification suite:
+## Security
 
-    python -m pytest -q
-    pip-audit
-    python -m build
-
-Then submit changes through a pull request.
-
-## Capability Categorization & Project Boundaries
-
-To maintain strict source-of-truth accuracy, all Yasin-AI capabilities are organized into clear lifecycle categories:
-
-### IMPLEMENTED
-- **Modular Runtime & Lifecycle**: In-process module bootstrapping and runtime lifecycle manager (in `yasinai/core/`).
-- **Local SQLite Persistence**: SQLite-backed semantic vector storage for memory retrieval (in `knowledge_platform/`).
-- **In-process Plugin Extension**: SDK contracts enabling hot-toggling and execution of trusted, local plugins (in `developer_platform/`).
-- **Local CLI Commands**: Diagnostics, local status verification, and semantic search CLI helpers (in `yasinai/cli/`).
-- **API Service Layer**: Transport-neutral service interface and model schemas (in `api_service/`).
-- **Metrics Observability**: Cross-cutting instrumentation timer and counter primitives (in `observability/`).
-
-### CURRENT ARCHITECTURE
-- Single-process focus with clear internal component layering.
-- Configurable data directories and SQLite database paths.
-- Trusted plugin model (assumes running plugin code is safe).
-
-### PLANNED
-- **Remote Plugin Sandboxing**: Isolated, secure container/sandbox execution of untrusted third-party code.
-- **Multi-provider Routing**: Intelligent provider-routing, automatic LLM load-balancing, and fallback across cloud model vendors.
-- **Inference Guardrails**: Dynamic safety, cost-control, and latency-budget policies applied prior to inference.
-
-### FUTURE ECOSYSTEM CONTRACT
-- **Ecosystem Observability**: Exposing platform metrics and latency records directly to `YasinHub`.
-- **Ecosystem Agent Orchestration**: Delegating multi-step planning and runtime workflows to `Yasin-Agent`.
-- **Unified Command Center**: Porting and integrating local diagnostic commands (`status`, `memory`, etc.) directly into `YasinCLI`.
-
----
-
-## Known Platform Limitations & Truths
-
-- **No HA/Distribution**: The default local SQLite storage is a single-node database. It is not designed for multi-node clusters or high availability.
-- **In-process Trust**: The execution environment does not sandbox third-party plugin code. Only run trusted plugins.
-- **Resolved Version Contradiction**: In Phase 2.2, version inconsistencies across code metadata, CLI outputs, and documentation were unified to **v1.1.0** in Phase 2.2 and remain synchronized through **v1.1.2**.
-
----
-
-## Versioning
-
-Yasin-AI follows semantic versioning for releases.
-
-See the complete [Versioning Policy & Compatibility Model](VERSIONING_POLICY.md) for details on:
-- Where the authoritative package version resides
-- Runtime version programmatic retrieval
-- DEC and Contract version mapping
-- Release tagging procedures
-- Release state classification (released, development, planned)
-- Platform compatibility guarantees (Python versions, SQLite schemas, and vendor routing)
-
-Existing release tags are immutable. A new release receives a new version tag rather than moving an existing tag.
+Report security issues according to `SECURITY.md`. Never commit credentials or secrets.
 
 ## License
 

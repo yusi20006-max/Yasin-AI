@@ -1,94 +1,58 @@
 # Yasin-AI Versioning Policy and Compatibility Model
 
-This document defines the canonical versioning policy, release lifecycle, and compatibility model for Yasin-AI.
-
----
+This document is the canonical versioning policy for Yasin-AI.
 
 ## 1. Versioning Policy
 
-Yasin-AI strictly follows [Semantic Versioning 2.0.0 (SemVer)](https://semver.org/) for its package versions.
+Yasin-AI follows Semantic Versioning (SemVer).
 
-### 1.1. Authoritative Package Version
-- **Source of Truth**: The single authoritative source of truth for the platform version is defined in the `pyproject.toml` file under the `[project]` table:
-  ```toml
-  [project]
-  version = "1.1.0"
-  ```
-- **Runtime Version Retrieval**: The runtime/module version is obtained programmatically by importing the package's `__version__` attribute:
-  ```python
-  import yasinai
-  print(yasinai.__version__)  # Output: 1.1.0
-  ```
-  Alternatively, for installed packages, the standard library metadata can be used:
-  ```python
-  import importlib.metadata
-  print(importlib.metadata.version("yasinai"))  # Output: 1.1.0
-  ```
+### 1.1 Authoritative package version
+The authoritative package version is the `[project] version` in `pyproject.toml`.
 
-### 1.2. API & Capability Contract Versioning
-- **Separation of Concerns**: The Yasin-AI package version and the **AI Capability Contract version** are decoupled and must remain independently versionable.
-- **Contract Versioning**: The AI Capability Contract version (e.g., `v1`) represents the public request/response structures, stable endpoints, and in-process SDK integration points.
-- **Mapping/Compatibility Rule**:
-  - **Yasin-AI package (1.x.y)** implements **AI Capability Contract (v1)**.
-  - A major version increment of the package does not automatically force a major increment of the AI Capability Contract unless breaking API wire contracts are introduced.
+**Current stable version: `1.1.4`.**
 
-### 1.3. Release Tagging and Immutable Tags
-- **Tag Format**: Releases are tagged using a standard Git tag prefixed with `v` (e.g., `v1.1.0`).
-- **Tag Immutability**: Existing release tags are strictly **immutable**. Under no circumstances should an existing release tag be deleted or moved to a different commit. If a release contains a regression, a new patch release (e.g., `v1.1.1`) or hotfix must be cut.
-- **Release Commits**: Tags must point at the exact commit on `main` that passed all CI quality, security, and test gates.
+Runtime consumers should use `yasinai.__version__` or `importlib.metadata.version("yasinai")` rather than duplicating a version constant in documentation.
 
-### 1.4. Unreleased & Pre-Release Representation
-- **Unreleased / Development Changes**:
-  - During active development on a release line, the development version is suffixed with `-dev` or `.dev0` (e.g., `1.1.1-dev` or `1.2.0-dev`).
-  - This signifies that the code represents unreleased changes post the last stable release.
-- **Pre-Releases / Release Candidates**:
-  - Formal release previews are represented using standard SemVer suffixes:
-    - Alpha: `1.2.0-alpha.1`
-    - Beta: `1.2.0-beta.1`
-    - Release Candidate: `1.2.0-rc.1` (or `1.2.0-rc1`)
+### 1.2 API and capability contracts
+The package version and public AI capability contract versions are independently versioned. A package patch/minor release does not imply a contract-major change. Breaking public contracts require an explicitly versioned compatibility transition.
 
-### 1.5. CHANGELOG Structure
-- **Standard Format**: The project's `CHANGELOG.md` adheres to the [Keep a Changelog](https://keepachangelog.com/) format.
-- **Subheadings**: Every release section must categorize changes under:
-  - `Added` for new features.
-  - `Changed` for changes in existing functionality.
-  - `Deprecated` for soon-to-be-removed features.
-  - `Removed` for now-removed features.
-  - `Fixed` for any bug fixes.
-  - `Security` in case of vulnerabilities or security hardening.
-- **Timestamps**: Release titles must include the version and release date in `YYYY-MM-DD` format (e.g., `## [1.1.0] - 2026-08-12`).
+### 1.3 Release tags
+Release tags use the `vX.Y.Z` format and are immutable. A tag must point to the exact release commit that passed required CI, security and deployment gates. If a released tag is incorrect, do not move it; publish a new corrective release.
 
----
+### 1.4 Development and pre-release versions
+Unreleased development builds use a development/pre-release identifier such as `1.2.0.dev0` or `1.2.0-rc.1`. Documentation must never describe an unreleased development line as the current stable release.
+
+### 1.5 Changelog
+`CHANGELOG.md` follows Keep a Changelog. Each release records applicable Added, Changed, Deprecated, Removed, Fixed and Security changes with a release date.
 
 ## 2. Compatibility Model
 
-### 2.1. Python & Runtime Requirements
-- **Prerequisite**: Yasin-AI is declared and guaranteed compatible with Python version **`>=3.8`**.
-- **Installation Verifiers**: The environment installer verifies compatibility based on `sys.version_info` mapping major/minor requirements.
+### 2.1 Python
+The v1.1.4 CI matrix verifies Python 3.9, 3.10, 3.11 and 3.12. The package metadata remains authoritative for installation constraints.
 
-### 2.2. Package and SDK Compatibility
-- **Backward Compatibility**: Patch (`1.1.x`) and minor (`1.x.0`) package releases must maintain absolute backward compatibility with existing developer plugin extensions and Agent SDK clients.
-- **Breaking Changes**: Breaking package or API contract changes are restricted to new major version releases (e.g., `2.0.0`).
+### 2.2 Package and SDK compatibility
+Patch releases should preserve existing public behavior. Minor releases may add backward-compatible functionality. Breaking public API changes require a major release or an explicitly documented migration.
 
-### 2.3. Provider Routing & Compatibility
-- **Gateway Abstraction**: LLM providers and semantic/embedding drivers are accessed through transport-neutral wrappers.
-- **No Heavy Coupling**: System capabilities do not tightly couple with specific third-party provider versions. Vendor-specific routing is managed via configurable parameter interfaces rather than hardcoded client dependencies.
+### 2.3 Provider compatibility
+Yasin-AI currently provides provider abstraction, concrete provider adapters, bounded retry/fallback behavior, explicit provider/model selection and preservation of explicit model constraints. It does **not** claim cost-aware routing, health-aware load balancing or automatic multi-node provider orchestration.
 
-### 2.4. Persistence & Schema Compatibility
-- **Local SQLite Store**: Persistent memory and semantic retrieval rely on local SQLite files.
-- **Schema Migrations**:
-  - Minor and patch version upgrades must not break or invalidate existing SQLite databases or table schemas.
-  - If a schema evolution is required, a backward-compatible migration plan or migration helper must be provided to migrate data from the old table format to the new structure without data loss.
+### 2.4 Persistence
+The default persistence model is local SQLite. WAL and busy-timeout settings improve concurrent local access, but this is not a distributed/HA datastore. Schema changes must include a backward-compatible migration strategy where required.
 
----
+## 3. Release State Registry
 
-## 3. Platform Release State Registry
+| Version | State | Classification | Notes |
+|---|---|---|---|
+| `1.1.4` | Current code line | Stable | Current implementation baseline and audit/hardening line on `main`. |
+| `1.1.3` | Historical | Patch release | Provider, RAG, Docker, plugin, input-limit, SQLite and CI hardening. |
+| `1.1.2` | Historical | Patch release | Packaging, persistence, Docker and version-contract fixes. |
+| `1.1.1` | Historical | Feature release | Capability contracts, providers/services, ecosystem clients and production gates. |
+| `1.1.0` | Historical | Maintenance release | Architecture/documentation baseline. |
+| `1.0.0` | Historical | Major release | Initial production baseline. |
+| `1.2.x` | Planned | Future | Advanced routing, sandboxing and other capabilities only when implemented and verified. |
 
-This registry tracks the status and classification of known versions of Yasin-AI:
+## 4. Release Truth Rule
 
-| Version | Release Date | State | Classification | Description |
-|---|---|---|---|---|
-| **`1.1.0`** | 2026-08-12 | **Released** | Maintenance Release | Current stable production baseline. Features automated dependency audit and unified architecture docs. |
-| **`1.0.0`** | 2026-08-09 | **Released** | Major Release | Historical baseline launch. Hardened core runtime, persistent memory, and security platforms. |
-| **`1.1.1-dev`** | — | **Development** | Unreleased / Active | Active development stage focusing on Phase 2.3+ features and version alignment. |
-| **`1.2.0`** | Planned | **Planned** | Minor Release | Planned target featuring remote plugin sandboxing, provider gateways, and model registries. |
+Every release-related document must distinguish **implemented/current**, **historical**, **development**, and **planned** capabilities. Older roadmap phases are historical planning artifacts unless they still describe actual remaining work.
+
+Existing release tags are immutable. A corrective release must receive a new tag rather than rewriting an existing tag.
