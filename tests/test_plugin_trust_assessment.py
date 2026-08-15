@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from developer_platform.plugin import Plugin, PluginSDK
+from developer_platform.sdk import PluginTrustError
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -18,13 +19,8 @@ def test_adr_states_no_sandbox():
 def test_untrusted_plugin_rejected_by_default():
     sdk = PluginSDK()
     plugin = Plugin(name="x", version="1.0.0", trusted=False)
-
-    def handler():
-        return "nope"
-
-    plugin.handler = handler  # type: ignore[attr-defined]
-    with pytest.raises(Exception):
-        sdk.register(plugin) if hasattr(sdk, "register") else sdk.load_plugin(plugin)
+    with pytest.raises(PluginTrustError):
+        sdk.register_plugin(plugin)
 
 
 def test_no_sandbox_module():
