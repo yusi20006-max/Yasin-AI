@@ -60,6 +60,8 @@ class GenerationRequest:
             raise ValueError("GenerationRequest: 'temperature' must be between 0.0 and 2.0")
         if self.max_tokens < 1:
             raise ValueError("GenerationRequest: 'max_tokens' must be >= 1")
+        if self.max_tokens > 32000:
+            raise ValueError("GenerationRequest: 'max_tokens' must be <= 32000")
 
 
 @dataclass(frozen=True)

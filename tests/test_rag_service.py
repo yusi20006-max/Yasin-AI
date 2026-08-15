@@ -46,6 +46,14 @@ def test_rag_request_validation():
         RagRequest(query="")
     with pytest.raises(ContractViolationError, match="top_k"):
         RagRequest(query="q", top_k=0)
+    with pytest.raises(ContractViolationError, match="top_k"):
+        RagRequest(query="q", top_k=101)
+    with pytest.raises(ContractViolationError, match="memory_limit"):
+        RagRequest(query="q", memory_limit=1001)
+    with pytest.raises(ContractViolationError, match="max_tokens"):
+        RagRequest(query="q", max_tokens=32001)
+    # boundary values are accepted
+    RagRequest(query="q", top_k=100, memory_limit=1000, max_tokens=32000)
 
 
 def test_rag_run_without_documents(rag):

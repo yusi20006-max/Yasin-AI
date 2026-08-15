@@ -44,6 +44,8 @@ class GenerationRequest:
     metadata: Dict[str, Any] = field(default_factory=dict)
     context: Optional[ObservabilityContext] = None
 
+    MAX_TOKENS_LIMIT = 32000
+
     def __post_init__(self) -> None:
         if not self.prompt or not str(self.prompt).strip():
             raise ContractViolationError("GenerationRequest: 'prompt' must not be empty")
@@ -53,6 +55,10 @@ class GenerationRequest:
             )
         if self.max_tokens < 1:
             raise ContractViolationError("GenerationRequest: 'max_tokens' must be >= 1")
+        if self.max_tokens > self.MAX_TOKENS_LIMIT:
+            raise ContractViolationError(
+                f"GenerationRequest: 'max_tokens' must be <= {self.MAX_TOKENS_LIMIT}"
+            )
 
 
 @dataclass(frozen=True)

@@ -72,6 +72,10 @@ def test_generation_request_validation():
         GenerationRequest(prompt="hi", temperature=3.0)
     with pytest.raises(ContractViolationError, match="max_tokens"):
         GenerationRequest(prompt="hi", max_tokens=0)
+    with pytest.raises(ContractViolationError, match="max_tokens"):
+        GenerationRequest(prompt="hi", max_tokens=32001)
+    # boundary value is accepted
+    GenerationRequest(prompt="hi", max_tokens=32000)
 
 
 def test_generate_via_local_provider():

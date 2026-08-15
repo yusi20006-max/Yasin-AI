@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import pytest
 
+from yasinai.contracts.base import ContractViolationError
 from yasinai.contracts.knowledge import (
     KnowledgeQuery,
     KnowledgeQueryType,
@@ -41,6 +42,29 @@ def svc(tmp_path, monkeypatch):
         knowledge_graph=KnowledgeGraph(),
         retriever=Retriever(path=str(tmp_path / "vectors.db")),
     )
+
+
+# ---------------------------------------------------------------------------
+# Contract bounds validation
+# ---------------------------------------------------------------------------
+
+def test_knowledge_query_top_k_bounds():
+    with pytest.raises(ContractViolationError, match="top_k"):
+        KnowledgeQuery(query_type=KnowledgeQueryType.SEMANTIC, text="x", top_k=0)
+    with pytest.raises(ContractViolationError, match="top_k"):
+        KnowledgeQuery(query_type=KnowledgeQueryType.SEMANTIC, text="x", top_k=101)
+    # boundary value accepted
+    KnowledgeQuery(query_type=KnowledgeQueryType.SEMANTIC, text="x", top_k=100)
+
+
+def test_memory_request_limit_bounds():
+    with pytest.raises(ContractViolationError, match="limit"):
+        MemoryRequest(operation="retrieve", limit=-1)
+    with pytest.raises(ContractViolationError, match="limit"):
+        MemoryRequest(operation="retrieve", limit=1001)
+    # boundary value and None (no limit) are both accepted
+    MemoryRequest(operation="retrieve", limit=1000)
+    MemoryRequest(operation="retrieve", limit=None)
 
 
 # ---------------------------------------------------------------------------

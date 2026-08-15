@@ -45,12 +45,21 @@ class MemoryRequest:
     metadata: Dict[str, Any] = field(default_factory=dict)
     context: Optional[ObservabilityContext] = None
 
+    LIMIT_LIMIT = 1000
+
     def __post_init__(self) -> None:
         valid_ops = {"store", "retrieve", "delete", "list", "clear"}
         if self.operation not in valid_ops:
             raise ContractViolationError(
                 f"MemoryRequest.operation must be one of {valid_ops}, got '{self.operation}'"
             )
+        if self.limit is not None:
+            if self.limit < 0:
+                raise ContractViolationError("MemoryRequest: 'limit' must be >= 0")
+            if self.limit > self.LIMIT_LIMIT:
+                raise ContractViolationError(
+                    f"MemoryRequest: 'limit' must be <= {self.LIMIT_LIMIT}"
+                )
         if self.operation == "store" and self.content is None:
             raise ContractViolationError("MemoryRequest: 'store' operation requires 'content'")
         if self.memory_type == MemoryType.LONG_TERM and self.operation in {"store", "retrieve", "delete"}:
