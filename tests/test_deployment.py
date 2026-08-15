@@ -71,13 +71,31 @@ def test_docker_manager_generation(tmp_path):
     assert res["dockerfile_created"] is True
     assert res["compose_created"] is True
 
-    assert os.path.exists(os.path.join(tmp_path, "Dockerfile"))
-    assert os.path.exists(os.path.join(tmp_path, "docker-compose.yml"))
+    dockerfile = (tmp_path / "Dockerfile").read_text(encoding="utf-8")
+    compose = (tmp_path / "docker-compose.yml").read_text(encoding="utf-8")
+    assert "USER 10001:10001" in dockerfile
+    assert "HEALTHCHECK" in dockerfile
+    assert "no-new-privileges:true" in compose
+    assert "cap_drop:" in compose
+    assert "YASINAI_ENVIRONMENT" in compose
+    assert "ENVIRONMENT=production" not in compose
 
     # Shouldn't recreate files if they exist and overwrite is False
     res_second = manager.generate_docker_files(overwrite=False)
     assert res_second["dockerfile_created"] is False
     assert res_second["compose_created"] is False
+
+    # overwrite=True alone must not clobber existing files
+    res_unsafe = manager.generate_docker_files(overwrite=True)
+    assert res_unsafe["dockerfile_created"] is False
+    assert res_unsafe["compose_created"] is False
+
+    # Explicit dual confirmation required to replace existing files
+    res_force = manager.generate_docker_files(
+        overwrite=True, confirm_overwrite_production=True
+    )
+    assert res_force["dockerfile_created"] is True
+    assert res_force["compose_created"] is True
 
 
 def test_docker_manager_status(tmp_path):
