@@ -7,7 +7,7 @@ name = "yasinai"
 version = "1.1.1"
 description = "YasinAI Modular AI Platform"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "cryptography>=48.0.1",
 ]
