@@ -3,10 +3,10 @@ Installer for YasinAI Deployment System.
 Handles local setup, directory creation, configuration template setup, and environment verification.
 """
 
+import json
 import logging
 import os
 import sys
-import json
 from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
@@ -106,7 +106,7 @@ class Installer:
                     json.dump(default_config, f, indent=4)
                 config_created = True
                 logger.info(f"Created default configuration template at: {config_path}")
-            except IOError as e:
+            except OSError as e:
                 logger.error(f"Failed to create configuration file template at '{config_path}': {e}", exc_info=True)
 
         logger.info("YasinAI local installation successfully completed.")

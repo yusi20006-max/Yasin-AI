@@ -12,20 +12,28 @@ from yasinai.contracts.base import (
     ContractViolationError,
     ObservabilityContext,
 )
-from yasinai.contracts.memory import MemoryEntry, MemoryRequest, MemoryResponse, MemoryType
+from yasinai.contracts.embedding import (
+    EmbeddingRequest,
+    EmbeddingResponse,
+    EmbeddingVector,
+)
 from yasinai.contracts.knowledge import (
     KnowledgeEntry,
     KnowledgeQuery,
     KnowledgeQueryType,
     KnowledgeResult,
 )
-from yasinai.contracts.embedding import EmbeddingRequest, EmbeddingResponse, EmbeddingVector
+from yasinai.contracts.memory import (
+    MemoryEntry,
+    MemoryRequest,
+    MemoryResponse,
+    MemoryType,
+)
 from yasinai.contracts.plugin import (
     PluginContract,
     PluginInvokeRequest,
     PluginInvokeResponse,
 )
-
 
 # ---------------------------------------------------------------------------
 # Contract version

@@ -1,10 +1,9 @@
 import os
-import json
-import pytest
 from unittest.mock import MagicMock, patch
-from yasinai.deployment.installer import Installer
+
 from yasinai.deployment.docker_manager import DockerManager
 from yasinai.deployment.health_check import HealthCheck
+from yasinai.deployment.installer import Installer
 from yasinai.deployment.package_builder import PackageBuilder
 
 
@@ -179,7 +178,7 @@ def test_additional_deployment_coverage(tmp_path):
 
     # DockerManager generate files IOError (lines 91-92, 101-102)
     # Mocking open to raise IOError when writing
-    with patch("builtins.open", side_effect=IOError("Disk full")):
+    with patch("builtins.open", side_effect=OSError("Disk full")):
         res = manager.generate_docker_files(overwrite=True)
         assert res["dockerfile_created"] is False
         assert res["compose_created"] is False
@@ -220,7 +219,7 @@ def test_additional_deployment_coverage(tmp_path):
         assert "Environment verification failed" in res["message"]
 
     # Installer environment template creation IOError (lines 101-102)
-    with patch("builtins.open", side_effect=IOError("Cannot open file")):
+    with patch("builtins.open", side_effect=OSError("Cannot open file")):
         res = installer.install()
         assert res["success"] is True  # installation is successful but configuration creation is logged and skipped
         assert res["config_created"] is False

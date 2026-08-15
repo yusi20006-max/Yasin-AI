@@ -18,8 +18,8 @@ from yasinai.services import GenerationService, KnowledgeService, RagService
 def knowledge(tmp_path, monkeypatch):
     monkeypatch.setenv("YASINAI_MEMORY_PATH", str(tmp_path / "mem.db"))
     monkeypatch.setenv("YASINAI_VECTOR_PATH", str(tmp_path / "vectors.db"))
-    from knowledge_platform.memory import MemoryManager
     from knowledge_platform.graph import KnowledgeGraph
+    from knowledge_platform.memory import MemoryManager
     from knowledge_platform.semantic_search import Retriever
 
     return KnowledgeService(
@@ -114,6 +114,7 @@ def test_rag_prompt_includes_injected_source_without_dropping_it(rag, knowledge)
 
 def test_rag_build_prompt_flags_injection_phrase_via_logging(caplog):
     import logging as _logging
+
     from yasinai.contracts.knowledge import KnowledgeEntry
     from yasinai.contracts.rag import RagRequest
 
@@ -156,7 +157,7 @@ def test_rag_generation_failure_surfaces(knowledge):
 
 
 def test_service_import_surface():
-    from yasinai import services, contracts
+    from yasinai import contracts, services
 
     assert hasattr(services, "RagService")
     assert hasattr(contracts, "RagRequest")

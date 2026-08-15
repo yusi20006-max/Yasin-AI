@@ -75,12 +75,20 @@ def test_release_checklist_mentions_phase_gates():
 
 def test_public_imports_smoke():
     from yasinai.contracts import GenerationRequest, RagRequest
-    from yasinai.services import GenerationService, KnowledgeService, RagService
     from yasinai.integration import (
-        YasinAgentClient, YasinCLIClient, YasinFeedClient,
-        YasinHubClient, YasinPressClient, YasinRelayClient,
+        YasinAgentClient,
+        YasinCLIClient,
+        YasinFeedClient,
+        YasinHubClient,
+        YasinPressClient,
+        YasinRelayClient,
     )
-    from yasinai.providers import LocalProvider, ProviderCapability, build_default_registry
+    from yasinai.providers import (
+        LocalProvider,
+        ProviderCapability,
+        build_default_registry,
+    )
+    from yasinai.services import GenerationService, KnowledgeService, RagService
 
     assert GenerationRequest and RagRequest
     assert GenerationService and KnowledgeService and RagService

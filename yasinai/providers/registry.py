@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 from threading import Lock
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, List, Optional
 
 from yasinai.providers.base import ProviderBase, ProviderCapability, ProviderInfo
 

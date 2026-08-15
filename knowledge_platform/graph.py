@@ -6,9 +6,9 @@ import logging
 from typing import Dict, List, Optional, Tuple
 
 from knowledge_platform.entity import Entity
+from knowledge_platform.query_engine import QueryEngine
 from knowledge_platform.relation import Relation
 from knowledge_platform.triple_store import TripleStore
-from knowledge_platform.query_engine import QueryEngine
 
 logger = logging.getLogger(__name__)
 

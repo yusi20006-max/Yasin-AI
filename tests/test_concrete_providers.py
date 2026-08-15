@@ -16,7 +16,6 @@ from yasinai.providers import (
 from yasinai.providers.base import GenerationRequest
 from yasinai.providers.router import ProviderUnavailableError
 
-
 # ---------------------------------------------------------------------------
 # LocalProvider
 # ---------------------------------------------------------------------------
@@ -116,6 +115,7 @@ def test_openai_bad_response_shape():
 
 def test_openai_http_error_message_redacted(monkeypatch):
     import urllib.error
+
     from yasinai.providers import openai_provider as mod
 
     class FakeHTTPError(urllib.error.HTTPError):

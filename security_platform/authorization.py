@@ -5,7 +5,8 @@ Manages permissions, policies, access rules, and role-based access control (RBAC
 
 import logging
 from typing import Dict, List, Optional, Set
-from security_platform.identity import IdentityManager, User
+
+from security_platform.identity import IdentityManager
 
 logger = logging.getLogger(__name__)
 

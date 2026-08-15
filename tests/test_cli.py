@@ -1,16 +1,18 @@
+import argparse
 import json
 import sys
 from unittest.mock import MagicMock, patch
+
 import pytest
-import argparse
+
 from yasinai.cli.main import (
     create_parser,
-    handle_status,
     handle_agent_create,
     handle_memory_search,
-    handle_security_check,
     handle_package_build,
-    main
+    handle_security_check,
+    handle_status,
+    main,
 )
 
 
@@ -55,6 +57,7 @@ def test_handle_serve_invalid_interval(capsys):
 def test_serve_command_loop(mock_run_all, mock_sleep, capsys):
     import os
     import signal
+
     from yasinai.cli.main import handle_serve
     mock_run_all.return_value = {"success": True, "status": "HEALTHY"}
     args = argparse.Namespace(interval=5, json=False)
@@ -79,6 +82,7 @@ def test_serve_command_loop(mock_run_all, mock_sleep, capsys):
 def test_serve_command_json_output(mock_run_all, mock_sleep, capsys):
     import os
     import signal
+
     from yasinai.cli.main import handle_serve
     mock_run_all.return_value = {"success": True, "status": "HEALTHY"}
     args = argparse.Namespace(interval=1, json=True)
@@ -109,6 +113,7 @@ def test_serve_command_json_output(mock_run_all, mock_sleep, capsys):
 def test_serve_command_graceful_shutdown(mock_run_all, mock_sleep, capsys):
     import os
     import signal
+
     from yasinai.cli.main import handle_serve
     mock_run_all.return_value = {"success": False, "status": "DEGRADED"}
     args = argparse.Namespace(interval=5, json=False)
@@ -432,8 +437,8 @@ def test_additional_cli_coverage(capsys):
         assert exc_info.value.code == 0
 
     # 8. Run as main script via subprocess to execute lines 302 and 339
-    import subprocess
     import os
+    import subprocess
     env = os.environ.copy()
     env["PYTHONPATH"] = "."
     res = subprocess.run([sys.executable, "yasinai/cli/main.py", "--help"], capture_output=True, text=True, env=env)

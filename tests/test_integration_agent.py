@@ -10,7 +10,6 @@ from yasinai.integration import YasinAgentClient
 from yasinai.providers import LocalProvider, ProviderRegistry
 from yasinai.services import GenerationService, KnowledgeService, RagService
 
-
 FORBIDDEN_IMPORT_ROOTS = (
     "knowledge_platform",
     "developer_platform",
@@ -27,8 +26,8 @@ def client(tmp_path, monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
-    from knowledge_platform.memory import MemoryManager
     from knowledge_platform.graph import KnowledgeGraph
+    from knowledge_platform.memory import MemoryManager
     from knowledge_platform.semantic_search import Retriever
 
     knowledge = KnowledgeService(

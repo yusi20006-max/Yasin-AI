@@ -10,36 +10,36 @@ Import from here, never from internal implementation modules.
 
 from yasinai.contracts.base import (
     CapabilityError,
+    CapabilityMetadata,
     CapabilityUnavailableError,
     ContractViolationError,
     ObservabilityContext,
-    CapabilityMetadata,
-)
-from yasinai.contracts.memory import (
-    MemoryRequest,
-    MemoryResponse,
-    MemoryEntry,
-    MemoryType,
-)
-from yasinai.contracts.knowledge import (
-    KnowledgeQuery,
-    KnowledgeResult,
-    KnowledgeEntry,
-    KnowledgeQueryType,
 )
 from yasinai.contracts.embedding import (
     EmbeddingRequest,
     EmbeddingResponse,
     EmbeddingVector,
 )
+from yasinai.contracts.generation import (
+    GenerationRequest,
+    GenerationResult,
+)
+from yasinai.contracts.knowledge import (
+    KnowledgeEntry,
+    KnowledgeQuery,
+    KnowledgeQueryType,
+    KnowledgeResult,
+)
+from yasinai.contracts.memory import (
+    MemoryEntry,
+    MemoryRequest,
+    MemoryResponse,
+    MemoryType,
+)
 from yasinai.contracts.plugin import (
     PluginContract,
     PluginInvokeRequest,
     PluginInvokeResponse,
-)
-from yasinai.contracts.generation import (
-    GenerationRequest,
-    GenerationResult,
 )
 from yasinai.contracts.rag import (
     RagRequest,

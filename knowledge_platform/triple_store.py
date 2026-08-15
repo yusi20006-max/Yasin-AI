@@ -3,7 +3,7 @@ Triple Store for YasinAI Knowledge Graph.
 """
 
 import logging
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 

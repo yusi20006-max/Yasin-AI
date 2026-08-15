@@ -142,7 +142,7 @@ class OpenAIProvider(ProviderBase):
             payload = self._transport(url, headers, body)
         except ProviderError:
             raise
-        except Exception as exc:  # noqa: BLE001 — boundary: never leak transport errors
+        except Exception as exc:
             logger.error("OpenAI transport error: %s", exc)
             raise ProviderError(
                 "openai",

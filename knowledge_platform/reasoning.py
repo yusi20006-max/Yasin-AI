@@ -4,7 +4,8 @@ Implements KnowledgeReasoner and RuleEngine.
 """
 
 import logging
-from typing import Any, Dict, List, Tuple, Callable
+from typing import Any, Callable, Dict, List, Tuple
+
 from knowledge_platform.graph import KnowledgeGraph
 
 logger = logging.getLogger(__name__)

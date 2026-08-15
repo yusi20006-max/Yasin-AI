@@ -26,10 +26,10 @@ from yasinai.contracts.memory import (
 logger = logging.getLogger(__name__)
 
 # Internal imports — only allowed inside the service layer
-from knowledge_platform.memory import MemoryManager
 from knowledge_platform.graph import KnowledgeGraph
-from knowledge_platform.semantic_search import Retriever
+from knowledge_platform.memory import MemoryManager
 from knowledge_platform.reasoning import KnowledgeReasoner
+from knowledge_platform.semantic_search import Retriever
 
 
 class KnowledgeService:
@@ -76,7 +76,7 @@ class KnowledgeService:
                 error=f"Unsupported memory operation: {op}",
                 meta=meta,
             )
-        except Exception as exc:  # noqa: BLE001 — facade must not leak internals
+        except Exception as exc:
             logger.exception("KnowledgeService.memory failed")
             return MemoryResponse(success=False, error=str(exc), meta=meta)
 
@@ -202,7 +202,7 @@ class KnowledgeService:
                 error=f"Unsupported query_type: {qt}",
                 meta=meta,
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception("KnowledgeService.query failed")
             return KnowledgeResult(success=False, error=str(exc), meta=meta)
 

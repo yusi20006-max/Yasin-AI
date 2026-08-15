@@ -182,4 +182,4 @@ class Retriever:
             close()
 
 
-__all__ = ["EmbeddingEngine", "VectorStore", "SQLiteVectorStore", "SemanticSearch", "Retriever"]
+__all__ = ["EmbeddingEngine", "Retriever", "SQLiteVectorStore", "SemanticSearch", "VectorStore"]

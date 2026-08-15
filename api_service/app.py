@@ -6,8 +6,9 @@ HTTP/CLI adapters can depend on this layer without coupling the core to a web fr
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Mapping, Optional
+from typing import Any, Callable, Dict, Optional
 
 from .errors import APIError, ValidationError
 from .models import HealthResponse, ServiceResponse

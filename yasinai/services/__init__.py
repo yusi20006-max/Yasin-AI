@@ -8,12 +8,12 @@ Consumers may import from here or from contracts; they must not import
 internal packages directly.
 """
 
-from yasinai.services.knowledge_service import KnowledgeService
 from yasinai.services.generation_service import GenerationService
+from yasinai.services.knowledge_service import KnowledgeService
 from yasinai.services.rag_service import RagService
 
 __all__ = [
-    "KnowledgeService",
     "GenerationService",
+    "KnowledgeService",
     "RagService",
 ]

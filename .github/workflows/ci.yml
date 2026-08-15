@@ -50,6 +50,33 @@ jobs:
           path: coverage.xml
           if-no-files-found: ignore
 
+  lint:
+    name: Lint (Ruff, non-blocking)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install lint tooling
+        run: python -m pip install --upgrade pip && python -m pip install -e ".[lint]"
+
+      - name: Run Ruff
+        # Non-blocking: 594 pre-existing violations (mostly legacy typing
+        # style) are tracked in issue #116, not fixed here. This step
+        # reports the current baseline in CI output without failing the
+        # build. Flip continue-on-error to false once the backlog is
+        # cleared (see #116).
+        continue-on-error: true
+        run: ruff check . --output-format=github
+
   security:
     name: Security quality gate
     runs-on: ubuntu-latest
