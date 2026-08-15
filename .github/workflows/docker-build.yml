@@ -1,10 +1,13 @@
 name: Docker Build & Smoke Test
 
+# Manual/tag release path only. PR and main push Docker smoke is owned by
+# ci.yml (`docker` job) to avoid duplicate image builds on every push.
+
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
+  push:
+    tags:
+      - "v*"
 
 permissions:
   contents: read
