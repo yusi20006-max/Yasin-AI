@@ -113,7 +113,6 @@ def handle_memory_search(args: argparse.Namespace) -> int:
         search = client.search_memory(query or " ", top_k=limit)
         if not search.success:
             raise RuntimeError(search.error or "memory search failed")
-        # Empty query: show demo corpus (threshold only applies to non-empty queries)
         effective_threshold = 0.0 if not (query or "").strip() else threshold
         results = client.format_search_results(search, threshold=effective_threshold)
 
@@ -145,46 +144,17 @@ def handle_memory_search(args: argparse.Namespace) -> int:
 
 
 def handle_security_check(args: argparse.Namespace) -> int:
-    """
-    Handle the 'yasin security check' command.
-    Simulates security vulnerability scan and audit check.
+    """Run the canonical repository security scanner.
+
+    This handler intentionally delegates to the same implementation used by the
+    installed ``yasin`` security entrypoint so every CLI invocation has one
+    source of truth and cannot report simulated results.
     """
     logger.debug("Executing CLI command: security check")
-
     try:
-        # Simulated check items
-        checks = [
-            {"id": "SEC_001", "name": "Environment Secrets Check", "passed": True, "details": "No plain-text credentials found in codebase."},
-            {"id": "SEC_002", "name": "File Permissions", "passed": True, "details": "Repository files are properly restricted."},
-            {"id": "SEC_003", "name": "Encryption Engines", "passed": True, "details": "SHA-256 and AES configuration validated."},
-            {"id": "SEC_004", "name": "Policy Engine Health", "passed": True, "details": "Role-Based Access Control policies loaded."},
-        ]
-
-        failed_checks = [c for c in checks if not c["passed"]]
-        overall_status = "SECURE" if not failed_checks else "VULNERABLE"
-
-        output = {
-            "status": overall_status,
-            "scanned_items": len(checks),
-            "failed_items": len(failed_checks),
-            "checks": checks
-        }
-
-        if args.json:
-            print(json.dumps(output, indent=2))
-        else:
-            print("=========================================")
-            print("YasinAI Security Platform - Audit Check")
-            print(f"Status: {overall_status}")
-            print("=========================================")
-            for check in checks:
-                status_str = "[ PASS ]" if check["passed"] else "[ FAIL ]"
-                print(f"{status_str} {check['name']}")
-                print(f"         Details: {check['details']}")
-            print("=========================================")
-            print(f"Scan complete. {len(checks)} checks performed.")
-        logger.info("Successfully executed security check.")
-        return 0
+        from yasinai.cli.security_entrypoint import security_check
+        argv = ["--json"] if getattr(args, "json", False) else []
+        return security_check(argv)
     except Exception as e:
         logger.exception("Error checking security")
         print(f"Error checking security: {e}", file=sys.stderr)
@@ -241,7 +211,6 @@ def handle_serve(args: argparse.Namespace) -> int:
     logger.debug("Executing CLI command: serve")
     interval: int = getattr(args, "interval", 300)
 
-    # Validate interval
     if interval <= 0:
         logger.exception("Interval must be a positive integer.")
         print("Error: Interval must be a positive integer.", file=sys.stderr)
@@ -254,7 +223,6 @@ def handle_serve(args: argparse.Namespace) -> int:
         nonlocal stop_flag
         stop_flag = True
 
-    # Register signal handlers
     original_sigint = signal.getsignal(signal.SIGINT)
     original_sigterm = signal.getsignal(signal.SIGTERM)
     signal.signal(signal.SIGINT, signal_handler)
@@ -262,17 +230,11 @@ def handle_serve(args: argparse.Namespace) -> int:
 
     try:
         runtime.start()
-
         health_checker = HealthCheck()
 
         startup_msg = f"YasinAI Core Runtime started in foreground supervisor mode. Health check interval: {interval} seconds."
         if args.json:
-            print(json.dumps({
-                "event": "startup",
-                "status": "running",
-                "interval": interval,
-                "message": startup_msg
-            }))
+            print(json.dumps({"event": "startup", "status": "running", "interval": interval, "message": startup_msg}))
         else:
             print("=========================================")
             print("         YasinAI Foreground Serve        ")
@@ -284,21 +246,13 @@ def handle_serve(args: argparse.Namespace) -> int:
 
         while not stop_flag:
             report = health_checker.run_all_checks()
-
             if args.json:
-                print(json.dumps({
-                    "event": "health_check",
-                    "status": report.get("status"),
-                    "success": report.get("success"),
-                    "timestamp": time.strftime('%Y-%m-%d %H:%M:%S')
-                }))
+                print(json.dumps({"event": "health_check", "status": report.get("status"), "success": report.get("success"), "timestamp": time.strftime('%Y-%m-%d %H:%M:%S')}))
             else:
                 timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
                 print(f"[{timestamp}] Health Check Status: {report.get('status')} (Success: {report.get('success')})")
-
             logger.info(f"Health Check Completed: {report}")
 
-            # Sleep in small increments to be responsive to signals
             slept = 0
             while slept < interval and not stop_flag:
                 time.sleep(1)
@@ -309,31 +263,22 @@ def handle_serve(args: argparse.Namespace) -> int:
         print(f"Error in serve loop: {e}", file=sys.stderr)
         return 1
     finally:
-        # Restore signal handlers
         signal.signal(signal.SIGINT, original_sigint)
         signal.signal(signal.SIGTERM, original_sigterm)
 
         shutdown_msg = "Shutting down YasinAI Core Runtime cleanly..."
         if args.json:
-            print(json.dumps({
-                "event": "shutdown",
-                "status": "stopped",
-                "message": shutdown_msg
-            }))
+            print(json.dumps({"event": "shutdown", "status": "stopped", "message": shutdown_msg}))
         else:
             print(shutdown_msg)
         logger.info(shutdown_msg)
-
         runtime.shutdown()
 
     return 0
 
 
 def create_parser() -> argparse.ArgumentParser:
-    """
-    Creates and configures the argument parser for YasinAI CLI.
-    """
-    # Create a parent parser to share common options like --json
+    """Creates and configures the argument parser for YasinAI CLI."""
     parent_parser = argparse.ArgumentParser(add_help=False)
     parent_parser.add_argument("--json", action="store_true", help="Output results in JSON format")
 
@@ -345,11 +290,9 @@ def create_parser() -> argparse.ArgumentParser:
 
     subparsers = parser.add_subparsers(dest="command", help="Available subcommands")
 
-    # 1. 'status' command
     status_parser = subparsers.add_parser("status", help="Check system status and details", parents=[parent_parser])
     status_parser.set_defaults(func=handle_status)
 
-    # 2. 'agent' command and its 'create' subcommand
     agent_parser = subparsers.add_parser("agent", help="Manage AI Agents", parents=[parent_parser])
     agent_subparsers = agent_parser.add_subparsers(dest="subcommand", help="Agent subcommands")
 
@@ -360,7 +303,6 @@ def create_parser() -> argparse.ArgumentParser:
     agent_create_parser.add_argument("--type", default="standard", help="Type of the agent (e.g. standard, specialist)")
     agent_create_parser.set_defaults(func=handle_agent_create)
 
-    # 3. 'memory' command and its 'search' subcommand
     memory_parser = subparsers.add_parser("memory", help="Manage Knowledge Memory Platform", parents=[parent_parser])
     memory_subparsers = memory_parser.add_subparsers(dest="subcommand", help="Memory subcommands")
 
@@ -370,14 +312,12 @@ def create_parser() -> argparse.ArgumentParser:
     memory_search_parser.add_argument("--threshold", type=float, default=0.7, help="Minimum matching similarity score")
     memory_search_parser.set_defaults(func=handle_memory_search)
 
-    # 4. 'security' command and its 'check' subcommand
     security_parser = subparsers.add_parser("security", help="Manage Security Platform", parents=[parent_parser])
     security_subparsers = security_parser.add_subparsers(dest="subcommand", help="Security subcommands")
 
     security_check_parser = security_subparsers.add_parser("check", help="Run audit and security checks", parents=[parent_parser])
     security_check_parser.set_defaults(func=handle_security_check)
 
-    # 5. 'package' command and its 'build' subcommand
     package_parser = subparsers.add_parser("package", help="Manage Deployment Packaging", parents=[parent_parser])
     package_subparsers = package_parser.add_subparsers(dest="subcommand", help="Package subcommands")
 
@@ -386,7 +326,6 @@ def create_parser() -> argparse.ArgumentParser:
     package_build_parser.add_argument("--version", default="1.1.4", help="Target package version")
     package_build_parser.set_defaults(func=handle_package_build)
 
-    # 6. 'serve' command
     serve_parser = subparsers.add_parser("serve", help="Keep Core Runtime alive as a foreground process", parents=[parent_parser])
     serve_parser.add_argument("--interval", type=int, default=300, help="Periodic health-check interval in seconds")
     serve_parser.set_defaults(func=handle_serve)
@@ -395,9 +334,7 @@ def create_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> None:
-    """
-    Main CLI entrypoint. Parses command line arguments and executes requested subcommands.
-    """
+    """Main CLI entrypoint. Parses command line arguments and executes requested subcommands."""
     if argv is None:
         argv = sys.argv[1:]
 
@@ -408,9 +345,7 @@ def main(argv: list[str] | None = None) -> None:
         parser.print_help()
         sys.exit(0)
 
-    # For commands with nested subcommands, ensure subcommand is provided
     if args.command in ("agent", "memory", "security", "package") and not getattr(args, "subcommand", None):
-        # Print subcommand help
         sub_parsers_actions = [
             action for action in parser._subparsers._actions
             if isinstance(action, argparse._SubParsersAction)
@@ -424,7 +359,6 @@ def main(argv: list[str] | None = None) -> None:
         sys.exit(0)
 
     if hasattr(args, "func"):
-        # Propagate the top-level --json option to nested args if not present
         if args.json and not hasattr(args, "json"):
             args.json = True
         exit_code: int = args.func(args)
