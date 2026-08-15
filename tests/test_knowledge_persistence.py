@@ -36,3 +36,21 @@ def test_sqlite_vector_store_update_delete_and_clear(tmp_path):
     store.clear()
     assert store.get_all_records() == []
     store.close()
+
+
+def test_sqlite_vector_store_sets_wal_and_busy_timeout(tmp_path):
+    store = SQLiteVectorStore(tmp_path / "vectors.db")
+    journal_mode = store._connection.execute("PRAGMA journal_mode").fetchone()[0]
+    busy_timeout = store._connection.execute("PRAGMA busy_timeout").fetchone()[0]
+    assert journal_mode.lower() == "wal"
+    assert busy_timeout == 5000
+    store.close()
+
+
+def test_sqlite_vector_store_in_memory_skips_wal_but_sets_busy_timeout():
+    store = SQLiteVectorStore(":memory:")
+    journal_mode = store._connection.execute("PRAGMA journal_mode").fetchone()[0]
+    busy_timeout = store._connection.execute("PRAGMA busy_timeout").fetchone()[0]
+    assert journal_mode.lower() != "wal"
+    assert busy_timeout == 5000
+    store.close()

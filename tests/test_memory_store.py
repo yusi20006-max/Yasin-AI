@@ -23,6 +23,26 @@ def test_sqlite_memory_store_round_trip_and_update(tmp_path):
     store.close()
 
 
+def test_sqlite_memory_store_sets_wal_and_busy_timeout(tmp_path):
+    path = tmp_path / "memory.db"
+    store = SQLiteMemoryStore(path)
+    journal_mode = store._connection.execute("PRAGMA journal_mode").fetchone()[0]
+    busy_timeout = store._connection.execute("PRAGMA busy_timeout").fetchone()[0]
+    assert journal_mode.lower() == "wal"
+    assert busy_timeout == 5000
+    store.close()
+
+
+def test_sqlite_memory_store_in_memory_skips_wal_but_sets_busy_timeout():
+    store = SQLiteMemoryStore(":memory:")
+    journal_mode = store._connection.execute("PRAGMA journal_mode").fetchone()[0]
+    busy_timeout = store._connection.execute("PRAGMA busy_timeout").fetchone()[0]
+    # WAL is not applicable to :memory: databases; SQLite keeps its default.
+    assert journal_mode.lower() != "wal"
+    assert busy_timeout == 5000
+    store.close()
+
+
 def test_long_term_memory_defaults_to_durable_store(tmp_path):
     path = tmp_path / "memory.db"
     first = LongTermMemory(path=str(path))
