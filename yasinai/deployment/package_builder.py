@@ -52,11 +52,11 @@ class PackageBuilder:
             archive_path = os.path.join(output_directory, package_name)
 
             resolved_paths = [(path, Path(path).resolve()) for path in paths_to_include if os.path.exists(path)]
-            if resolved_paths:
-                source_roots = [resolved.parent if resolved.is_file() else resolved.parent for _, resolved in resolved_paths]
-                common_root = Path(os.path.commonpath([str(root) for root in source_roots]))
-            else:
-                common_root = Path.cwd().resolve()
+            common_root = (
+                Path(os.path.commonpath([str(resolved.parent) for _, resolved in resolved_paths]))
+                if resolved_paths
+                else Path.cwd().resolve()
+            )
 
             files_included: list[str] = []
             with tarfile.open(archive_path, "w:gz") as tar:
