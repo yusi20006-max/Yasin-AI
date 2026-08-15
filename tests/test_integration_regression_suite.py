@@ -84,11 +84,9 @@ def test_end_to_end_memory_knowledge_generation_rag(stack):
 
 
 def test_regression_public_imports_only_for_suite():
-    import ast
-    from pathlib import Path
+        from pathlib import Path
 
     path = Path(__file__)
-    tree = ast.parse(path.read_text(encoding="utf-8"))
     # Fixture may import knowledge_platform for test wiring only — allowed in tests.
     # Production integration clients are covered by boundary tests.
     assert path.name.startswith("test_")
