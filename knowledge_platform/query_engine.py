@@ -3,7 +3,8 @@ Query Engine for YasinAI Knowledge Graph.
 """
 
 import logging
-from typing import Any, List, Dict, Tuple, Optional
+from typing import List, Optional, Tuple
+
 from knowledge_platform.triple_store import TripleStore
 
 logger = logging.getLogger(__name__)

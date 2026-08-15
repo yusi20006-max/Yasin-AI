@@ -17,12 +17,10 @@ from yasinai.contracts.knowledge import (
 )
 from yasinai.contracts.memory import (
     MemoryRequest,
-    MemoryResponse,
     MemoryType,
 )
 from yasinai.services import KnowledgeService
 from yasinai.services.knowledge_service import KnowledgeService as KS
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -33,8 +31,8 @@ def svc(tmp_path, monkeypatch):
     """Isolated service with temp long-term memory and vector paths."""
     monkeypatch.setenv("YASINAI_MEMORY_PATH", str(tmp_path / "mem.db"))
     monkeypatch.setenv("YASINAI_VECTOR_PATH", str(tmp_path / "vectors.db"))
-    from knowledge_platform.memory import MemoryManager
     from knowledge_platform.graph import KnowledgeGraph
+    from knowledge_platform.memory import MemoryManager
     from knowledge_platform.semantic_search import Retriever
 
     return KnowledgeService(

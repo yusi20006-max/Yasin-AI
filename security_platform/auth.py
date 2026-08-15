@@ -8,7 +8,8 @@ import hmac
 import logging
 import secrets
 import time
-from typing import Dict, Optional, Set
+from typing import Dict, Optional
+
 from security_platform.identity import IdentityManager
 
 logger = logging.getLogger(__name__)

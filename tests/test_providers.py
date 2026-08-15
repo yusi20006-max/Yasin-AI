@@ -15,7 +15,6 @@ from yasinai.providers.base import (
 from yasinai.providers.registry import ProviderRegistry, ProviderRegistryError
 from yasinai.providers.router import ProviderRouter, ProviderUnavailableError
 
-
 # ---------------------------------------------------------------------------
 # Fixtures — stub provider implementations
 # ---------------------------------------------------------------------------

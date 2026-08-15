@@ -59,7 +59,7 @@ class HealthCheck:
             logger.error(f"Core Runtime health check: FAILED: {e}", exc_info=True)
             return {
                 "success": False,
-                "message": f"Core Runtime verification failed: {str(e)}",
+                "message": f"Core Runtime verification failed: {e!s}",
                 "details": {}
             }
 
@@ -88,7 +88,7 @@ class HealthCheck:
             logger.error(f"CLI health check: FAILED: {e}", exc_info=True)
             return {
                 "success": False,
-                "message": f"CLI verification failed: {str(e)}",
+                "message": f"CLI verification failed: {e!s}",
                 "subcommands_found": []
             }
 
@@ -98,8 +98,8 @@ class HealthCheck:
         """
         logger.debug("Checking Security Platform health...")
         try:
-            from security_platform.identity import IdentityManager
             from security_platform.encryption import EncryptionEngine
+            from security_platform.identity import IdentityManager
 
             id_mgr = IdentityManager()
             # Roles need to be created before assigning them
@@ -123,7 +123,7 @@ class HealthCheck:
             logger.error(f"Security Platform health check: FAILED: {e}", exc_info=True)
             return {
                 "success": False,
-                "message": f"Security Platform verification failed: {str(e)}",
+                "message": f"Security Platform verification failed: {e!s}",
                 "identity_ok": False,
                 "encryption_ok": False
             }
@@ -157,7 +157,7 @@ class HealthCheck:
             logger.error(f"Knowledge Platform health check: FAILED: {e}", exc_info=True)
             return {
                 "success": False,
-                "message": f"Knowledge Platform verification failed: {str(e)}",
+                "message": f"Knowledge Platform verification failed: {e!s}",
                 "memory_ok": False,
                 "search_ok": False
             }

@@ -2,7 +2,8 @@ import argparse
 import json
 import logging
 import sys
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
+
 from yasinai.core.runtime import Runtime
 
 logger = logging.getLogger(__name__)
@@ -233,6 +234,7 @@ def handle_serve(args: argparse.Namespace) -> int:
     """
     import signal
     import time
+
     from yasinai.deployment.health_check import HealthCheck
 
     logger.debug("Executing CLI command: serve")
@@ -424,7 +426,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     if hasattr(args, "func"):
         # Propagate the top-level --json option to nested args if not present
         if args.json and not hasattr(args, "json"):
-            setattr(args, "json", True)
+            args.json = True
         exit_code: int = args.func(args)
         sys.exit(exit_code)
     else:

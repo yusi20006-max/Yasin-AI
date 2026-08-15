@@ -10,7 +10,6 @@ from __future__ import annotations
 from typing import Any, Dict, Optional
 
 from observability.metrics import MetricsRegistry
-
 from yasinai.contracts.generation import GenerationRequest, GenerationResult
 from yasinai.contracts.knowledge import (
     KnowledgeQuery,

@@ -13,6 +13,8 @@ from yasinai.contracts.base import CapabilityMetadata
 from yasinai.contracts.generation import GenerationRequest, GenerationResult
 from yasinai.providers.base import (
     GenerationRequest as ProviderGenerationRequest,
+)
+from yasinai.providers.base import (
     ProviderBase,
     ProviderCapability,
     ProviderError,
@@ -114,7 +116,7 @@ class GenerationService:
                         candidate.info.name, exc.retryable, exc,
                     )
                     break
-                except Exception as exc:  # noqa: BLE001 — facade must not leak
+                except Exception as exc:
                     logger.exception("GenerationService.generate failed")
                     return GenerationResult(success=False, error=str(exc), meta=meta)
 

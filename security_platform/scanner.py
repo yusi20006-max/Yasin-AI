@@ -8,9 +8,10 @@ intelligence.
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, List, Optional
 
 
 @dataclass
@@ -91,6 +92,7 @@ class SecurityScanner:
     def check_crypto(self) -> SecurityFinding:
         try:
             from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
             from security_platform.encryption import EncryptionEngine
             if AESGCM is None or not hasattr(EncryptionEngine, "encrypt"):
                 raise RuntimeError("required AEAD implementation is unavailable")

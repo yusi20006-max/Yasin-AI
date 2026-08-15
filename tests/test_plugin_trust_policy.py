@@ -12,7 +12,6 @@ from developer_platform.sdk import (
     plugin,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 

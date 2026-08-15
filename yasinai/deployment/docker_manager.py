@@ -184,7 +184,7 @@ class DockerManager:
                 f.write(content)
             logger.info("Wrote %s at: %s", label, path)
             return True
-        except IOError as e:
+        except OSError as e:
             logger.error("Failed to write %s: %s", label, e, exc_info=True)
             return False
 

@@ -4,7 +4,6 @@ import os
 import tempfile
 from pathlib import Path
 
-
 _BASE = Path(tempfile.gettempdir())
 _TEST_MEMORY_PATH = _BASE / f"yasinai-tests-{os.getpid()}.db"
 _TEST_VECTOR_PATH = _BASE / f"yasinai-vectors-{os.getpid()}.db"

@@ -92,7 +92,7 @@ class RagService:
                     provider=gen.provider,
                 ),
             )
-        except Exception as exc:  # noqa: BLE001 — facade boundary
+        except Exception as exc:
             logger.exception("RagService.run failed")
             return RagResult(success=False, error=str(exc), meta=meta)
 

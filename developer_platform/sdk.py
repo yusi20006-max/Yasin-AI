@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Iterable, Optional
+from typing import Any, Callable, Dict, Optional
 
 
 class SDKError(Exception):
@@ -86,18 +87,7 @@ def plugin(
     """Declare plugin metadata without coupling the handler to the registry."""
 
     def decorator(handler: Callable[..., Any]) -> Callable[..., Any]:
-        setattr(
-            handler,
-            "__yasinai_plugin__",
-            PluginSpec(
-                name,
-                handler,
-                version,
-                description,
-                dict(metadata or {}),
-                trusted=trusted,
-            ),
-        )
+        handler.__yasinai_plugin__ = PluginSpec(name, handler, version, description, dict(metadata or {}), trusted=trusted)
         return handler
 
     return decorator
@@ -105,9 +95,9 @@ def plugin(
 
 __all__ = [
     "PluginError",
-    "PluginTrustError",
     "PluginRegistry",
     "PluginSpec",
+    "PluginTrustError",
     "SDKError",
     "plugin",
 ]

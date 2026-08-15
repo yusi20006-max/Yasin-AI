@@ -6,7 +6,7 @@ enrichment (generation / RAG) without importing internal platforms.
 """
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from yasinai.contracts.generation import GenerationRequest, GenerationResult
 from yasinai.contracts.rag import RagRequest, RagResult

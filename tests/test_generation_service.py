@@ -3,10 +3,16 @@ from __future__ import annotations
 
 import pytest
 
-from yasinai.contracts import GenerationRequest, GenerationResult, ContractViolationError
+from yasinai.contracts import (
+    ContractViolationError,
+    GenerationRequest,
+    GenerationResult,
+)
 from yasinai.providers import LocalProvider, OpenAIProvider, ProviderRegistry
 from yasinai.providers.base import (
     GenerationRequest as ProviderGenerationRequest,
+)
+from yasinai.providers.base import (
     GenerationResponse,
     ProviderBase,
     ProviderCapability,
@@ -131,8 +137,7 @@ def test_default_registry_includes_local(monkeypatch):
 
 
 def test_service_import_surface():
-    from yasinai import services
-    from yasinai import contracts
+    from yasinai import contracts, services
 
     assert hasattr(services, "GenerationService")
     assert hasattr(contracts, "GenerationRequest")
