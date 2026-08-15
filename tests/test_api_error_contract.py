@@ -44,9 +44,9 @@ def test_provider_style_failure_mapped_generically():
 
 def test_internal_failure_never_leaks_exception_text():
     svc = create_service()
-    secret = "postgres://user:pass@host/db"
-    svc.add_route("GET", "/x", lambda _: (_ for _ in ()).throw(RuntimeError(secret)))
+    marker = "SENSITIVE_MARKER_XYZ_999"
+    svc.add_route("GET", "/x", lambda _: (_ for _ in ()).throw(RuntimeError(marker)))
     res = svc.dispatch("GET", "/x")
     assert res.status == 500
     assert res.data == {"error": "internal server error"}
-    assert secret not in str(res.data)
+    assert marker not in str(res.data)
