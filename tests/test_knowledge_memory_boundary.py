@@ -34,7 +34,8 @@ def test_memory_store_retrieve_short_term(svc):
 
 
 def test_memory_long_term_requires_key():
-    with pytest.raises(Exception):
+    from yasinai.contracts.base import ContractViolationError
+    with pytest.raises(ContractViolationError):
         MemoryRequest(operation="store", memory_type=MemoryType.LONG_TERM, content="x")
 
 
