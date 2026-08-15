@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from developer_platform.agent import Agent, AgentSDK
 from developer_platform.plugin import Plugin, PluginSDK
@@ -298,17 +300,81 @@ def test_profiler():
     assert prof.get_profile_report() == {"status": "no profiles recorded"}
 
 
-def test_package_builder():
+def test_package_builder(tmp_path):
     builder = PackageBuilder()
+    build_dir = str(tmp_path / "build") + "/"
+    dist_dir = str(tmp_path / "dist") + "/"
 
-    res = builder.build_package(name="yasinai", version="1.5.0", output_directory="build/")
+    res = builder.build_package(name="yasinai", version="1.5.0", output_directory=build_dir)
     assert res["success"] is True
     assert res["package_name"] == "yasinai-pkg-1.5.0.tar.gz"
-    assert res["output_directory"] == "build/"
+    assert res["output_directory"] == build_dir
     assert "yasinai/core/" in res["files_included"]
 
-    res_plugin = builder.build_package(name="my-plugin", version="2.0", output_directory="dist/")
+    res_plugin = builder.build_package(name="my-plugin", version="2.0", output_directory=dist_dir)
     assert res_plugin["package_name"] == "my-plugin-v2.0.tar.gz"
+
+
+def test_package_builder_creates_real_archive_on_disk(tmp_path):
+    import tarfile
+
+    # Set up a minimal fake project layout to package, independent of the
+    # real repo's own yasinai/ directory.
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "module.py").write_text("print('hello')\n")
+    (tmp_path / "config.toml").write_text("[tool]\nname = 'demo'\n")
+
+    output_dir = tmp_path / "out"
+    builder = PackageBuilder()
+    res = builder.build_package(
+        name="demo",
+        version="0.1.0",
+        output_directory=str(output_dir),
+        include_paths=[str(tmp_path / "src"), str(tmp_path / "config.toml")],
+    )
+
+    assert res["success"] is True
+    archive_path = res["archive_path"]
+    assert os.path.isfile(archive_path)
+    assert archive_path.endswith("demo-v0.1.0.tar.gz")
+
+    with tarfile.open(archive_path, "r:gz") as tar:
+        members = tar.getnames()
+    assert any(m.endswith("module.py") for m in members)
+    assert any(m.endswith("config.toml") for m in members)
+
+
+def test_package_builder_output_directory_auto_created(tmp_path):
+    output_dir = tmp_path / "nested" / "does" / "not" / "exist"
+    assert not output_dir.exists()
+
+    builder = PackageBuilder()
+    res = builder.build_package(
+        name="demo",
+        version="1.0.0",
+        output_directory=str(output_dir),
+        include_paths=[],
+    )
+
+    assert res["success"] is True
+    assert output_dir.exists()
+    assert os.path.isfile(res["archive_path"])
+
+
+def test_package_builder_skips_missing_paths_without_failing(tmp_path):
+    (tmp_path / "real.txt").write_text("present\n")
+
+    builder = PackageBuilder()
+    res = builder.build_package(
+        name="demo",
+        version="1.0.0",
+        output_directory=str(tmp_path / "out"),
+        include_paths=[str(tmp_path / "real.txt"), str(tmp_path / "does_not_exist.txt")],
+    )
+
+    assert res["success"] is True
+    assert any(f.endswith("real.txt") for f in res["files_included"])
+    assert not any("does_not_exist.txt" in f for f in res["files_included"])
 
 
 # Verified Developer SDK coverage is at 100%

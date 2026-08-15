@@ -265,9 +265,10 @@ def test_handle_security_check_json(capsys):
 
 
 # Test 'package build' handler
-def test_handle_package_build_text(capsys):
+def test_handle_package_build_text(capsys, tmp_path):
+    output_dir = str(tmp_path / "custom_dist") + "/"
     args = argparse.Namespace(
-        output="custom_dist/",
+        output=output_dir,
         version="2.1.0",
         json=False
     )
@@ -275,13 +276,14 @@ def test_handle_package_build_text(capsys):
     assert exit_code == 0
     captured = capsys.readouterr()
     assert "Building YasinAI deployment package v2.1.0..." in captured.out
-    assert "Target directory: custom_dist/" in captured.out
-    assert "SUCCESS: Created build artifact: custom_dist/yasinai-pkg-2.1.0.tar.gz" in captured.out
+    assert f"Target directory: {output_dir}" in captured.out
+    assert f"SUCCESS: Created build artifact: {output_dir}yasinai-pkg-2.1.0.tar.gz" in captured.out
 
 
-def test_handle_package_build_json(capsys):
+def test_handle_package_build_json(capsys, tmp_path):
+    output_dir = str(tmp_path / "custom_dist") + "/"
     args = argparse.Namespace(
-        output="custom_dist/",
+        output=output_dir,
         version="2.1.0",
         json=True
     )
@@ -291,7 +293,7 @@ def test_handle_package_build_json(capsys):
     data = json.loads(captured.out)
     assert data["success"] is True
     assert data["package_name"] == "yasinai-pkg-2.1.0.tar.gz"
-    assert data["output_directory"] == "custom_dist/"
+    assert data["output_directory"] == output_dir
 
 
 # Test main CLI dispatching and error/help handling
@@ -352,9 +354,10 @@ def test_main_security_check(capsys):
     assert "YasinAI Security Platform - Audit Check" in captured.out
 
 
-def test_main_package_build(capsys):
+def test_main_package_build(capsys, tmp_path):
+    output_dir = str(tmp_path / "build") + "/"
     with pytest.raises(SystemExit) as exc_info:
-        main(["package", "build", "--output", "build/"])
+        main(["package", "build", "--output", output_dir])
     assert exc_info.value.code == 0
     captured = capsys.readouterr()
     assert "Building YasinAI deployment package" in captured.out
