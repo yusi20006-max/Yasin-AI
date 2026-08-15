@@ -152,14 +152,17 @@ def test_health_check_run_all():
 
 
 # 4. Tests for PackageBuilder
-def test_package_builder_build():
+def test_package_builder_build(tmp_path):
     builder = PackageBuilder()
-    res = builder.build_package(name="yasinai", version="1.0.0", output_directory="dist/")
+    dist_dir = str(tmp_path / "dist") + "/"
+    temp_dir = str(tmp_path / "temp") + "/"
+
+    res = builder.build_package(name="yasinai", version="1.0.0", output_directory=dist_dir)
     assert res["success"] is True
     assert res["package_name"] == "yasinai-pkg-1.0.0.tar.gz"
     assert "yasinai/core/" in res["files_included"]
 
-    res_other = builder.build_package(name="custom-plugin", version="2.5", output_directory="temp/")
+    res_other = builder.build_package(name="custom-plugin", version="2.5", output_directory=temp_dir)
     assert res_other["package_name"] == "custom-plugin-v2.5.tar.gz"
 
 
