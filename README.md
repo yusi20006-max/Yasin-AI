@@ -15,7 +15,7 @@ According to YASIN-DOCS ADR-001, Yasin-AI is the Canonical AI Capability Platfor
 
 ## Status
 
-Yasin-AI has completed its Phase 2.2 architecture reconciliation.
+Yasin-AI has completed its current audit and production-hardening cycle.
 
 - Reconciled version: **v1.1.3**
 - Security audit: completed
@@ -74,6 +74,15 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the complete canonical refe
 - API-oriented request/response boundaries
 - Centralized error handling
 
+### Providers and Inference
+
+- Provider abstraction and registry
+- Capability-aware provider selection
+- Explicit model-aware routing
+- OpenAI-compatible, Anthropic-compatible, and local provider adapters
+- Deterministic local provider for tests and air-gapped environments
+- Safe explicit model fallback semantics; automatic load-balancing and retry orchestration remain future work
+
 ### Observability
 
 - Dependency-free counters and timers
@@ -113,7 +122,7 @@ Container deployments should additionally verify the production compose profile 
 
 ## Release history
 
-- **v1.1.3** — Current production release (P1/P2 audit fixes + CI hardening) (includes Docker hardening + persistent storage + Python contract fixes)
+- **v1.1.3** — Current production baseline (P1/P2 audit fixes + CI hardening, including Docker hardening, persistent storage, and Python compatibility fixes)
 - **v1.1.1** — Phases 2–5 complete (contracts, providers, services, ecosystem integration)
 - **v1.1.0** — Maintenance baseline (aligned in Phase 2.2)
 - **v1.0.0** — First production release
@@ -173,6 +182,7 @@ To maintain strict source-of-truth accuracy, all Yasin-AI capabilities are organ
 ### IMPLEMENTED
 - **Modular Runtime & Lifecycle**: In-process module bootstrapping and runtime lifecycle manager (in `yasinai/core/`).
 - **Local SQLite Persistence**: SQLite-backed semantic vector storage for memory retrieval (in `knowledge_platform/`).
+- **Provider Abstraction & Routing**: Provider registry, capability-aware selection, explicit model matching, and local/cloud adapter contracts (in `yasinai/providers/`).
 - **In-process Plugin Extension**: SDK contracts enabling hot-toggling and execution of trusted, local plugins (in `developer_platform/`).
 - **Local CLI Commands**: Diagnostics, local status verification, and semantic search CLI helpers (in `yasinai/cli/`).
 - **API Service Layer**: Transport-neutral service interface and model schemas (in `api_service/`).
@@ -182,10 +192,11 @@ To maintain strict source-of-truth accuracy, all Yasin-AI capabilities are organ
 - Single-process focus with clear internal component layering.
 - Configurable data directories and SQLite database paths.
 - Trusted plugin model (assumes running plugin code is safe).
+- Provider fallback is explicit and model-safe; the platform does not silently substitute an unrelated requested model.
 
 ### PLANNED
 - **Remote Plugin Sandboxing**: Isolated, secure container/sandbox execution of untrusted third-party code.
-- **Multi-provider Routing**: Intelligent provider-routing, automatic LLM load-balancing, and fallback across cloud model vendors.
+- **Advanced Provider Orchestration**: Intelligent load-balancing, automatic retry/failover, health-aware routing, and cost/latency policies across vendors.
 - **Inference Guardrails**: Dynamic safety, cost-control, and latency-budget policies applied prior to inference.
 
 ### FUTURE ECOSYSTEM CONTRACT
@@ -199,7 +210,8 @@ To maintain strict source-of-truth accuracy, all Yasin-AI capabilities are organ
 
 - **No HA/Distribution**: The default local SQLite storage is a single-node database. It is not designed for multi-node clusters or high availability.
 - **In-process Trust**: The execution environment does not sandbox third-party plugin code. Only run trusted plugins.
-- **Resolved Version Contradiction**: In Phase 2.2, version inconsistencies across code metadata, CLI outputs, and documentation were unified to **v1.1.0** in Phase 2.2 and remain synchronized through **v1.1.2**.
+- **Explicit provider routing**: Provider selection supports capability and exact model matching. Automatic multi-provider retry/load-balancing remains planned and is not claimed as a completed feature.
+- **Release metadata**: Source/package metadata and the current `main` branch are reconciled to **v1.1.3**. GitHub's published release object must remain aligned with the immutable `v1.1.3` tag before a release is considered fully published.
 
 ---
 
