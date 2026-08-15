@@ -5,11 +5,14 @@ HTTP/CLI adapters can depend on this layer without coupling the core to a web fr
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Mapping, Optional
 
 from .errors import APIError, ValidationError
 from .models import HealthResponse, ServiceResponse
+
+logger = logging.getLogger(__name__)
 
 Handler = Callable[[Mapping[str, Any]], Mapping[str, Any]]
 
@@ -46,6 +49,14 @@ class APIService:
             result = dict(handler(payload or {}))
         except APIError as exc:
             return ServiceResponse(exc.status_code, {"error": str(exc)})
+        except Exception:
+            # Any exception the handler doesn't raise as an APIError is a bug
+            # in the handler, not a client error. Log full details internally
+            # for debugging; never leak exception text or a traceback into
+            # the response body — same "don't expose internals" principle
+            # applied to provider error handling elsewhere in this codebase.
+            logger.error("Unhandled exception in handler for %s", key, exc_info=True)
+            return ServiceResponse(500, {"error": "internal server error"})
         return ServiceResponse(200, result)
 
     @staticmethod
