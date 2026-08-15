@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -18,7 +16,6 @@ def test_dockerfile_runs_as_non_root():
 
 def test_dockerfile_does_not_copy_env_secrets_explicitly():
     text = (ROOT / "Dockerfile").read_text(encoding="utf-8")
-    # Must not COPY a live .env into the image
     assert "COPY .env" not in text
     assert "COPY *.pem" not in text
 
@@ -35,6 +32,13 @@ def test_production_compose_hardening():
     assert "yasinai-data" in text
     assert "pids_limit:" in text
     assert "mem_limit:" in text
+
+
+def test_production_persistence_paths_use_durable_volume():
+    text = (ROOT / "deploy" / "compose.production.yml").read_text(encoding="utf-8")
+    assert "YASINAI_MEMORY_PATH: /data/memory.db" in text
+    assert "YASINAI_VECTOR_PATH: /data/vectors.db" in text
+    assert "- yasinai-data:/data" in text
 
 
 def test_dev_compose_points_to_production_profile():

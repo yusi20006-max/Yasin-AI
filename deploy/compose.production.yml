@@ -7,6 +7,9 @@ services:
     init: true
     env_file:
       - .env
+    environment:
+      YASINAI_MEMORY_PATH: /data/memory.db
+      YASINAI_VECTOR_PATH: /data/vectors.db
     volumes:
       - yasinai-data:/data
     security_opt:
