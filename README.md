@@ -9,7 +9,7 @@ According to YASIN-DOCS ADR-001, Yasin-AI is the Canonical AI Capability Platfor
 - **YasinCLI**: Unified user-facing command surface. (The CLI in `yasinai/cli/` is a local diagnostic helper; the unified command interface is owned by YasinCLI).
 - **YasinRelay / YasinFeed / YasinPress**: Domain, content, and business pipelines.
 
-**Current release: v1.1.2**
+**Current release: v1.1.3**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -17,7 +17,7 @@ According to YASIN-DOCS ADR-001, Yasin-AI is the Canonical AI Capability Platfor
 
 Yasin-AI has completed its Phase 2.2 architecture reconciliation.
 
-- Reconciled version: **v1.1.2**
+- Reconciled version: **v1.1.3**
 - Security audit: completed
 - Release candidate verification: completed
 - Performance/reliability baseline: completed
@@ -113,7 +113,7 @@ Container deployments should additionally verify the production compose profile 
 
 ## Release history
 
-- **v1.1.2** — Current production release (includes Docker hardening + persistent storage + Python contract fixes)
+- **v1.1.3** — Current production release (P1/P2 audit fixes + CI hardening) (includes Docker hardening + persistent storage + Python contract fixes)
 - **v1.1.1** — Phases 2–5 complete (contracts, providers, services, ecosystem integration)
 - **v1.1.0** — Maintenance baseline (aligned in Phase 2.2)
 - **v1.0.0** — First production release

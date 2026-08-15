@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project follows Semantic Versioning.
 
+## [1.1.3] - 2026-08-15
+
+### Fixed
+- ProviderRouter fails explicitly on unmatched model (#93)
+- Provider HTTP bodies redacted from exception messages (#94)
+- DockerManager cannot clobber production Docker files (#95)
+- Legacy PluginSDK trust-boundary bypass closed (#96)
+- RAG prompt trust boundary against indirect injection (#97)
+- APIService maps unhandled exceptions to standard errors (#98)
+- PackageBuilder produces a real deployment archive (#99)
+- GenerationService bounded provider retry/fallback (#109)
+- Upper bounds on unbounded numeric inputs (#111)
+- SQLite WAL mode and busy_timeout in knowledge stores (#113)
+
+### Changed
+- Ruff lint backlog cleared; CI lint is blocking (#115, #116)
+- GitHub Actions majors updated (checkout@v7, upload-artifact@v5) (#120)
+- Docker CI deduplicated — docker-build.yml tag/manual only (#119)
+
 ## [1.1.2] - 2026-08-15
 
 ### Fixed
