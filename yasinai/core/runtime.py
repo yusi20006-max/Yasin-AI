@@ -27,7 +27,7 @@ class Runtime:
         self.services: ServiceRegistry = ServiceRegistry()
         self.system_info: SystemInfo = SystemInfo(
             app_name=self.config.get("app_name", "YasinAI"),
-            version=self.config.get("version", "1.1.2"),
+            version=self.config.get("version", "1.1.3"),
             status="inactive",
         )
         self.bootstrap_loader: Bootstrap = Bootstrap(self)

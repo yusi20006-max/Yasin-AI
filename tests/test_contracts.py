@@ -74,7 +74,7 @@ def test_observability_context_defaults():
 def test_capability_metadata_defaults():
     meta = CapabilityMetadata(capability="memory")
     assert meta.contract_version == "v1"
-    assert meta.platform_version == "1.1.2"
+    assert meta.platform_version == "1.1.3"
     assert meta.provider is None
 
 
