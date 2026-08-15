@@ -224,12 +224,22 @@ def test_router_selects_by_model_hint():
     assert provider.info.name == "provider-b"
 
 
-def test_router_falls_back_when_no_model_match():
+def test_router_raises_on_unknown_model_by_default():
     reg = ProviderRegistry()
     reg.register(StubGenerationProvider(name="only-provider", models=["model-x"]))
     router = ProviderRouter(reg)
-    # unknown-model has no exact match — falls back to first available
-    provider = router.select(ProviderCapability.GENERATION, model="unknown-model")
+    with pytest.raises(ProviderUnavailableError) as exc_info:
+        router.select(ProviderCapability.GENERATION, model="unknown-model")
+    assert exc_info.value.model == "unknown-model"
+
+
+def test_router_falls_back_when_allow_fallback_true():
+    reg = ProviderRegistry()
+    reg.register(StubGenerationProvider(name="only-provider", models=["model-x"]))
+    router = ProviderRouter(reg)
+    provider = router.select(
+        ProviderCapability.GENERATION, model="unknown-model", allow_fallback=True
+    )
     assert provider.info.name == "only-provider"
 
 

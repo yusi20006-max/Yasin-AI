@@ -1,13 +1,12 @@
 """
 Provider Router — selects the best available provider for a capability.
 
-Routing policy (Phase 2.6):
-  1. If model hint is given, prefer the provider whose model_ids contain it.
-  2. Otherwise, return the first available provider for the capability.
-  3. If none available, raise ProviderUnavailableError.
-
-Phase 3 will extend this with priority weights, cost routing, and
-fallback chains defined in configuration.
+Routing policy:
+  1. If model hint is given, select the provider whose model_ids contain it.
+  2. If model is given and no provider lists it: raise ProviderUnavailableError
+     unless allow_fallback=True (opt-in best-effort).
+  3. If no model hint, return the first available provider for the capability.
+  4. If none available, raise ProviderUnavailableError.
 """
 from __future__ import annotations
 
@@ -48,14 +47,31 @@ class ProviderRouter:
         self,
         capability: ProviderCapability,
         model: Optional[str] = None,
+        *,
+        allow_fallback: bool = False,
     ) -> ProviderBase:
+        """
+        Select an available provider for ``capability``.
+
+        Args:
+            capability: Required provider capability.
+            model: Optional model id hint. When set, only a provider that lists
+                this id in ``info.model_ids`` is selected unless
+                ``allow_fallback`` is True.
+            allow_fallback: If True and ``model`` has no exact match, use the
+                first available provider for the capability (best-effort).
+                Default False — raise ``ProviderUnavailableError`` on mismatch.
+
+        Raises:
+            ProviderUnavailableError: No available provider, or model mismatch
+                without ``allow_fallback``.
+        """
         candidates = self._registry.available_for_capability(capability)
 
         if not candidates:
             raise ProviderUnavailableError(capability, model)
 
         if model:
-            # Prefer a provider that explicitly lists this model_id
             for provider in candidates:
                 if model in provider.info.model_ids:
                     logger.debug(
@@ -63,9 +79,14 @@ class ProviderRouter:
                         provider.info.name, capability.value, model,
                     )
                     return provider
-            # Fall through: use first available if no exact model match
+            if not allow_fallback:
+                logger.debug(
+                    "Router: no provider lists model '%s' for capability=%s",
+                    model, capability.value,
+                )
+                raise ProviderUnavailableError(capability, model)
             logger.debug(
-                "Router: no exact model match for '%s'; using first available provider '%s'",
+                "Router: no exact model match for '%s'; fallback to first available '%s'",
                 model, candidates[0].info.name,
             )
 
