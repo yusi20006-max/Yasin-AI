@@ -16,7 +16,7 @@ import logging
 import os
 import urllib.error
 import urllib.request
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 
 logger = logging.getLogger(__name__)
 
@@ -30,15 +30,15 @@ from yasinai.providers.base import (
 )
 
 # Optional injectable transport: (url, headers, body_dict) -> response_dict
-HttpTransport = Callable[[str, Dict[str, str], Dict[str, Any]], Dict[str, Any]]
+HttpTransport = Callable[[str, dict[str, str], dict[str, Any]], dict[str, Any]]
 
 DEFAULT_BASE_URL = "https://api.openai.com/v1"
 DEFAULT_MODEL = "gpt-4o-mini"
 
 
 def _default_http_transport(
-    url: str, headers: Dict[str, str], body: Dict[str, Any]
-) -> Dict[str, Any]:
+    url: str, headers: dict[str, str], body: dict[str, Any]
+) -> dict[str, Any]:
     data = json.dumps(body).encode("utf-8")
     req = urllib.request.Request(url, data=data, headers=headers, method="POST")
     try:
@@ -71,10 +71,10 @@ class OpenAIProvider(ProviderBase):
     def __init__(
         self,
         *,
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
+        api_key: str | None = None,
+        base_url: str | None = None,
         default_model: str = DEFAULT_MODEL,
-        transport: Optional[HttpTransport] = None,
+        transport: HttpTransport | None = None,
     ) -> None:
         # api_key arg is for tests only; production uses env
         self._api_key_override = api_key
@@ -82,7 +82,7 @@ class OpenAIProvider(ProviderBase):
         self._default_model = default_model
         self._transport = transport or _default_http_transport
 
-    def _api_key(self) -> Optional[str]:
+    def _api_key(self) -> str | None:
         return self._api_key_override or os.environ.get("OPENAI_API_KEY")
 
     @property
@@ -123,7 +123,7 @@ class OpenAIProvider(ProviderBase):
             messages.append({"role": "system", "content": request.system_prompt})
         messages.append({"role": "user", "content": request.prompt})
 
-        body: Dict[str, Any] = {
+        body: dict[str, Any] = {
             "model": model,
             "messages": messages,
             "max_tokens": request.max_tokens,

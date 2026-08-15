@@ -58,10 +58,12 @@ def test_docker_manager_compose_checks():
         assert manager.check_docker_compose_available() is True
 
     # Test "docker compose" subcommand check
-    with patch("shutil.which", side_effect=lambda name: "/usr/bin/docker" if name == "docker" else None):
-        with patch("subprocess.run") as mock_run:
-            mock_run.return_value = MagicMock(returncode=0)
-            assert manager.check_docker_compose_available() is True
+    with (
+        patch("shutil.which", side_effect=lambda name: "/usr/bin/docker" if name == "docker" else None),
+        patch("subprocess.run") as mock_run,
+    ):
+        mock_run.return_value = MagicMock(returncode=0)
+        assert manager.check_docker_compose_available() is True
 
 
 def test_docker_manager_generation(tmp_path):
@@ -168,9 +170,11 @@ def test_package_builder_build(tmp_path):
 def test_additional_deployment_coverage(tmp_path):
     # 1. DockerManager compose check subprocess exceptions (lines 47-51)
     manager = DockerManager()
-    with patch("shutil.which", side_effect=lambda name: "/usr/bin/docker" if name == "docker" else None):
-        with patch("subprocess.run", side_effect=Exception("Subprocess failed")):
-            assert manager.check_docker_compose_available() is False
+    with (
+        patch("shutil.which", side_effect=lambda name: "/usr/bin/docker" if name == "docker" else None),
+        patch("subprocess.run", side_effect=Exception("Subprocess failed")),
+    ):
+        assert manager.check_docker_compose_available() is False
 
     # DockerManager when check_docker_available is False (lines 50-51)
     with patch.object(DockerManager, "check_docker_available", return_value=False):

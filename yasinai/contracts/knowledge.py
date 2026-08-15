@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from yasinai.contracts.base import (
     CapabilityMetadata,
@@ -41,13 +41,13 @@ class KnowledgeQuery:
     """
 
     query_type: KnowledgeQueryType
-    text: Optional[str] = None
-    subject: Optional[str] = None
-    predicate: Optional[str] = None
-    relation: Optional[str] = None
+    text: str | None = None
+    subject: str | None = None
+    predicate: str | None = None
+    relation: str | None = None
     top_k: int = 5
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    context: Optional[ObservabilityContext] = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    context: ObservabilityContext | None = None
 
     TOP_K_LIMIT = 100
 
@@ -62,16 +62,14 @@ class KnowledgeQuery:
             raise ContractViolationError(
                 "KnowledgeQuery: SEMANTIC query requires 'text'"
             )
-        if self.query_type in {KnowledgeQueryType.GRAPH, KnowledgeQueryType.TRIPLE}:
-            if not self.subject:
-                raise ContractViolationError(
-                    f"KnowledgeQuery: {self.query_type} query requires 'subject'"
-                )
-        if self.query_type == KnowledgeQueryType.REASONING:
-            if not self.subject or not self.relation:
-                raise ContractViolationError(
-                    "KnowledgeQuery: REASONING query requires 'subject' and 'relation'"
-                )
+        if self.query_type in {KnowledgeQueryType.GRAPH, KnowledgeQueryType.TRIPLE} and not self.subject:
+            raise ContractViolationError(
+                f"KnowledgeQuery: {self.query_type} query requires 'subject'"
+            )
+        if self.query_type == KnowledgeQueryType.REASONING and (not self.subject or not self.relation):
+            raise ContractViolationError(
+                "KnowledgeQuery: REASONING query requires 'subject' and 'relation'"
+            )
 
 
 @dataclass(frozen=True)
@@ -80,8 +78,8 @@ class KnowledgeEntry:
 
     content: Any
     score: float = 1.0
-    source: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    source: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -97,8 +95,8 @@ class KnowledgeResult:
     """
 
     success: bool
-    entries: List[KnowledgeEntry] = field(default_factory=list)
-    error: Optional[str] = None
+    entries: list[KnowledgeEntry] = field(default_factory=list)
+    error: str | None = None
     meta: CapabilityMetadata = field(
         default_factory=lambda: CapabilityMetadata(capability="knowledge")
     )

@@ -2,10 +2,11 @@
 Monitoring and Audit Logging Module for YasinAI Security Platform.
 Records security events and contains rule-based heuristics for threat detection.
 """
+from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ class SecurityEvent:
         self.details: str = details
         self.severity: str = severity  # "low", "medium", "high", "critical"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert security event to dictionary format."""
         return {
             "timestamp": self.timestamp,
@@ -44,7 +45,7 @@ class AuditLogger:
     """
 
     def __init__(self) -> None:
-        self._events: List[SecurityEvent] = []
+        self._events: list[SecurityEvent] = []
 
     def log_event(self, event_type: str, username: str, status: str, details: str, severity: str = "low") -> SecurityEvent:
         """
@@ -55,13 +56,13 @@ class AuditLogger:
         logger.info(f"AuditLog Event registered: {event}")
         return event
 
-    def get_logs(self, event_type: Optional[str] = None, username: Optional[str] = None, min_severity: Optional[str] = None) -> List[SecurityEvent]:
+    def get_logs(self, event_type: str | None = None, username: str | None = None, min_severity: str | None = None) -> list[SecurityEvent]:
         """
         Filter and return matching logs.
         """
         logger.debug(f"Retrieving audit logs with filters: event_type={event_type}, username={username}, min_severity={min_severity}")
-        severity_ranks: Dict[str, int] = {"low": 1, "medium": 2, "high": 3, "critical": 4}
-        filtered: List[SecurityEvent] = self._events
+        severity_ranks: dict[str, int] = {"low": 1, "medium": 2, "high": 3, "critical": 4}
+        filtered: list[SecurityEvent] = self._events
 
         if event_type:
             filtered = [e for e in filtered if e.event_type == event_type]
@@ -87,7 +88,7 @@ class ThreatDetector:
     def __init__(self, audit_logger: AuditLogger) -> None:
         self.audit_logger: AuditLogger = audit_logger
 
-    def detect_threats(self) -> List[Dict[str, Any]]:
+    def detect_threats(self) -> list[dict[str, Any]]:
         """
         Scan logs to identify known patterns of malicious behavior.
         Currently supports:
@@ -96,13 +97,13 @@ class ThreatDetector:
           - Deactivated User Access Attempt: 1+ attempt of access by an inactive/deleted user profile.
         """
         logger.debug("Running threat detection scan on audit logs...")
-        threats: List[Dict[str, Any]] = []
+        threats: list[dict[str, Any]] = []
         logs = self.audit_logger.get_logs()
 
         # Group login failure counts by user
-        login_failures: Dict[str, int] = {}
+        login_failures: dict[str, int] = {}
         # Group access denied counts by user
-        access_denied_counts: Dict[str, int] = {}
+        access_denied_counts: dict[str, int] = {}
 
         for log in logs:
             user = log.username

@@ -2,9 +2,10 @@
 Extension API for YasinAI Developer Platform.
 Allows third-party systems to expose custom capabilities or hooks.
 """
+from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ class ExtensionAPI:
     """
 
     def __init__(self) -> None:
-        self._extensions: Dict[str, Dict[str, Any]] = {}
+        self._extensions: dict[str, dict[str, Any]] = {}
 
     def register_extension(self, name: str, ext_type: str, handler: Any) -> None:
         """
@@ -32,7 +33,7 @@ class ExtensionAPI:
         }
         logger.info(f"Successfully registered developer extension: '{name}' of type '{ext_type}'")
 
-    def get_extension(self, name: str) -> Optional[Dict[str, Any]]:
+    def get_extension(self, name: str) -> dict[str, Any] | None:
         """
         Retrieve a registered extension dictionary.
         """
@@ -64,7 +65,7 @@ class ExtensionAPI:
         logger.warning(f"Attempted to unregister non-existent extension: '{name}'")
         return False
 
-    def list_extensions(self) -> List[Dict[str, Any]]:
+    def list_extensions(self) -> list[dict[str, Any]]:
         """
         List all registered developer extensions.
         """

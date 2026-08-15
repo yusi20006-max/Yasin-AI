@@ -9,7 +9,7 @@ without changing this contract.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from yasinai.contracts.base import (
     CapabilityMetadata,
@@ -30,10 +30,10 @@ class EmbeddingRequest:
         context:    Observability tracing context
     """
 
-    texts: List[str]
-    model: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    context: Optional[ObservabilityContext] = None
+    texts: list[str]
+    model: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    context: ObservabilityContext | None = None
 
     def __post_init__(self) -> None:
         if not self.texts:
@@ -51,9 +51,9 @@ class EmbeddingVector:
     """A single embedding result."""
 
     text: str
-    vector: List[float]
-    model: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    vector: list[float]
+    model: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -69,8 +69,8 @@ class EmbeddingResponse:
     """
 
     success: bool
-    vectors: List[EmbeddingVector] = field(default_factory=list)
-    error: Optional[str] = None
+    vectors: list[EmbeddingVector] = field(default_factory=list)
+    error: str | None = None
     meta: CapabilityMetadata = field(
         default_factory=lambda: CapabilityMetadata(capability="embedding")
     )

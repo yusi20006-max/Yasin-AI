@@ -267,8 +267,11 @@ def test_unsupported_memory_operation(svc):
         key = None
         content = None
         limit = None
-        metadata = {}
+        metadata: dict = None  # type: ignore[assignment]
         context = None
+
+        def __init__(self):
+            self.metadata = {}
 
     resp = svc.memory(FakeReq())  # type: ignore[arg-type]
     assert resp.success is False

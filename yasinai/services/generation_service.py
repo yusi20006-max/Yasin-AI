@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import List, Optional
 
 from yasinai.contracts.base import CapabilityMetadata
 from yasinai.contracts.generation import GenerationRequest, GenerationResult
@@ -36,8 +35,8 @@ class GenerationService:
 
     def __init__(
         self,
-        registry: Optional[ProviderRegistry] = None,
-        router: Optional[ProviderRouter] = None,
+        registry: ProviderRegistry | None = None,
+        router: ProviderRouter | None = None,
         *,
         default_capability: ProviderCapability = ProviderCapability.GENERATION,
         max_retries_per_provider: int = 1,
@@ -80,7 +79,7 @@ class GenerationService:
 
         pinned = bool(request.provider)
         fallbacks_used = 0
-        last_error: Optional[ProviderError] = None
+        last_error: ProviderError | None = None
 
         for candidate in candidates:
             attempt = 0
@@ -135,7 +134,7 @@ class GenerationService:
             ),
         )
 
-    def _candidate_providers(self, request: GenerationRequest) -> List[ProviderBase]:
+    def _candidate_providers(self, request: GenerationRequest) -> list[ProviderBase]:
         """Return an ordered list of providers to try for this request.
 
         A caller-pinned request.provider yields exactly one candidate (no

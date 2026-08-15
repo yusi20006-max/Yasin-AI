@@ -5,10 +5,9 @@ from __future__ import annotations
 import importlib
 import json
 import sys
-from typing import List, Optional
 
 
-def security_check(argv: List[str]) -> int:
+def security_check(argv: list[str]) -> int:
     from security_platform.scanner import SecurityScanner
 
     json_output = "--json" in argv
@@ -30,7 +29,7 @@ def security_check(argv: List[str]) -> int:
     return 0 if report["failed_items"] == 0 else 1
 
 
-def main(argv: Optional[List[str]] = None) -> None:
+def main(argv: list[str] | None = None) -> None:
     args = list(sys.argv[1:] if argv is None else argv)
     if len(args) >= 2 and args[0] == "security" and args[1] == "check":
         raise SystemExit(security_check(args[2:]))

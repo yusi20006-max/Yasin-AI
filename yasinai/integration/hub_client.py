@@ -7,7 +7,7 @@ Hub telemetry export.
 """
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from observability.metrics import MetricsRegistry
 from yasinai.contracts.generation import GenerationRequest, GenerationResult
@@ -30,10 +30,10 @@ class YasinHubClient:
     def __init__(
         self,
         *,
-        knowledge: Optional[KnowledgeService] = None,
-        generation: Optional[GenerationService] = None,
-        rag: Optional[RagService] = None,
-        metrics: Optional[MetricsRegistry] = None,
+        knowledge: KnowledgeService | None = None,
+        generation: GenerationService | None = None,
+        rag: RagService | None = None,
+        metrics: MetricsRegistry | None = None,
     ) -> None:
         self._knowledge = knowledge if knowledge is not None else KnowledgeService()
         self._generation = (
@@ -50,9 +50,9 @@ class YasinHubClient:
         self,
         prompt: str,
         *,
-        model: Optional[str] = None,
-        provider: Optional[str] = None,
-        system_prompt: Optional[str] = None,
+        model: str | None = None,
+        provider: str | None = None,
+        system_prompt: str | None = None,
         max_tokens: int = 1024,
         temperature: float = 0.7,
     ) -> GenerationResult:
@@ -101,7 +101,7 @@ class YasinHubClient:
         *,
         top_k: int = 5,
         include_memory: bool = False,
-        provider: Optional[str] = None,
+        provider: str | None = None,
     ) -> RagResult:
         self._metrics.counter("hub.rag.requests").inc()
         from time import monotonic
@@ -122,7 +122,7 @@ class YasinHubClient:
             self._metrics.counter("hub.rag.errors").inc()
         return result
 
-    def metrics_snapshot(self) -> Dict[str, Any]:
+    def metrics_snapshot(self) -> dict[str, Any]:
         """Export counters/timers for YasinHub control-plane telemetry."""
         return self._metrics.snapshot()
 

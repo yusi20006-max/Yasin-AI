@@ -51,7 +51,7 @@ jobs:
           if-no-files-found: ignore
 
   lint:
-    name: Lint (Ruff, non-blocking)
+    name: Lint (Ruff)
     runs-on: ubuntu-latest
 
     steps:
@@ -69,12 +69,7 @@ jobs:
         run: python -m pip install --upgrade pip && python -m pip install -e ".[lint]"
 
       - name: Run Ruff
-        # Non-blocking: 594 pre-existing violations (mostly legacy typing
-        # style) are tracked in issue #116, not fixed here. This step
-        # reports the current baseline in CI output without failing the
-        # build. Flip continue-on-error to false once the backlog is
-        # cleared (see #116).
-        continue-on-error: true
+        # Blocking gate after #116 cleared the pre-existing Ruff backlog.
         run: ruff check . --output-format=github
 
   security:

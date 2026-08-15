@@ -1,9 +1,9 @@
 """
 Knowledge Graph coordinator for YasinAI Knowledge Platform.
 """
+from __future__ import annotations
 
 import logging
-from typing import Dict, List, Optional, Tuple
 
 from knowledge_platform.entity import Entity
 from knowledge_platform.query_engine import QueryEngine
@@ -20,12 +20,12 @@ class KnowledgeGraph:
     """
 
     def __init__(self) -> None:
-        self.entities: Dict[str, Entity] = {}
-        self.relations: Dict[str, Relation] = {}
+        self.entities: dict[str, Entity] = {}
+        self.relations: dict[str, Relation] = {}
         self.triple_store: TripleStore = TripleStore()
         self.query_engine: QueryEngine = QueryEngine(self.triple_store)
 
-    def add_entity(self, name: str, entity_type: str = "Concept", properties: Optional[dict] = None) -> Entity:
+    def add_entity(self, name: str, entity_type: str = "Concept", properties: dict | None = None) -> Entity:
         """Create and add an entity to the graph."""
         logger.debug(f"KnowledgeGraph: Adding entity '{name}' of type '{entity_type}'")
         if name in self.entities:
@@ -38,7 +38,7 @@ class KnowledgeGraph:
         self.entities[name] = entity
         return entity
 
-    def get_entity(self, name: str) -> Optional[Entity]:
+    def get_entity(self, name: str) -> Entity | None:
         """Look up an entity by name."""
         return self.entities.get(name)
 
@@ -59,7 +59,7 @@ class KnowledgeGraph:
         logger.warning(f"KnowledgeGraph: Attempted to delete non-existent entity '{name}'")
         return False
 
-    def add_relation(self, name: str, description: str = "", properties: Optional[dict] = None) -> Relation:
+    def add_relation(self, name: str, description: str = "", properties: dict | None = None) -> Relation:
         """Create and register a relation definition."""
         logger.debug(f"KnowledgeGraph: Registering relation '{name}'")
         if name in self.relations:
@@ -72,7 +72,7 @@ class KnowledgeGraph:
         self.relations[name] = relation
         return relation
 
-    def get_relation(self, name: str) -> Optional[Relation]:
+    def get_relation(self, name: str) -> Relation | None:
         """Look up a relation definition."""
         return self.relations.get(name)
 
@@ -88,11 +88,11 @@ class KnowledgeGraph:
 
         self.triple_store.add_triple(subject, predicate, obj)
 
-    def query(self, subject: Optional[str] = None, predicate: Optional[str] = None, obj: Optional[str] = None) -> List[Tuple[str, str, str]]:
+    def query(self, subject: str | None = None, predicate: str | None = None, obj: str | None = None) -> list[tuple[str, str, str]]:
         """Query stored triples."""
         return self.triple_store.query_triples(subject, predicate, obj)
 
-    def find_path(self, start: str, end: str, max_depth: int = 3) -> Optional[List[Tuple[str, str]]]:
+    def find_path(self, start: str, end: str, max_depth: int = 3) -> list[tuple[str, str]] | None:
         """Find a path between two entities."""
         return self.query_engine.find_path(start, end, max_depth)
 

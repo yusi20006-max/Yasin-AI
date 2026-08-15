@@ -8,7 +8,7 @@ Consumers must not import yasinai.providers directly.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from yasinai.contracts.base import (
     CapabilityMetadata,
@@ -35,14 +35,14 @@ class GenerationRequest:
     """
 
     prompt: str
-    model: Optional[str] = None
+    model: str | None = None
     max_tokens: int = 1024
     temperature: float = 0.7
-    system_prompt: Optional[str] = None
-    stop_sequences: List[str] = field(default_factory=list)
-    provider: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    context: Optional[ObservabilityContext] = None
+    system_prompt: str | None = None
+    stop_sequences: list[str] = field(default_factory=list)
+    provider: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    context: ObservabilityContext | None = None
 
     MAX_TOKENS_LIMIT = 32000
 
@@ -80,12 +80,12 @@ class GenerationResult:
 
     success: bool
     text: str = ""
-    model: Optional[str] = None
-    provider: Optional[str] = None
+    model: str | None = None
+    provider: str | None = None
     input_tokens: int = 0
     output_tokens: int = 0
-    finish_reason: Optional[str] = None
-    error: Optional[str] = None
+    finish_reason: str | None = None
+    error: str | None = None
     meta: CapabilityMetadata = field(
         default_factory=lambda: CapabilityMetadata(capability="generation")
     )

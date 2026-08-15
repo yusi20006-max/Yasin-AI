@@ -15,7 +15,7 @@ import logging
 import os
 import urllib.error
 import urllib.request
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 
 from yasinai.providers.base import (
     GenerationRequest,
@@ -26,7 +26,7 @@ from yasinai.providers.base import (
     ProviderInfo,
 )
 
-HttpTransport = Callable[[str, Dict[str, str], Dict[str, Any]], Dict[str, Any]]
+HttpTransport = Callable[[str, dict[str, str], dict[str, Any]], dict[str, Any]]
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +36,8 @@ ANTHROPIC_VERSION = "2023-06-01"
 
 
 def _default_http_transport(
-    url: str, headers: Dict[str, str], body: Dict[str, Any]
-) -> Dict[str, Any]:
+    url: str, headers: dict[str, str], body: dict[str, Any]
+) -> dict[str, Any]:
     data = json.dumps(body).encode("utf-8")
     req = urllib.request.Request(url, data=data, headers=headers, method="POST")
     try:
@@ -70,17 +70,17 @@ class AnthropicProvider(ProviderBase):
     def __init__(
         self,
         *,
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
+        api_key: str | None = None,
+        base_url: str | None = None,
         default_model: str = DEFAULT_MODEL,
-        transport: Optional[HttpTransport] = None,
+        transport: HttpTransport | None = None,
     ) -> None:
         self._api_key_override = api_key
         self._base_url = (base_url or DEFAULT_BASE_URL).rstrip("/")
         self._default_model = default_model
         self._transport = transport or _default_http_transport
 
-    def _api_key(self) -> Optional[str]:
+    def _api_key(self) -> str | None:
         return self._api_key_override or os.environ.get("ANTHROPIC_API_KEY")
 
     @property
@@ -114,7 +114,7 @@ class AnthropicProvider(ProviderBase):
                 retryable=False,
             )
         model = request.model or self._default_model
-        body: Dict[str, Any] = {
+        body: dict[str, Any] = {
             "model": model,
             "max_tokens": request.max_tokens,
             "temperature": request.temperature,

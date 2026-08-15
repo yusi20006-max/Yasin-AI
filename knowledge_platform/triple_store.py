@@ -1,9 +1,9 @@
 """
 Triple Store for YasinAI Knowledge Graph.
 """
+from __future__ import annotations
 
 import logging
-from typing import List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ class TripleStore:
 
     def __init__(self) -> None:
         # Triples are stored as tuples of strings (subject_name, predicate_name, object_name)
-        self._triples: List[Tuple[str, str, str]] = []
+        self._triples: list[tuple[str, str, str]] = []
 
     def add_triple(self, subject: str, predicate: str, obj: str) -> None:
         """Add a triple to the store if it does not already exist."""
@@ -37,11 +37,11 @@ class TripleStore:
         logger.warning(f"Attempted to remove non-existent triple: {triple}")
         return False
 
-    def query_triples(self, subject: Optional[str] = None, predicate: Optional[str] = None, obj: Optional[str] = None) -> List[Tuple[str, str, str]]:
+    def query_triples(self, subject: str | None = None, predicate: str | None = None, obj: str | None = None) -> list[tuple[str, str, str]]:
         """
         Query the triple store using wildcards. None acts as a wildcard.
         """
-        results: List[Tuple[str, str, str]] = []
+        results: list[tuple[str, str, str]] = []
         for s, p, o in self._triples:
             if subject is not None and s != subject:
                 continue
@@ -52,7 +52,7 @@ class TripleStore:
             results.append((s, p, o))
         return results
 
-    def list_all(self) -> List[Tuple[str, str, str]]:
+    def list_all(self) -> list[tuple[str, str, str]]:
         """List all stored triples."""
         return list(self._triples)
 

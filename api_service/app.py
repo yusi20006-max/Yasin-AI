@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 
 from .errors import APIError, ValidationError
 from .models import HealthResponse, ServiceResponse
@@ -21,7 +21,7 @@ Handler = Callable[[Mapping[str, Any]], Mapping[str, Any]]
 class APIService:
     name: str = "yasinai"
     version: str = "1.1.2"
-    _routes: Optional[Dict[str, Handler]] = None
+    _routes: dict[str, Handler] | None = None
 
     def __post_init__(self) -> None:
         self._routes = dict(self._routes or {})
@@ -39,7 +39,7 @@ class APIService:
     def health(self) -> HealthResponse:
         return HealthResponse("ok", self.name, self.version)
 
-    def dispatch(self, method: str, path: str, payload: Optional[Mapping[str, Any]] = None) -> ServiceResponse:
+    def dispatch(self, method: str, path: str, payload: Mapping[str, Any] | None = None) -> ServiceResponse:
         key = f"{method.upper().strip()} {self._normalize_path(path)}"
         if key == "GET /health":
             return ServiceResponse(200, self.health().as_dict())
@@ -56,7 +56,7 @@ class APIService:
             # for debugging; never leak exception text or a traceback into
             # the response body — same "don't expose internals" principle
             # applied to provider error handling elsewhere in this codebase.
-            logger.error("Unhandled exception in handler for %s", key, exc_info=True)
+            logger.exception("Unhandled exception in handler for %s", key)
             return ServiceResponse(500, {"error": "internal server error"})
         return ServiceResponse(200, result)
 

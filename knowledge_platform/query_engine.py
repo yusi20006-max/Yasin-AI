@@ -1,9 +1,9 @@
 """
 Query Engine for YasinAI Knowledge Graph.
 """
+from __future__ import annotations
 
 import logging
-from typing import List, Optional, Tuple
 
 from knowledge_platform.triple_store import TripleStore
 
@@ -18,13 +18,13 @@ class QueryEngine:
     def __init__(self, triple_store: TripleStore) -> None:
         self.triple_store: TripleStore = triple_store
 
-    def find_neighbors(self, entity_name: str) -> List[Tuple[str, str]]:
+    def find_neighbors(self, entity_name: str) -> list[tuple[str, str]]:
         """
         Find direct neighbors of an entity.
         Returns a list of tuples containing (relation_name, target_entity_name).
         """
         logger.debug(f"QueryEngine: Finding direct neighbors of entity: '{entity_name}'")
-        neighbors: List[Tuple[str, str]] = []
+        neighbors: list[tuple[str, str]] = []
 
         # Outgoing triples
         outgoing = self.triple_store.query_triples(subject=entity_name)
@@ -38,7 +38,7 @@ class QueryEngine:
 
         return neighbors
 
-    def find_path(self, start: str, end: str, max_depth: int = 3, visited: Optional[set] = None) -> Optional[List[Tuple[str, str]]]:
+    def find_path(self, start: str, end: str, max_depth: int = 3, visited: set | None = None) -> list[tuple[str, str]] | None:
         """
         Find a path of relations and entities between start and end entity names.
         Returns a list of (relation, entity) showing the path, or None if not found.

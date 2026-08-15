@@ -5,7 +5,7 @@ Verifies post-deployment integrity of Core Runtime, CLI, Security Platform, and 
 
 import argparse
 import logging
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -15,12 +15,12 @@ class HealthCheck:
     Performs comprehensive health checks across all integrated platforms.
     """
 
-    def run_all_checks(self) -> Dict[str, Any]:
+    def run_all_checks(self) -> dict[str, Any]:
         """
         Run verification on all platforms and return detailed status.
         """
         logger.info("Running health checks on all platforms...")
-        checks: Dict[str, Dict[str, Any]] = {
+        checks: dict[str, dict[str, Any]] = {
             "runtime": self.check_runtime(),
             "cli": self.check_cli(),
             "security_platform": self.check_security_platform(),
@@ -37,7 +37,7 @@ class HealthCheck:
             "platforms": checks
         }
 
-    def check_runtime(self) -> Dict[str, Any]:
+    def check_runtime(self) -> dict[str, Any]:
         """
         Verify that the Core Runtime can boot and return status.
         """
@@ -56,14 +56,14 @@ class HealthCheck:
                 "details": info
             }
         except Exception as e:
-            logger.error(f"Core Runtime health check: FAILED: {e}", exc_info=True)
+            logger.exception("Core Runtime health check: FAILED")
             return {
                 "success": False,
                 "message": f"Core Runtime verification failed: {e!s}",
                 "details": {}
             }
 
-    def check_cli(self) -> Dict[str, Any]:
+    def check_cli(self) -> dict[str, Any]:
         """
         Verify that the CLI interface is configured and responsive.
         """
@@ -74,8 +74,7 @@ class HealthCheck:
             subcommands = []
             for action in parser._actions:
                 if isinstance(action, argparse._SubParsersAction):
-                    for choice in action.choices:
-                        subcommands.append(choice)
+                    subcommands.extend(action.choices)
 
             success = len(subcommands) > 0
             logger.debug(f"CLI health check: {'OK' if success else 'FAILED'}")
@@ -85,14 +84,14 @@ class HealthCheck:
                 "subcommands_found": subcommands
             }
         except Exception as e:
-            logger.error(f"CLI health check: FAILED: {e}", exc_info=True)
+            logger.exception("CLI health check: FAILED")
             return {
                 "success": False,
                 "message": f"CLI verification failed: {e!s}",
                 "subcommands_found": []
             }
 
-    def check_security_platform(self) -> Dict[str, Any]:
+    def check_security_platform(self) -> dict[str, Any]:
         """
         Verify that Security Platform components are functional.
         """
@@ -120,7 +119,7 @@ class HealthCheck:
                 "encryption_ok": dec_data == "health_check_secret"
             }
         except Exception as e:
-            logger.error(f"Security Platform health check: FAILED: {e}", exc_info=True)
+            logger.exception("Security Platform health check: FAILED")
             return {
                 "success": False,
                 "message": f"Security Platform verification failed: {e!s}",
@@ -128,7 +127,7 @@ class HealthCheck:
                 "encryption_ok": False
             }
 
-    def check_knowledge_platform(self) -> Dict[str, Any]:
+    def check_knowledge_platform(self) -> dict[str, Any]:
         """
         Verify that Knowledge Platform memory and search components are functional.
         """
@@ -154,7 +153,7 @@ class HealthCheck:
                 "search_ok": len(results) > 0
             }
         except Exception as e:
-            logger.error(f"Knowledge Platform health check: FAILED: {e}", exc_info=True)
+            logger.exception("Knowledge Platform health check: FAILED")
             return {
                 "success": False,
                 "message": f"Knowledge Platform verification failed: {e!s}",

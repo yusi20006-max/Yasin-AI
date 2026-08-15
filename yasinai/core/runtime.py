@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from yasinai.core.bootstrap import Bootstrap
 from yasinai.core.config import Config
@@ -20,7 +22,7 @@ class Runtime:
     SHUTTING_DOWN = "SHUTTING_DOWN"
     FAILED = "FAILED"
 
-    def __init__(self, config_defaults: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, config_defaults: dict[str, Any] | None = None) -> None:
         self.config: Config = Config(defaults=config_defaults)
         self.services: ServiceRegistry = ServiceRegistry()
         self.system_info: SystemInfo = SystemInfo(
@@ -30,7 +32,7 @@ class Runtime:
         )
         self.bootstrap_loader: Bootstrap = Bootstrap(self)
         self.state = self.STOPPED
-        self.last_error: Optional[str] = None
+        self.last_error: str | None = None
 
     def start(self) -> None:
         """Start the runtime; repeated starts while ready are harmless."""
@@ -51,7 +53,7 @@ class Runtime:
             self.state = self.FAILED
             self.system_info.status = "failed"
             self._cleanup_services()
-            logger.error("Runtime startup failed", exc_info=True)
+            logger.exception("Runtime startup failed")
             raise RuntimeError(f"Runtime startup failed: {exc}") from exc
 
         logger.info("Core Runtime successfully started and ready.")

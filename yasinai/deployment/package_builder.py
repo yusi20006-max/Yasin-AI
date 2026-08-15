@@ -2,11 +2,12 @@
 Package Builder for YasinAI Deployment System.
 Bundles modules, agents, and plugins into deployable artifacts.
 """
+from __future__ import annotations
 
 import logging
 import os
 import tarfile
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +29,8 @@ class PackageBuilder:
         version: str = "1.0.0",
         output_directory: str = "dist/",
         *,
-        include_paths: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        include_paths: list[str] | None = None,
+    ) -> dict[str, Any]:
         """
         Bundle the given paths into a real .tar.gz deployment artifact.
 
@@ -46,7 +47,7 @@ class PackageBuilder:
             os.makedirs(output_directory, exist_ok=True)
             archive_path = os.path.join(output_directory, package_name)
 
-            files_included: List[str] = []
+            files_included: list[str] = []
             with tarfile.open(archive_path, "w:gz") as tar:
                 for path in paths_to_include:
                     if not os.path.exists(path):
@@ -65,8 +66,8 @@ class PackageBuilder:
             }
             logger.info(f"Package successfully built: {archive_path}")
             return result
-        except Exception as e:
-            logger.error(f"Failed to build package '{name}': {e}", exc_info=True)
+        except Exception:
+            logger.exception("Failed to build package '{name}'")
             return {
                 "success": False,
                 "package_name": "",

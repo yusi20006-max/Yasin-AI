@@ -2,9 +2,9 @@
 Agent SDK for YasinAI Developer Platform.
 Manages AI agent definitions, task execution, and agent lifecycle.
 """
+from __future__ import annotations
 
 import logging
-from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class AgentSDK:
     """
 
     def __init__(self) -> None:
-        self._agents: Dict[str, Agent] = {}
+        self._agents: dict[str, Agent] = {}
 
     def create_agent(
         self,
@@ -87,7 +87,7 @@ class AgentSDK:
         logger.info(f"Successfully registered agent: '{name}'")
         return agent
 
-    def get_agent(self, name: str) -> Optional[Agent]:
+    def get_agent(self, name: str) -> Agent | None:
         """
         Retrieve an agent by name.
         """
@@ -104,7 +104,7 @@ class AgentSDK:
         logger.warning(f"Attempted to delete non-existent agent: '{name}'")
         return False
 
-    def list_agents(self) -> List[Agent]:
+    def list_agents(self) -> list[Agent]:
         """
         List all registered agents.
         """

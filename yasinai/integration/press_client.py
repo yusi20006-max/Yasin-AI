@@ -6,8 +6,6 @@ draft assistance and grounded fact lookup via contracts/services only.
 """
 from __future__ import annotations
 
-from typing import List, Optional
-
 from yasinai.contracts.generation import GenerationRequest, GenerationResult
 from yasinai.contracts.rag import RagRequest, RagResult
 from yasinai.services.generation_service import GenerationService
@@ -21,9 +19,9 @@ class YasinPressClient:
     def __init__(
         self,
         *,
-        knowledge: Optional[KnowledgeService] = None,
-        generation: Optional[GenerationService] = None,
-        rag: Optional[RagService] = None,
+        knowledge: KnowledgeService | None = None,
+        generation: GenerationService | None = None,
+        rag: RagService | None = None,
     ) -> None:
         self._knowledge = knowledge if knowledge is not None else KnowledgeService()
         self._generation = (
@@ -39,7 +37,7 @@ class YasinPressClient:
         self,
         brief: str,
         *,
-        provider: Optional[str] = None,
+        provider: str | None = None,
         max_tokens: int = 1024,
     ) -> GenerationResult:
         return self._generation.generate(
@@ -56,7 +54,7 @@ class YasinPressClient:
         question: str,
         *,
         top_k: int = 5,
-        provider: Optional[str] = None,
+        provider: str | None = None,
     ) -> RagResult:
         return self._rag.run(
             RagRequest(
@@ -71,5 +69,5 @@ class YasinPressClient:
     def index_source(self, source_id: str, text: str) -> None:
         self._knowledge.add_document(source_id, text)
 
-    def capabilities(self) -> List[str]:
+    def capabilities(self) -> list[str]:
         return ["draft", "research", "index_source"]

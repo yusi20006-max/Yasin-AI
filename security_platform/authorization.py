@@ -2,9 +2,9 @@
 Authorization Module for YasinAI Security Platform.
 Manages permissions, policies, access rules, and role-based access control (RBAC).
 """
+from __future__ import annotations
 
 import logging
-from typing import Dict, List, Optional, Set
 
 from security_platform.identity import IdentityManager
 
@@ -29,12 +29,12 @@ class Policy:
     Defines which roles are granted a set of permissions.
     """
 
-    def __init__(self, name: str, allowed_roles: List[str], permissions: List[str]) -> None:
+    def __init__(self, name: str, allowed_roles: list[str], permissions: list[str]) -> None:
         self.name: str = name
-        self.allowed_roles: Set[str] = set(allowed_roles)
-        self.permissions: Set[str] = set(permissions)
+        self.allowed_roles: set[str] = set(allowed_roles)
+        self.permissions: set[str] = set(permissions)
 
-    def permits(self, roles: Set[str], permission: str) -> bool:
+    def permits(self, roles: set[str], permission: str) -> bool:
         """Check if policy permits any of the given roles to access a permission."""
         if permission not in self.permissions:
             return False
@@ -52,8 +52,8 @@ class PolicyEngine:
 
     def __init__(self, identity_manager: IdentityManager) -> None:
         self.identity_manager: IdentityManager = identity_manager
-        self._permissions: Dict[str, Permission] = {}
-        self._policies: Dict[str, Policy] = {}
+        self._permissions: dict[str, Permission] = {}
+        self._policies: dict[str, Policy] = {}
 
     def create_permission(self, name: str, description: str = "") -> Permission:
         """Create and register a system permission."""
@@ -65,11 +65,11 @@ class PolicyEngine:
         logger.info(f"Successfully registered system permission: '{name}'")
         return permission
 
-    def get_permission(self, name: str) -> Optional[Permission]:
+    def get_permission(self, name: str) -> Permission | None:
         """Look up a registered permission."""
         return self._permissions.get(name)
 
-    def create_policy(self, name: str, allowed_roles: List[str], permissions: List[str]) -> Policy:
+    def create_policy(self, name: str, allowed_roles: list[str], permissions: list[str]) -> Policy:
         """Create and register an authorization policy."""
         if name in self._policies:
             logger.error(f"Cannot create policy: '{name}' already exists.")
@@ -90,7 +90,7 @@ class PolicyEngine:
         logger.info(f"Successfully registered authorization policy: '{name}'")
         return policy
 
-    def get_policy(self, name: str) -> Optional[Policy]:
+    def get_policy(self, name: str) -> Policy | None:
         """Look up a registered policy."""
         return self._policies.get(name)
 

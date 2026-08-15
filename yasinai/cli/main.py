@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 import argparse
 import json
 import logging
 import sys
-from typing import List, Optional
 
 from yasinai.core.runtime import Runtime
 
@@ -38,7 +39,7 @@ def handle_status(args: argparse.Namespace) -> int:
         logger.info("Successfully displayed status.")
         return 0
     except Exception as e:
-        logger.error(f"Error checking status: {e}", exc_info=True)
+        logger.exception("Error checking status")
         print(f"Error checking status: {e}", file=sys.stderr)
         return 1
 
@@ -88,7 +89,7 @@ def handle_agent_create(args: argparse.Namespace) -> int:
         logger.info(f"Successfully created agent: {agent.name}")
         return 0
     except Exception as e:
-        logger.error(f"Error creating agent: {e}", exc_info=True)
+        logger.exception("Error creating agent")
         print(f"Error creating agent: {e}", file=sys.stderr)
         return 1
 
@@ -138,7 +139,7 @@ def handle_memory_search(args: argparse.Namespace) -> int:
         logger.info("Successfully searched memory.")
         return 0
     except Exception as e:
-        logger.error(f"Error searching memory: {e}", exc_info=True)
+        logger.exception("Error searching memory")
         print(f"Error searching memory: {e}", file=sys.stderr)
         return 1
 
@@ -185,7 +186,7 @@ def handle_security_check(args: argparse.Namespace) -> int:
         logger.info("Successfully executed security check.")
         return 0
     except Exception as e:
-        logger.error(f"Error checking security: {e}", exc_info=True)
+        logger.exception("Error checking security")
         print(f"Error checking security: {e}", file=sys.stderr)
         return 1
 
@@ -221,7 +222,7 @@ def handle_package_build(args: argparse.Namespace) -> int:
         logger.info(f"Successfully built package v{version}")
         return 0
     except Exception as e:
-        logger.error(f"Error building package: {e}", exc_info=True)
+        logger.exception("Error building package")
         print(f"Error building package: {e}", file=sys.stderr)
         return 1
 
@@ -242,7 +243,7 @@ def handle_serve(args: argparse.Namespace) -> int:
 
     # Validate interval
     if interval <= 0:
-        logger.error("Interval must be a positive integer.")
+        logger.exception("Interval must be a positive integer.")
         print("Error: Interval must be a positive integer.", file=sys.stderr)
         return 1
 
@@ -304,7 +305,7 @@ def handle_serve(args: argparse.Namespace) -> int:
                 slept += 1
 
     except Exception as e:
-        logger.error(f"Error in serve loop: {e}", exc_info=True)
+        logger.exception("Error in serve loop")
         print(f"Error in serve loop: {e}", file=sys.stderr)
         return 1
     finally:
@@ -393,7 +394,7 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Optional[List[str]] = None) -> None:
+def main(argv: list[str] | None = None) -> None:
     """
     Main CLI entrypoint. Parses command line arguments and executes requested subcommands.
     """
@@ -408,20 +409,19 @@ def main(argv: Optional[List[str]] = None) -> None:
         sys.exit(0)
 
     # For commands with nested subcommands, ensure subcommand is provided
-    if args.command in ("agent", "memory", "security", "package"):
-        if not getattr(args, "subcommand", None):
-            # Print subcommand help
-            sub_parsers_actions = [
-                action for action in parser._subparsers._actions
-                if isinstance(action, argparse._SubParsersAction)
-            ]
-            for action in sub_parsers_actions:
-                subcommand_parser = action.choices.get(args.command)
-                if subcommand_parser:
-                    subcommand_parser.print_help()
-                    sys.exit(0)
-            parser.print_help()
-            sys.exit(0)
+    if args.command in ("agent", "memory", "security", "package") and not getattr(args, "subcommand", None):
+        # Print subcommand help
+        sub_parsers_actions = [
+            action for action in parser._subparsers._actions
+            if isinstance(action, argparse._SubParsersAction)
+        ]
+        for action in sub_parsers_actions:
+            subcommand_parser = action.choices.get(args.command)
+            if subcommand_parser:
+                subcommand_parser.print_help()
+                sys.exit(0)
+        parser.print_help()
+        sys.exit(0)
 
     if hasattr(args, "func"):
         # Propagate the top-level --json option to nested args if not present

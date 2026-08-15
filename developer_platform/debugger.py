@@ -2,9 +2,10 @@
 Debugging and Execution Tracer for YasinAI Developer Platform.
 Tracks agent steps, inputs, outputs, and status.
 """
+from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -15,8 +16,8 @@ class Debugger:
     """
 
     def __init__(self) -> None:
-        self.current_agent: Optional[str] = None
-        self.logs: List[Dict[str, Any]] = []
+        self.current_agent: str | None = None
+        self.logs: list[dict[str, Any]] = []
 
     def start_session(self, agent_name: str) -> None:
         """
@@ -42,7 +43,7 @@ class Debugger:
             "output": output_data
         })
 
-    def get_session_logs(self) -> List[Dict[str, Any]]:
+    def get_session_logs(self) -> list[dict[str, Any]]:
         """
         Retrieve all execution logs recorded in the current session.
         """

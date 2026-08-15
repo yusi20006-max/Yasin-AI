@@ -11,7 +11,7 @@ import re
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import ClassVar
 
 
 @dataclass
@@ -21,7 +21,7 @@ class SecurityFinding:
     passed: bool
     severity: str
     details: str
-    path: Optional[str] = None
+    path: str | None = None
 
 
 class SecurityScanner:
@@ -33,11 +33,11 @@ class SecurityScanner:
         ("aws_access_key", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),
         ("generic_secret", re.compile(r"(?i)\b(?:api[_-]?key|secret|token|password|passwd)\b\s*[:=]\s*[\"'][^\"']{12,}[\"']")),
     )
-    SKIP_DIRS = {".git", ".venv", "venv", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", "dist", "build"}
-    TEXT_SUFFIXES = {".py", ".toml", ".yml", ".yaml", ".json", ".ini", ".cfg", ".conf", ".txt", ".md", ".sh", ".env"}
-    SECRET_FILENAMES = {".env", ".env.local", ".env.production", "credentials", "credentials.json"}
+    SKIP_DIRS: ClassVar[set[str]] = {".git", ".venv", "venv", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", "dist", "build"}
+    TEXT_SUFFIXES: ClassVar[set[str]] = {".py", ".toml", ".yml", ".yaml", ".json", ".ini", ".cfg", ".conf", ".txt", ".md", ".sh", ".env"}
+    SECRET_FILENAMES: ClassVar[set[str]] = {".env", ".env.local", ".env.production", "credentials", "credentials.json"}
 
-    def __init__(self, root: Optional[Path] = None) -> None:
+    def __init__(self, root: Path | None = None) -> None:
         self.root = Path(root or Path.cwd()).resolve()
 
     def _iter_files(self) -> Iterable[Path]:
@@ -50,8 +50,8 @@ class SecurityScanner:
             if path.suffix.lower() in self.TEXT_SUFFIXES or path.name in self.SECRET_FILENAMES:
                 yield path
 
-    def check_secrets(self) -> List[SecurityFinding]:
-        findings: List[SecurityFinding] = []
+    def check_secrets(self) -> list[SecurityFinding]:
+        findings: list[SecurityFinding] = []
         for path in self._iter_files():
             try:
                 text = path.read_text(encoding="utf-8", errors="ignore")
@@ -76,8 +76,8 @@ class SecurityScanner:
             return SecurityFinding("SEC_POLICY_001", "Secret ignore policy", False, "high", f"Missing ignore patterns: {', '.join(missing)}")
         return SecurityFinding("SEC_POLICY_001", "Secret ignore policy", True, "high", "Repository ignores common secret-bearing files.")
 
-    def check_file_permissions(self) -> List[SecurityFinding]:
-        findings: List[SecurityFinding] = []
+    def check_file_permissions(self) -> list[SecurityFinding]:
+        findings: list[SecurityFinding] = []
         for path in self._iter_files():
             try:
                 mode = path.stat().st_mode
@@ -97,7 +97,7 @@ class SecurityScanner:
             if AESGCM is None or not hasattr(EncryptionEngine, "encrypt"):
                 raise RuntimeError("required AEAD implementation is unavailable")
             return SecurityFinding("SEC_CRYPTO_001", "Authenticated encryption", True, "critical", "AES-GCM dependency and encryption engine are available.")
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 — crypto probe must not crash the security scan
             return SecurityFinding("SEC_CRYPTO_001", "Authenticated encryption", False, "critical", f"Encryption security check failed: {exc}")
 
     def check_policy_files(self) -> SecurityFinding:
@@ -107,8 +107,8 @@ class SecurityScanner:
             return SecurityFinding("SEC_POLICY_002", "Security policy documentation", False, "medium", f"Missing policy files: {', '.join(missing)}")
         return SecurityFinding("SEC_POLICY_002", "Security policy documentation", True, "medium", "Security truth and engineering policy documents are present.")
 
-    def scan(self) -> Dict[str, object]:
-        findings: List[SecurityFinding] = []
+    def scan(self) -> dict[str, object]:
+        findings: list[SecurityFinding] = []
         findings.extend(self.check_secrets())
         findings.append(self.check_secret_policy())
         findings.extend(self.check_file_permissions())

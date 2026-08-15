@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import json
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Any
 
 # Setup local module logger
 logger = logging.getLogger(__name__)
@@ -13,11 +15,11 @@ class Config:
     Supports default dictionary values, file-based loading (JSON), and environment variable overrides.
     """
 
-    def __init__(self, defaults: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, defaults: dict[str, Any] | None = None) -> None:
         """
         Initialize the Configuration with optional defaults.
         """
-        self._config: Dict[str, Any] = {
+        self._config: dict[str, Any] = {
             "app_name": "YasinAI",
             "version": "1.1.2",
             "environment": "production",
@@ -46,9 +48,9 @@ class Config:
                     logger.info(f"Successfully loaded configuration from {filepath}")
                     return True
                 else:
-                    logger.error(f"Configuration file {filepath} does not contain a valid JSON object.")
-        except Exception as e:
-            logger.error(f"Error loading configuration from file {filepath}: {e}", exc_info=True)
+                    logger.exception(f"Configuration file {filepath} does not contain a valid JSON object.")
+        except (OSError, json.JSONDecodeError, TypeError, ValueError) as e:
+            logger.error("Error loading configuration from file %s: %s", filepath, e)
         return False
 
     def _load_from_env(self) -> None:
@@ -80,8 +82,11 @@ class Config:
                             self._config[key] = json.loads(val)
                         else:
                             self._config[key] = [item.strip() for item in val.split(",") if item.strip()]
-                    except Exception as e:
-                        logger.warning(f"Environment variable '{env_key}' value '{val}' could not be parsed to list: {e}")
+                    except (json.JSONDecodeError, TypeError, ValueError) as e:
+                        logger.warning(
+                            "Environment variable '%s' value '%s' could not be parsed to list: %s",
+                            env_key, val, e,
+                        )
                 else:
                     self._config[key] = val
 
@@ -97,7 +102,7 @@ class Config:
         """
         self._config[key] = value
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Return the entire configuration as a dictionary copy.
         """

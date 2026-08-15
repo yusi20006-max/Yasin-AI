@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from functools import wraps
 from threading import Lock
 from time import monotonic
-from typing import Any, Callable, Dict
+from typing import Any, Callable
 
 
 @dataclass
@@ -47,8 +47,8 @@ class MetricsRegistry:
     """Thread-safe in-process registry suitable for service adapters."""
 
     def __init__(self) -> None:
-        self._counters: Dict[str, Counter] = {}
-        self._timers: Dict[str, Timer] = {}
+        self._counters: dict[str, Counter] = {}
+        self._timers: dict[str, Timer] = {}
         self._lock = Lock()
 
     def counter(self, name: str) -> Counter:

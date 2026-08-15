@@ -1,6 +1,6 @@
 import importlib
 import logging
-from typing import Any, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -10,16 +10,16 @@ class Bootstrap:
 
     def __init__(self, runtime: Any) -> None:
         self.runtime = runtime
-        self.loaded_modules: List[str] = []
+        self.loaded_modules: list[str] = []
 
-    def discover_and_load(self, module_names: List[str]) -> List[str]:
+    def discover_and_load(self, module_names: list[str]) -> list[str]:
         """Import modules and invoke their optional registration hook.
 
         Duplicate module names are ignored while preserving configuration order.
         If a module fails, the exception is wrapped with the module name and
         modules successfully loaded before the failure remain recorded.
         """
-        loaded: List[str] = []
+        loaded: list[str] = []
         seen = set(self.loaded_modules)
         for name in module_names:
             if name in seen:
@@ -38,7 +38,7 @@ class Bootstrap:
                 seen.add(name)
                 logger.info("Successfully bootstrapped module: '%s'", name)
             except Exception as exc:
-                logger.error("Failed to bootstrap module '%s'", name, exc_info=True)
+                logger.exception("Failed to bootstrap module '%s'", name)
                 raise ImportError(f"Failed to bootstrap and load module '{name}': {exc}") from exc
         return loaded
 

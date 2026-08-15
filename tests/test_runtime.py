@@ -105,16 +105,20 @@ def test_bootstrap_rejects_non_callable_registration_hook():
     bootstrap = Bootstrap(runtime)
     mock_module = MagicMock()
     mock_module.register_module = "invalid"
-    with patch("importlib.import_module", return_value=mock_module):
-        with pytest.raises(ImportError, match="register_module is not callable"):
+    with (
+        patch("importlib.import_module", return_value=mock_module),
+        pytest.raises(ImportError, match="register_module is not callable"),
+    ):
             bootstrap.discover_and_load(["mock_mod"])
 
 
 def test_bootstrap_load_failure():
     runtime = MagicMock()
     bootstrap = Bootstrap(runtime)
-    with patch("importlib.import_module", side_effect=ImportError("Module not found")):
-        with pytest.raises(ImportError, match="invalid_mod"):
+    with (
+        patch("importlib.import_module", side_effect=ImportError("Module not found")),
+        pytest.raises(ImportError, match="invalid_mod"),
+    ):
             bootstrap.discover_and_load(["invalid_mod"])
 
 
@@ -165,9 +169,11 @@ def test_runtime_orchestrated_start_is_idempotent():
 
 def test_runtime_start_failure_cleans_up():
     runtime = Runtime(config_defaults={"modules": ["invalid_mod"]})
-    with patch("importlib.import_module", side_effect=ImportError("Module not found")):
-        with pytest.raises(RuntimeError, match="Runtime startup failed"):
-            runtime.start()
+    with (
+        patch("importlib.import_module", side_effect=ImportError("Module not found")),
+        pytest.raises(RuntimeError, match="Runtime startup failed"),
+    ):
+        runtime.start()
     assert runtime.state == Runtime.FAILED
     assert runtime.system_info.status == "failed"
     assert runtime.services.list_services() == {}

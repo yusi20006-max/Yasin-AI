@@ -7,7 +7,7 @@ Backed by developer_platform.sdk — consumers must not import that directly.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from yasinai.contracts.base import (
     CapabilityMetadata,
@@ -23,7 +23,7 @@ class PluginContract:
     name: str
     version: str
     description: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -39,9 +39,9 @@ class PluginInvokeRequest:
     """
 
     name: str
-    args: List[Any] = field(default_factory=list)
-    kwargs: Dict[str, Any] = field(default_factory=dict)
-    context: Optional[ObservabilityContext] = None
+    args: list[Any] = field(default_factory=list)
+    kwargs: dict[str, Any] = field(default_factory=dict)
+    context: ObservabilityContext | None = None
 
     def __post_init__(self) -> None:
         if not self.name or not self.name.strip():
@@ -64,7 +64,7 @@ class PluginInvokeResponse:
 
     success: bool
     result: Any = None
-    error: Optional[str] = None
+    error: str | None = None
     meta: CapabilityMetadata = field(
         default_factory=lambda: CapabilityMetadata(capability="plugin")
     )

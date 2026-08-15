@@ -49,31 +49,31 @@ from yasinai.contracts.rag import (
 __all__ = [
     # base
     "CapabilityError",
+    "CapabilityMetadata",
     "CapabilityUnavailableError",
     "ContractViolationError",
-    "ObservabilityContext",
-    "CapabilityMetadata",
-    # memory
-    "MemoryRequest",
-    "MemoryResponse",
-    "MemoryEntry",
-    "MemoryType",
-    # knowledge
-    "KnowledgeQuery",
-    "KnowledgeResult",
-    "KnowledgeEntry",
-    "KnowledgeQueryType",
     # embedding
     "EmbeddingRequest",
     "EmbeddingResponse",
     "EmbeddingVector",
+    # generation
+    "GenerationRequest",
+    "GenerationResult",
+    "KnowledgeEntry",
+    # knowledge
+    "KnowledgeQuery",
+    "KnowledgeQueryType",
+    "KnowledgeResult",
+    "MemoryEntry",
+    # memory
+    "MemoryRequest",
+    "MemoryResponse",
+    "MemoryType",
+    "ObservabilityContext",
     # plugin
     "PluginContract",
     "PluginInvokeRequest",
     "PluginInvokeResponse",
-    # generation
-    "GenerationRequest",
-    "GenerationResult",
     # rag
     "RagRequest",
     "RagResult",

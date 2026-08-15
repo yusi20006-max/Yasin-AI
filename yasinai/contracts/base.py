@@ -4,7 +4,7 @@ Base types shared across all Yasin-AI Capability Contracts v1.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class CapabilityError(Exception):
@@ -14,7 +14,7 @@ class CapabilityError(Exception):
         super().__init__(message)
         self.code = code
 
-    def as_dict(self) -> Dict[str, str]:
+    def as_dict(self) -> dict[str, str]:
         return {"error": str(self), "code": self.code}
 
 
@@ -40,10 +40,10 @@ class ContractViolationError(CapabilityError):
 class ObservabilityContext:
     """Opaque tracing/logging context passed through capability calls."""
 
-    trace_id: Optional[str] = None
-    span_id: Optional[str] = None
-    caller: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    trace_id: str | None = None
+    span_id: str | None = None
+    caller: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -53,4 +53,4 @@ class CapabilityMetadata:
     capability: str
     contract_version: str = "v1"
     platform_version: str = "1.1.2"
-    provider: Optional[str] = None
+    provider: str | None = None

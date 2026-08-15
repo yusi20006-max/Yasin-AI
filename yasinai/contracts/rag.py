@@ -7,7 +7,7 @@ Orchestrated by yasinai.services.RagService.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from yasinai.contracts.base import (
     CapabilityMetadata,
@@ -40,13 +40,13 @@ class RagRequest:
     top_k: int = 5
     include_memory: bool = False
     memory_limit: int = 5
-    model: Optional[str] = None
-    provider: Optional[str] = None
+    model: str | None = None
+    provider: str | None = None
     max_tokens: int = 1024
     temperature: float = 0.7
-    system_prompt: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    context: Optional[ObservabilityContext] = None
+    system_prompt: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    context: ObservabilityContext | None = None
 
     TOP_K_LIMIT = 100
     MEMORY_LIMIT_LIMIT = 1000
@@ -92,12 +92,12 @@ class RagResult:
 
     success: bool
     answer: str = ""
-    sources: List[KnowledgeEntry] = field(default_factory=list)
-    model: Optional[str] = None
-    provider: Optional[str] = None
+    sources: list[KnowledgeEntry] = field(default_factory=list)
+    model: str | None = None
+    provider: str | None = None
     input_tokens: int = 0
     output_tokens: int = 0
-    error: Optional[str] = None
+    error: str | None = None
     meta: CapabilityMetadata = field(
         default_factory=lambda: CapabilityMetadata(capability="rag")
     )

@@ -11,7 +11,6 @@ Routing policy:
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from yasinai.providers.base import ProviderBase, ProviderCapability, ProviderError
 from yasinai.providers.registry import ProviderRegistry
@@ -21,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class ProviderUnavailableError(ProviderError):
     """Raised when no provider is available for the requested capability."""
-    def __init__(self, capability: ProviderCapability, model: Optional[str] = None) -> None:
+    def __init__(self, capability: ProviderCapability, model: str | None = None) -> None:
         msg = f"No available provider for capability '{capability.value}'"
         if model:
             msg += f" with model hint '{model}'"
@@ -46,7 +45,7 @@ class ProviderRouter:
     def select(
         self,
         capability: ProviderCapability,
-        model: Optional[str] = None,
+        model: str | None = None,
         *,
         allow_fallback: bool = False,
     ) -> ProviderBase:
