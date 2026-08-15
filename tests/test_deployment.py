@@ -166,6 +166,20 @@ def test_package_builder_archive_member_names_are_safe(tmp_path):
     assert all(".." not in member.split("/") for member in members)
 
 
+def test_package_builder_single_file_input(tmp_path):
+    builder = PackageBuilder()
+    source = tmp_path / "single.txt"
+    source.write_text("single file\n")
+    result = builder.build_package(
+        name="single",
+        output_directory=str(tmp_path / "out"),
+        include_paths=[str(source)],
+    )
+    assert result["success"] is True
+    with tarfile.open(result["archive_path"], "r:gz") as archive:
+        assert archive.getnames() == ["single.txt"]
+
+
 def test_additional_deployment_coverage(tmp_path):
     manager = DockerManager()
     with (
