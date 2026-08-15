@@ -10,14 +10,8 @@ import time
 
 from yasinai.contracts.base import CapabilityMetadata
 from yasinai.contracts.generation import GenerationRequest, GenerationResult
-from yasinai.providers.base import (
-    GenerationRequest as ProviderGenerationRequest,
-)
-from yasinai.providers.base import (
-    ProviderBase,
-    ProviderCapability,
-    ProviderError,
-)
+from yasinai.providers.base import GenerationRequest as ProviderGenerationRequest
+from yasinai.providers.base import ProviderBase, ProviderCapability, ProviderError
 from yasinai.providers.factory import build_default_registry
 from yasinai.providers.registry import ProviderRegistry
 from yasinai.providers.router import ProviderRouter, ProviderUnavailableError
@@ -56,7 +50,7 @@ class GenerationService:
         Retries the selected provider on retryable errors (bounded by
         max_retries_per_provider, with a short backoff between attempts).
         If a provider is exhausted and the caller did not pin a specific
-        provider name, falls back to the next available candidate for the
+        provider name, falls back to the next eligible provider for the
         capability (bounded by max_provider_fallbacks). A caller-pinned
         provider (request.provider set) is only retried, never substituted.
         """
@@ -115,9 +109,9 @@ class GenerationService:
                         candidate.info.name, exc.retryable, exc,
                     )
                     break
-                except Exception as exc:
+                except Exception:
                     logger.exception("GenerationService.generate failed")
-                    return GenerationResult(success=False, error=str(exc), meta=meta)
+                    return GenerationResult(success=False, error="generation failed", meta=meta)
 
             if pinned or fallbacks_used >= self._max_provider_fallbacks:
                 break
@@ -135,27 +129,33 @@ class GenerationService:
         )
 
     def _candidate_providers(self, request: GenerationRequest) -> list[ProviderBase]:
-        """Return an ordered list of providers to try for this request.
+        """Return an ordered list of providers eligible for this request.
 
         A caller-pinned request.provider yields exactly one candidate (no
-        substitution). Otherwise, returns available providers for the
-        capability ordered by the router's selection policy, so fallback
-        tries alternates in the same order the router would prefer them.
+        substitution). When a model hint is supplied, every fallback must
+        advertise that same model id; silently substituting a different model
+        would violate the request's explicit model constraint. Without a model
+        hint, all available providers for the capability remain eligible.
         """
         if request.provider:
             named = self._registry.get(request.provider)
             if named is None or not named.is_available():
                 raise ProviderUnavailableError(self._default_capability, request.model)
+            if request.model and request.model not in named.info.model_ids:
+                raise ProviderUnavailableError(self._default_capability, request.model)
             return [named]
 
-        # Prime the ordered candidate list via the router (respects model
-        # hint matching), then include any other available providers for
-        # this capability as further fallback candidates.
         primary = self._router.select(self._default_capability, model=request.model)
-        rest = [
-            p for p in self._registry.available_for_capability(self._default_capability)
-            if p is not primary
-        ]
+        available = self._registry.available_for_capability(self._default_capability)
+        if request.model:
+            # Preserve explicit model semantics across retries/fallbacks: only
+            # providers advertising the requested model may be substituted.
+            rest = [
+                p for p in available
+                if p is not primary and request.model in p.info.model_ids
+            ]
+        else:
+            rest = [p for p in available if p is not primary]
         return [primary, *rest]
 
     @property
