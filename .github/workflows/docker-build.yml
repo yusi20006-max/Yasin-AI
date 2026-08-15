@@ -6,6 +6,13 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-test:
     name: Build and Smoke Test
@@ -15,14 +22,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Workaround pyproject.toml setuptools flat-layout discovery
-        run: |
-          echo -e '\n[tool.setuptools]\npackages = ["yasinai", "yasinai.core", "yasinai.cli", "yasinai.deployment", "security_platform", "developer_platform", "knowledge_platform"]' >> pyproject.toml
-
       - name: Build Docker Image
-        run: |
-          docker build -t yasinai:latest .
+        run: docker build --pull -t yasinai:latest .
 
       - name: Run Smoke Test
-        run: |
-          docker run --rm yasinai:latest yasin status
+        run: docker run --rm yasinai:latest yasin status

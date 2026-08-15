@@ -10,7 +10,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - ENVIRONMENT=development
+      - YASINAI_ENVIRONMENT=development
     # Local hardening baseline (production profile is stricter)
     security_opt:
       - no-new-privileges:true
