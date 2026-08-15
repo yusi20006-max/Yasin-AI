@@ -23,8 +23,10 @@ def test_core_config_public_api():
 
 def test_core_does_not_require_private_platforms():
     # Importing Runtime must not require consumers to import private packages
+    from pathlib import Path
+
     import yasinai.core.runtime as runtime_mod
 
-    src = open(runtime_mod.__file__, encoding="utf-8").read()
+    src = Path(runtime_mod.__file__).read_text(encoding="utf-8")
     assert "knowledge_platform" not in src
     assert "developer_platform" not in src
