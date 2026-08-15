@@ -108,8 +108,37 @@ def test_openai_bad_response_shape():
         return {"choices": []}
 
     p = OpenAIProvider(api_key="sk-test", transport=transport)
-    with pytest.raises(ProviderError, match="Unexpected response"):
+    with pytest.raises(ProviderError, match="unexpected response format") as ei:
         p.generate(GenerationRequest(prompt="x"))
+    # must not leak payload dump
+    assert "choices" not in str(ei.value)
+
+
+def test_openai_http_error_message_redacted(monkeypatch):
+    import urllib.error
+    from yasinai.providers import openai_provider as mod
+
+    class FakeHTTPError(urllib.error.HTTPError):
+        def __init__(self):
+            pass
+        code = 400
+        def read(self):
+            return b'{"error":{"message":"secret-provider-detail","type":"invalid_request"}}'
+
+    def boom(url, headers, body):
+        raise FakeHTTPError()
+
+    # Exercise default transport path by patching urlopen
+    def fake_urlopen(req, timeout=60):
+        raise FakeHTTPError()
+
+    monkeypatch.setattr(mod.urllib.request, "urlopen", fake_urlopen)
+    with pytest.raises(ProviderError) as ei:
+        mod._default_http_transport("https://api.openai.com/v1/chat/completions", {}, {})
+    msg = str(ei.value)
+    assert "HTTP 400" in msg or "400" in msg
+    assert "secret-provider-detail" not in msg
+    assert ei.value.retryable is False
 
 
 # ---------------------------------------------------------------------------
