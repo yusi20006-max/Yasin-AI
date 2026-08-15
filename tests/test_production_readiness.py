@@ -57,7 +57,7 @@ def test_docker_workflow_does_not_mutate_pyproject():
 def test_development_compose_uses_supported_environment_prefix():
     compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
     assert "YASINAI_ENVIRONMENT=development" in compose
-    assert "ENVIRONMENT=development" not in compose
+    assert "\n      - ENVIRONMENT=development" not in compose
 
 
 def test_ci_coverage_gate_configured():
