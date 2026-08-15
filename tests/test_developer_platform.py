@@ -7,6 +7,7 @@ from developer_platform.generator import Generator
 from developer_platform.debugger import Debugger
 from developer_platform.profiler import Profiler
 from developer_platform.package_builder import PackageBuilder
+from developer_platform.sdk import PluginTrustError
 
 
 def test_agent_sdk():
@@ -102,6 +103,48 @@ def test_plugin_sdk():
     # Non-existent enable/disable
     assert sdk.enable_plugin("unknown") is False
     assert sdk.disable_plugin("unknown") is False
+
+
+def test_plugin_sdk_rejects_untrusted_plugin_by_default():
+    sdk = PluginSDK()
+    untrusted_plugin = Plugin(name="sketchy", trusted=False)
+
+    with pytest.raises(PluginTrustError, match="untrusted"):
+        sdk.register_plugin(untrusted_plugin)
+
+    assert sdk.get_plugin("sketchy") is None
+
+
+def test_plugin_sdk_allows_untrusted_plugin_when_explicitly_opted_in():
+    sdk = PluginSDK(allow_untrusted=True)
+    untrusted_plugin = Plugin(name="sketchy", trusted=False)
+
+    sdk.register_plugin(untrusted_plugin)
+    assert sdk.get_plugin("sketchy") is untrusted_plugin
+
+
+def test_plugin_default_is_trusted_for_backward_compatibility():
+    plugin = Plugin(name="calculator")
+    assert plugin.trusted is True
+
+
+def test_ai_application_add_plugin_rejects_untrusted_plugin_by_default():
+    app = AIApplication(name="assistant")
+    untrusted_plugin = Plugin(name="sketchy", trusted=False)
+
+    with pytest.raises(PluginTrustError, match="untrusted"):
+        app.add_plugin(untrusted_plugin)
+
+    assert len(app.list_plugins()) == 0
+
+
+def test_ai_application_add_plugin_allows_untrusted_when_explicitly_opted_in():
+    app = AIApplication(name="assistant")
+    untrusted_plugin = Plugin(name="sketchy", trusted=False)
+
+    app.add_plugin(untrusted_plugin, allow_untrusted=True)
+    assert app.list_plugins() == [untrusted_plugin]
+
 
 
 def test_app_sdk():

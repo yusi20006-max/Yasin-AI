@@ -7,6 +7,7 @@ import logging
 from typing import Any, Dict, List, Optional
 from developer_platform.agent import Agent
 from developer_platform.plugin import Plugin
+from developer_platform.sdk import PluginTrustError
 
 logger = logging.getLogger(__name__)
 
@@ -32,13 +33,27 @@ class AIApplication:
         self._agents[agent.name] = agent
         logger.info(f"Agent '{agent.name}' added to application '{self.name}'.")
 
-    def add_plugin(self, plugin: Plugin) -> None:
+    def add_plugin(self, plugin: Plugin, *, allow_untrusted: bool = False) -> None:
         """
         Add a plugin to the application.
+
+        Enforces the same production trust policy as
+        ``developer_platform.plugin.PluginSDK.register_plugin`` — untrusted
+        plugins are rejected unless ``allow_untrusted=True`` is explicitly
+        passed, so this entry point cannot bypass the trust boundary.
         """
         if plugin.name in self._plugins:
             logger.error(f"Cannot add plugin '{plugin.name}': already added to application '{self.name}'.")
             raise ValueError(f"Plugin '{plugin.name}' already added to this application.")
+        if not plugin.trusted and not allow_untrusted:
+            logger.error(
+                f"Refusing untrusted plugin '{plugin.name}' for application '{self.name}': "
+                "in-process plugins must be trusted code."
+            )
+            raise PluginTrustError(
+                f"refusing untrusted plugin '{plugin.name}': in-process plugins must be "
+                "trusted code; pass allow_untrusted=True only for isolated non-production use"
+            )
         self._plugins[plugin.name] = plugin
         logger.info(f"Plugin '{plugin.name}' added to application '{self.name}'.")
 
