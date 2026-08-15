@@ -7,6 +7,7 @@ from __future__ import annotations
 import logging
 import os
 import tarfile
+from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -19,9 +20,7 @@ _DEFAULT_INCLUDE_PATHS = (
 
 
 class PackageBuilder:
-    """
-    Manages packaging of plugins, agents, and platform integrations for distribution.
-    """
+    """Builds source-based deployment archives with safe archive member names."""
 
     def build_package(
         self,
@@ -34,12 +33,17 @@ class PackageBuilder:
         """
         Bundle the given paths into a real .tar.gz deployment artifact.
 
-        include_paths defaults to the platform's core/cli/pyproject.toml
-        files if not given, preserving prior behavior. Pass a different
-        list to package a different set of components (e.g. a single
-        plugin directory).
+        Source paths may be relative or absolute for backwards compatibility.
+        Archive member names are always normalized to relative paths derived
+        from a common source root, preventing absolute/``..`` traversal names
+        from being emitted into the resulting tarball.
         """
-        logger.info(f"Building deployment package '{name}' (version={version}) to directory '{output_directory}'...")
+        logger.info(
+            "Building deployment package '%s' (version=%s) to directory '%s'...",
+            name,
+            version,
+            output_directory,
+        )
         paths_to_include = list(include_paths) if include_paths is not None else list(_DEFAULT_INCLUDE_PATHS)
 
         try:
@@ -47,14 +51,28 @@ class PackageBuilder:
             os.makedirs(output_directory, exist_ok=True)
             archive_path = os.path.join(output_directory, package_name)
 
+            resolved_paths = [(path, Path(path).resolve()) for path in paths_to_include if os.path.exists(path)]
+            common_root = (
+                Path(os.path.commonpath([str(resolved.parent) for _, resolved in resolved_paths]))
+                if resolved_paths
+                else Path.cwd().resolve()
+            )
+
             files_included: list[str] = []
             with tarfile.open(archive_path, "w:gz") as tar:
+                for original_path, resolved_path in resolved_paths:
+                    try:
+                        arcname = resolved_path.relative_to(common_root).as_posix()
+                    except ValueError as exc:
+                        raise ValueError(f"cannot derive safe archive path for {original_path!r}") from exc
+                    if not arcname or arcname == "." or arcname.startswith("/") or ".." in Path(arcname).parts:
+                        raise ValueError(f"unsafe archive member path for {original_path!r}")
+                    tar.add(str(resolved_path), arcname=arcname)
+                    files_included.append(original_path)
+
                 for path in paths_to_include:
                     if not os.path.exists(path):
-                        logger.warning(f"Skipping missing path for package '{name}': '{path}'")
-                        continue
-                    tar.add(path, arcname=path)
-                    files_included.append(path)
+                        logger.warning("Skipping missing path for package '%s': '%s'", name, path)
 
             result = {
                 "success": True,
@@ -64,10 +82,10 @@ class PackageBuilder:
                 "version": version,
                 "files_included": files_included,
             }
-            logger.info(f"Package successfully built: {archive_path}")
+            logger.info("Package successfully built: %s", archive_path)
             return result
         except Exception:
-            logger.exception("Failed to build package '{name}'")
+            logger.exception("Failed to build package '%s'", name)
             return {
                 "success": False,
                 "package_name": "",

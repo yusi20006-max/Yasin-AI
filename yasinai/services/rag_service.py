@@ -10,11 +10,7 @@ import logging
 
 from yasinai.contracts.base import CapabilityMetadata
 from yasinai.contracts.generation import GenerationRequest
-from yasinai.contracts.knowledge import (
-    KnowledgeEntry,
-    KnowledgeQuery,
-    KnowledgeQueryType,
-)
+from yasinai.contracts.knowledge import KnowledgeEntry, KnowledgeQuery, KnowledgeQueryType
 from yasinai.contracts.memory import MemoryRequest, MemoryType
 from yasinai.contracts.rag import RagRequest, RagResult
 from yasinai.services.generation_service import GenerationService
@@ -73,10 +69,7 @@ class RagService:
                     error=gen.error or "generation failed",
                     provider=gen.provider,
                     model=gen.model,
-                    meta=CapabilityMetadata(
-                        capability="rag",
-                        provider=gen.provider,
-                    ),
+                    meta=CapabilityMetadata(capability="rag", provider=gen.provider),
                 )
             return RagResult(
                 success=True,
@@ -86,14 +79,14 @@ class RagService:
                 provider=gen.provider,
                 input_tokens=gen.input_tokens,
                 output_tokens=gen.output_tokens,
-                meta=CapabilityMetadata(
-                    capability="rag",
-                    provider=gen.provider,
-                ),
+                meta=CapabilityMetadata(capability="rag", provider=gen.provider),
             )
-        except Exception as exc:
+        except Exception:
+            # Keep internal exception details in logs only. RagResult.error is
+            # a public-facing contract and must not become an accidental
+            # exception/traceback disclosure channel.
             logger.exception("RagService.run failed")
-            return RagResult(success=False, error=str(exc), meta=meta)
+            return RagResult(success=False, error="rag pipeline failed", meta=meta)
 
     def _retrieve(self, request: RagRequest) -> list[KnowledgeEntry]:
         result = self._knowledge.query(
@@ -120,17 +113,10 @@ class RagService:
         )
         if not resp.success:
             return []
-        bits: list[str] = []
-        for entry in resp.entries or []:
-            bits.append(str(entry.content))
-        return bits
+        return [str(entry.content) for entry in resp.entries or []]
 
     @staticmethod
-    def _build_prompt(
-        request: RagRequest,
-        sources: list[KnowledgeEntry],
-        memory_bits: list[str],
-    ) -> str:
+    def _build_prompt(request: RagRequest, sources: list[KnowledgeEntry], memory_bits: list[str]) -> str:
         sections: list[str] = []
         if sources:
             chunks = []
