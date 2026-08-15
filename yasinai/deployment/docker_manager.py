@@ -9,7 +9,7 @@ import logging
 import os
 import shutil
 import subprocess
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -102,12 +102,13 @@ class DockerManager:
                     ["docker", "compose", "version"],
                     capture_output=True,
                     text=True,
+                    check=False,  # availability probe — nonzero means compose missing
                 )
                 success = res.returncode == 0
                 logger.debug(f"'docker compose' verification exit code: {res.returncode}")
                 return success
-            except Exception as e:
-                logger.warning(f"Error while invoking 'docker compose version': {e}")
+            except Exception as e:  # noqa: BLE001 — availability probe must not raise
+                logger.warning("Error while invoking 'docker compose version': %s", e)
                 return False
         logger.debug("Docker Compose is not available.")
         return False
@@ -117,7 +118,7 @@ class DockerManager:
         overwrite: bool = False,
         *,
         confirm_overwrite_production: bool = False,
-    ) -> Dict[str, bool]:
+    ) -> dict[str, bool]:
         """
         Ensure Dockerfile and docker-compose.yml exist under ``root_directory``.
 
@@ -184,11 +185,11 @@ class DockerManager:
                 f.write(content)
             logger.info("Wrote %s at: %s", label, path)
             return True
-        except OSError as e:
-            logger.error("Failed to write %s: %s", label, e, exc_info=True)
+        except OSError:
+            logger.exception("Failed to write %s", label)
             return False
 
-    def get_docker_status(self) -> Dict[str, Any]:
+    def get_docker_status(self) -> dict[str, Any]:
         """Get status of docker tools and files."""
         logger.debug("Retrieving Docker deployment status...")
         status = {

@@ -11,7 +11,7 @@ import logging
 import math
 import os
 import re
-from typing import Any, Dict, List, Optional, Protocol
+from typing import Any, Protocol
 
 from knowledge_platform.vector_store import SQLiteVectorStore
 
@@ -19,8 +19,8 @@ logger = logging.getLogger(__name__)
 
 
 class VectorStoreProtocol(Protocol):
-    def store_vector(self, text_id: str, vector: List[float], metadata: Optional[Dict[str, Any]] = None) -> None: ...
-    def get_all_records(self) -> List[Dict[str, Any]]: ...
+    def store_vector(self, text_id: str, vector: list[float], metadata: dict[str, Any] | None = None) -> None: ...
+    def get_all_records(self) -> list[dict[str, Any]]: ...
     def clear(self) -> None: ...
 
     def close(self) -> None: ...
@@ -30,22 +30,22 @@ class EmbeddingEngine:
     """Generate TF-IDF-like vectors using only the Python standard library."""
 
     def __init__(self) -> None:
-        self.vocabulary: Dict[str, int] = {}
-        self.idf: Dict[str, float] = {}
-        self.documents: List[str] = []
+        self.vocabulary: dict[str, int] = {}
+        self.idf: dict[str, float] = {}
+        self.documents: list[str] = []
 
-    def tokenize(self, text: str) -> List[str]:
+    def tokenize(self, text: str) -> list[str]:
         text_clean = re.sub(r"[^\w\s]", "", text.lower())
         return [word for word in text_clean.split() if word]
 
-    def fit(self, texts: List[str]) -> None:
+    def fit(self, texts: list[str]) -> None:
         self.documents = list(texts)
         self.vocabulary.clear()
         self.idf.clear()
         if not texts:
             return
 
-        occurrences: Dict[str, int] = {}
+        occurrences: dict[str, int] = {}
         for doc in texts:
             for token in set(self.tokenize(doc)):
                 if token not in self.vocabulary:
@@ -56,7 +56,7 @@ class EmbeddingEngine:
         for term, frequency in occurrences.items():
             self.idf[term] = math.log((1 + count) / (1 + frequency)) + 1
 
-    def get_embedding(self, text: str) -> List[float]:
+    def get_embedding(self, text: str) -> list[float]:
         vector = [0.0] * max(len(self.vocabulary), 1)
         if not self.vocabulary:
             return vector
@@ -64,7 +64,7 @@ class EmbeddingEngine:
         if not tokens:
             return vector
 
-        tf: Dict[str, int] = {}
+        tf: dict[str, int] = {}
         for token in tokens:
             if token in self.vocabulary:
                 tf[token] = tf.get(token, 0) + 1
@@ -79,13 +79,13 @@ class VectorStore:
     """In-memory vector store retained as the lightweight library backend."""
 
     def __init__(self) -> None:
-        self.records: List[Dict[str, Any]] = []
+        self.records: list[dict[str, Any]] = []
 
-    def store_vector(self, text_id: str, vector: List[float], metadata: Optional[Dict[str, Any]] = None) -> None:
+    def store_vector(self, text_id: str, vector: list[float], metadata: dict[str, Any] | None = None) -> None:
         self.records = [record for record in self.records if record["id"] != text_id]
         self.records.append({"id": text_id, "vector": vector, "metadata": metadata or {}})
 
-    def get_all_records(self) -> List[Dict[str, Any]]:
+    def get_all_records(self) -> list[dict[str, Any]]:
         return self.records
 
     def clear(self) -> None:
@@ -94,7 +94,7 @@ class VectorStore:
 
 class SemanticSearch:
     @staticmethod
-    def cosine_similarity(v1: List[float], v2: List[float]) -> float:
+    def cosine_similarity(v1: list[float], v2: list[float]) -> float:
         if len(v1) != len(v2) or not v1:
             return 0.0
         dot = sum(a * b for a, b in zip(v1, v2))
@@ -104,7 +104,7 @@ class SemanticSearch:
             return 0.0
         return dot / (norm_a * norm_b)
 
-    def search(self, query_vector: List[float], records: List[Dict[str, Any]], limit: int = 5, threshold: float = 0.0) -> List[Dict[str, Any]]:
+    def search(self, query_vector: list[float], records: list[dict[str, Any]], limit: int = 5, threshold: float = 0.0) -> list[dict[str, Any]]:
         scored = []
         for record in records:
             score = self.cosine_similarity(query_vector, record["vector"])
@@ -117,7 +117,7 @@ class SemanticSearch:
 class Retriever:
     """Persistent semantic retriever with a pluggable vector store."""
 
-    def __init__(self, store: Optional[VectorStoreProtocol] = None, path: Optional[str] = None) -> None:
+    def __init__(self, store: VectorStoreProtocol | None = None, path: str | None = None) -> None:
         self.embedding_engine = EmbeddingEngine()
         if store is not None:
             self.vector_store = store
@@ -135,13 +135,13 @@ class Retriever:
             record["vector"] = self.embedding_engine.get_embedding(record["metadata"].get("text", ""))
             self.vector_store.store_vector(record["id"], record["vector"], record["metadata"])
 
-    def add_document(self, doc_id: str, text: str, metadata: Optional[Dict[str, Any]] = None) -> None:
+    def add_document(self, doc_id: str, text: str, metadata: dict[str, Any] | None = None) -> None:
         meta = dict(metadata or {})
         meta["text"] = text
         self.vector_store.store_vector(doc_id, [], meta)
         self._rebuild_embeddings()
 
-    def retrieve(self, query: str, limit: int = 5, threshold: float = 0.0) -> List[Dict[str, Any]]:
+    def retrieve(self, query: str, limit: int = 5, threshold: float = 0.0) -> list[dict[str, Any]]:
         records = self.vector_store.get_all_records()
         if not records or limit <= 0:
             return []

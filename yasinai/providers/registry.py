@@ -9,9 +9,9 @@ Phase 3: concrete providers register here.
 """
 from __future__ import annotations
 
+import builtins
 import logging
 from threading import Lock
-from typing import Dict, List, Optional
 
 from yasinai.providers.base import ProviderBase, ProviderCapability, ProviderInfo
 
@@ -26,7 +26,7 @@ class ProviderRegistry:
     """Thread-safe registry of provider adapters."""
 
     def __init__(self) -> None:
-        self._providers: Dict[str, ProviderBase] = {}
+        self._providers: dict[str, ProviderBase] = {}
         self._lock = Lock()
 
     def register(self, provider: ProviderBase, *, overwrite: bool = False) -> None:
@@ -47,15 +47,15 @@ class ProviderRegistry:
             self._providers.pop(name, None)
             return existed
 
-    def get(self, name: str) -> Optional[ProviderBase]:
+    def get(self, name: str) -> ProviderBase | None:
         with self._lock:
             return self._providers.get(name)
 
-    def list(self) -> List[ProviderInfo]:
+    def list(self) -> builtins.list[ProviderInfo]:
         with self._lock:
             return [p.info for p in self._providers.values()]
 
-    def for_capability(self, capability: ProviderCapability) -> List[ProviderBase]:
+    def for_capability(self, capability: ProviderCapability) -> builtins.list[ProviderBase]:
         """Return all providers that support a given capability."""
         with self._lock:
             return [
@@ -63,7 +63,7 @@ class ProviderRegistry:
                 if capability in p.info.capabilities
             ]
 
-    def available_for_capability(self, capability: ProviderCapability) -> List[ProviderBase]:
+    def available_for_capability(self, capability: ProviderCapability) -> builtins.list[ProviderBase]:
         """Return providers that support the capability AND report is_available()."""
         return [p for p in self.for_capability(capability) if p.is_available()]
 

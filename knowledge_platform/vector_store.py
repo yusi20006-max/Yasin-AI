@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import sqlite3
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class SQLiteVectorStore:
@@ -32,11 +32,11 @@ class SQLiteVectorStore:
         self._connection.commit()
 
     @property
-    def records(self) -> List[Dict[str, Any]]:
+    def records(self) -> list[dict[str, Any]]:
         """Compatibility view matching the in-memory VectorStore API."""
         return self.get_all_records()
 
-    def store_vector(self, text_id: str, vector: List[float], metadata: Optional[Dict[str, Any]] = None) -> None:
+    def store_vector(self, text_id: str, vector: list[float], metadata: dict[str, Any] | None = None) -> None:
         self._connection.execute(
             """INSERT INTO vectors(id, vector, metadata) VALUES (?, ?, ?)
                ON CONFLICT(id) DO UPDATE SET
@@ -50,7 +50,7 @@ class SQLiteVectorStore:
         )
         self._connection.commit()
 
-    def get_all_records(self) -> List[Dict[str, Any]]:
+    def get_all_records(self) -> list[dict[str, Any]]:
         rows = self._connection.execute(
             "SELECT id, vector, metadata FROM vectors ORDER BY id"
         ).fetchall()

@@ -28,15 +28,15 @@ from knowledge_platform.triple_store import TripleStore
 def test_short_term_memory_lifecycle():
     stm = ShortTermMemory(capacity=3)
 
-    e1 = stm.store("first msg", {"user": "alice"})
-    e2 = stm.store("second msg", {"user": "bob"})
-    e3 = stm.store("third msg")
+    _e1 = stm.store("first msg", {"user": "alice"})
+    _e2 = stm.store("second msg", {"user": "bob"})
+    _e3 = stm.store("third msg")
 
     assert len(stm.memory) == 3
     assert stm.memory[0]["content"] == "first msg"
 
     # Check eviction (FIFO)
-    e4 = stm.store("fourth msg")
+    _e4 = stm.store("fourth msg")
     assert len(stm.memory) == 3
     assert "first msg" not in [m["content"] for m in stm.memory]
     assert stm.memory[0]["content"] == "second msg"

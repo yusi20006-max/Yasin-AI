@@ -7,7 +7,6 @@ and GenerationService. No provider SDKs imported here.
 from __future__ import annotations
 
 import logging
-from typing import List, Optional
 
 from yasinai.contracts.base import CapabilityMetadata
 from yasinai.contracts.generation import GenerationRequest
@@ -34,8 +33,8 @@ class RagService:
 
     def __init__(
         self,
-        knowledge: Optional[KnowledgeService] = None,
-        generation: Optional[GenerationService] = None,
+        knowledge: KnowledgeService | None = None,
+        generation: GenerationService | None = None,
     ) -> None:
         self._knowledge = knowledge if knowledge is not None else KnowledgeService()
         self._generation = generation if generation is not None else GenerationService()
@@ -96,7 +95,7 @@ class RagService:
             logger.exception("RagService.run failed")
             return RagResult(success=False, error=str(exc), meta=meta)
 
-    def _retrieve(self, request: RagRequest) -> List[KnowledgeEntry]:
+    def _retrieve(self, request: RagRequest) -> list[KnowledgeEntry]:
         result = self._knowledge.query(
             KnowledgeQuery(
                 query_type=KnowledgeQueryType.SEMANTIC,
@@ -111,7 +110,7 @@ class RagService:
             return []
         return list(result.entries or [])
 
-    def _memory_context(self, request: RagRequest) -> List[str]:
+    def _memory_context(self, request: RagRequest) -> list[str]:
         resp = self._knowledge.memory(
             MemoryRequest(
                 operation="retrieve",
@@ -121,7 +120,7 @@ class RagService:
         )
         if not resp.success:
             return []
-        bits: List[str] = []
+        bits: list[str] = []
         for entry in resp.entries or []:
             bits.append(str(entry.content))
         return bits
@@ -129,10 +128,10 @@ class RagService:
     @staticmethod
     def _build_prompt(
         request: RagRequest,
-        sources: List[KnowledgeEntry],
-        memory_bits: List[str],
+        sources: list[KnowledgeEntry],
+        memory_bits: list[str],
     ) -> str:
-        sections: List[str] = []
+        sections: list[str] = []
         if sources:
             chunks = []
             for i, src in enumerate(sources, start=1):

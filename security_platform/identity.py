@@ -2,9 +2,9 @@
 Identity Module for YasinAI Security Platform.
 Manages Users, Roles, and user-role associations.
 """
+from __future__ import annotations
 
 import logging
-from typing import Dict, List, Optional, Set
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +27,9 @@ class User:
     Represents a User Identity within the YasinAI ecosystem.
     """
 
-    def __init__(self, username: str, roles: Optional[List[str]] = None, active: bool = True) -> None:
+    def __init__(self, username: str, roles: list[str] | None = None, active: bool = True) -> None:
         self.username: str = username
-        self.roles: Set[str] = set(roles) if roles else set()
+        self.roles: set[str] = set(roles) if roles else set()
         self.active: bool = active
 
     def add_role(self, role_name: str) -> None:
@@ -60,8 +60,8 @@ class IdentityManager:
     """
 
     def __init__(self) -> None:
-        self._users: Dict[str, User] = {}
-        self._roles: Dict[str, Role] = {}
+        self._users: dict[str, User] = {}
+        self._roles: dict[str, Role] = {}
 
     def create_role(self, name: str, description: str = "") -> Role:
         """Create and register a security role."""
@@ -73,7 +73,7 @@ class IdentityManager:
         logger.info(f"Successfully created role: '{name}'")
         return role
 
-    def get_role(self, name: str) -> Optional[Role]:
+    def get_role(self, name: str) -> Role | None:
         """Look up a registered role."""
         return self._roles.get(name)
 
@@ -89,7 +89,7 @@ class IdentityManager:
         logger.warning(f"Attempted to delete non-existent role: '{name}'")
         return False
 
-    def create_user(self, username: str, roles: Optional[List[str]] = None, active: bool = True) -> User:
+    def create_user(self, username: str, roles: list[str] | None = None, active: bool = True) -> User:
         """Create and register a user identity."""
         if username in self._users:
             logger.error(f"Cannot create user: '{username}' already exists.")
@@ -107,7 +107,7 @@ class IdentityManager:
         logger.info(f"Successfully created user identity: '{username}'")
         return user
 
-    def get_user(self, username: str) -> Optional[User]:
+    def get_user(self, username: str) -> User | None:
         """Look up a user identity."""
         return self._users.get(username)
 
@@ -142,10 +142,10 @@ class IdentityManager:
         logger.warning(f"Failed to revoke role '{role_name}' from user '{username}' (user not found).")
         return False
 
-    def list_users(self) -> List[User]:
+    def list_users(self) -> list[User]:
         """List all registered users."""
         return list(self._users.values())
 
-    def list_roles(self) -> List[Role]:
+    def list_roles(self) -> list[Role]:
         """List all registered roles."""
         return list(self._roles.values())

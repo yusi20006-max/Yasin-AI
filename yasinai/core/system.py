@@ -1,7 +1,7 @@
 import logging
 import platform
 import sys
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ class SystemInfo:
         self.version: str = version
         self.status: str = status
 
-    def get_info(self) -> Dict[str, Any]:
+    def get_info(self) -> dict[str, Any]:
         """
         Get system and environment details.
         """
@@ -30,8 +30,8 @@ class SystemInfo:
                 "os": platform.system(),
                 "architecture": platform.machine(),
             }
-        except Exception as e:
-            logger.error(f"Failed to gather system information: {e}", exc_info=True)
+        except Exception:
+            logger.exception("Failed to gather system information")
             # Return basic fallback information to ensure non-breaking behavior
             return {
                 "app_name": self.app_name,
@@ -50,7 +50,7 @@ class ServiceRegistry:
     """
 
     def __init__(self) -> None:
-        self._services: Dict[str, Any] = {}
+        self._services: dict[str, Any] = {}
 
     def register_service(self, name: str, service: Any, overwrite: bool = False) -> None:
         """
@@ -90,7 +90,7 @@ class ServiceRegistry:
         logger.warning(f"Attempted to unregister non-existent service: '{name}'")
         return False
 
-    def list_services(self) -> Dict[str, Any]:
+    def list_services(self) -> dict[str, Any]:
         """
         Return all registered services.
         """

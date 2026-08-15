@@ -441,12 +441,12 @@ def test_additional_cli_coverage(capsys):
     import subprocess
     env = os.environ.copy()
     env["PYTHONPATH"] = "."
-    res = subprocess.run([sys.executable, "yasinai/cli/main.py", "--help"], capture_output=True, text=True, env=env)
+    res = subprocess.run([sys.executable, "yasinai/cli/main.py", "--help"], capture_output=True, text=True, env=env, check=False)
     assert res.returncode == 0
     assert "YasinAI Command Line management interface" in res.stdout
 
     # Run module main
-    res_mod = subprocess.run([sys.executable, "-m", "yasinai.cli", "--help"], capture_output=True, text=True, env=env)
+    res_mod = subprocess.run([sys.executable, "-m", "yasinai.cli", "--help"], capture_output=True, text=True, env=env, check=False)
     assert res_mod.returncode == 0
 
     # 9. Call main(None) to execute line 302 in current process

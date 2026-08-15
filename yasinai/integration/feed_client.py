@@ -6,8 +6,6 @@ hints and short summaries via contracts/services only.
 """
 from __future__ import annotations
 
-from typing import List, Optional
-
 from yasinai.contracts.generation import GenerationRequest, GenerationResult
 from yasinai.contracts.knowledge import (
     KnowledgeQuery,
@@ -24,8 +22,8 @@ class YasinFeedClient:
     def __init__(
         self,
         *,
-        knowledge: Optional[KnowledgeService] = None,
-        generation: Optional[GenerationService] = None,
+        knowledge: KnowledgeService | None = None,
+        generation: GenerationService | None = None,
     ) -> None:
         self._knowledge = knowledge if knowledge is not None else KnowledgeService()
         self._generation = (
@@ -48,7 +46,7 @@ class YasinFeedClient:
         self,
         text: str,
         *,
-        provider: Optional[str] = None,
+        provider: str | None = None,
         max_tokens: int = 256,
     ) -> GenerationResult:
         return self._generation.generate(
@@ -60,5 +58,5 @@ class YasinFeedClient:
             )
         )
 
-    def capabilities(self) -> List[str]:
+    def capabilities(self) -> list[str]:
         return ["rank", "index_item", "summarize_card"]

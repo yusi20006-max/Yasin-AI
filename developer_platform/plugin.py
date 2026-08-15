@@ -2,9 +2,10 @@
 Plugin SDK for YasinAI Developer Platform.
 Manages external extensions and third-party modules.
 """
+from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from developer_platform.sdk import PluginTrustError
 
@@ -69,7 +70,7 @@ class PluginSDK:
     """
 
     def __init__(self, *, allow_untrusted: bool = False) -> None:
-        self._plugins: Dict[str, Plugin] = {}
+        self._plugins: dict[str, Plugin] = {}
         self.allow_untrusted = allow_untrusted
 
     def register_plugin(self, plugin: Plugin) -> None:
@@ -98,7 +99,7 @@ class PluginSDK:
         self._plugins[plugin.name] = plugin
         logger.info(f"Successfully registered plugin: '{plugin.name}'")
 
-    def get_plugin(self, name: str) -> Optional[Plugin]:
+    def get_plugin(self, name: str) -> Plugin | None:
         """
         Look up a registered plugin by name.
         """
@@ -128,7 +129,7 @@ class PluginSDK:
         logger.warning(f"Failed to disable plugin: '{name}' not found.")
         return False
 
-    def list_plugins(self) -> List[Plugin]:
+    def list_plugins(self) -> list[Plugin]:
         """
         List all registered plugins.
         """

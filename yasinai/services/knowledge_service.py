@@ -7,7 +7,7 @@ Consumers import this (or contracts) instead of knowledge_platform.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from yasinai.contracts.base import CapabilityMetadata
 from yasinai.contracts.knowledge import (
@@ -42,10 +42,10 @@ class KnowledgeService:
 
     def __init__(
         self,
-        memory_manager: Optional[MemoryManager] = None,
-        knowledge_graph: Optional[KnowledgeGraph] = None,
-        retriever: Optional[Retriever] = None,
-        reasoner: Optional[KnowledgeReasoner] = None,
+        memory_manager: MemoryManager | None = None,
+        knowledge_graph: KnowledgeGraph | None = None,
+        retriever: Retriever | None = None,
+        reasoner: KnowledgeReasoner | None = None,
     ) -> None:
         self._memory = memory_manager or MemoryManager()
         self._graph = knowledge_graph or KnowledgeGraph()
@@ -208,7 +208,7 @@ class KnowledgeService:
 
     def _query_semantic(self, request: KnowledgeQuery, meta: CapabilityMetadata) -> KnowledgeResult:
         results = self._retriever.retrieve(request.text, limit=request.top_k)  # type: ignore[arg-type]
-        entries: List[KnowledgeEntry] = []
+        entries: list[KnowledgeEntry] = []
         for item in results:
             # Retriever returns dicts or objects depending on implementation
             if isinstance(item, dict):
@@ -257,7 +257,7 @@ class KnowledgeService:
     def _query_reasoning(self, request: KnowledgeQuery, meta: CapabilityMetadata) -> KnowledgeResult:
         if self._reasoner is None:
             self._reasoner = KnowledgeReasoner(self._graph)
-        results: List[Any] = []
+        results: list[Any] = []
         # Prefer transitive deduction when a relation is supplied
         if request.relation and hasattr(self._reasoner, "deduce_transitive_relations"):
             try:
@@ -290,7 +290,7 @@ class KnowledgeService:
     # Convenience helpers used by tests / internal callers
     # ------------------------------------------------------------------
 
-    def add_document(self, doc_id: str, text: str, metadata: Optional[Dict[str, Any]] = None) -> None:
+    def add_document(self, doc_id: str, text: str, metadata: dict[str, Any] | None = None) -> None:
         """Index a document into the semantic retriever."""
         self._retriever.add_document(doc_id, text, metadata or {})
 

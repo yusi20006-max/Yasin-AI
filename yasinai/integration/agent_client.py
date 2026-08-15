@@ -9,7 +9,7 @@ This module is a reference implementation / smoke harness for that boundary.
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from yasinai.contracts.generation import GenerationRequest, GenerationResult
 from yasinai.contracts.knowledge import (
@@ -34,9 +34,9 @@ class YasinAgentClient:
     def __init__(
         self,
         *,
-        knowledge: Optional[KnowledgeService] = None,
-        generation: Optional[GenerationService] = None,
-        rag: Optional[RagService] = None,
+        knowledge: KnowledgeService | None = None,
+        generation: GenerationService | None = None,
+        rag: RagService | None = None,
     ) -> None:
         self._knowledge = knowledge if knowledge is not None else KnowledgeService()
         self._generation = (
@@ -54,9 +54,9 @@ class YasinAgentClient:
         self,
         content: Any,
         *,
-        key: Optional[str] = None,
+        key: str | None = None,
         long_term: bool = False,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> MemoryResponse:
         mem_type = MemoryType.LONG_TERM if long_term else MemoryType.SHORT_TERM
         return self._knowledge.memory(
@@ -72,9 +72,9 @@ class YasinAgentClient:
     def recall(
         self,
         *,
-        key: Optional[str] = None,
+        key: str | None = None,
         long_term: bool = False,
-        limit: Optional[int] = None,
+        limit: int | None = None,
     ) -> MemoryResponse:
         mem_type = MemoryType.LONG_TERM if long_term else MemoryType.SHORT_TERM
         return self._knowledge.memory(
@@ -98,7 +98,7 @@ class YasinAgentClient:
         )
 
     def index_document(
-        self, doc_id: str, text: str, metadata: Optional[Dict[str, Any]] = None
+        self, doc_id: str, text: str, metadata: dict[str, Any] | None = None
     ) -> None:
         self._knowledge.add_document(doc_id, text, metadata or {})
 
@@ -108,9 +108,9 @@ class YasinAgentClient:
         self,
         prompt: str,
         *,
-        system_prompt: Optional[str] = None,
-        model: Optional[str] = None,
-        provider: Optional[str] = None,
+        system_prompt: str | None = None,
+        model: str | None = None,
+        provider: str | None = None,
         max_tokens: int = 1024,
         temperature: float = 0.7,
     ) -> GenerationResult:
@@ -133,8 +133,8 @@ class YasinAgentClient:
         *,
         top_k: int = 5,
         include_memory: bool = True,
-        model: Optional[str] = None,
-        provider: Optional[str] = None,
+        model: str | None = None,
+        provider: str | None = None,
     ) -> RagResult:
         return self._rag.run(
             RagRequest(
@@ -146,6 +146,6 @@ class YasinAgentClient:
             )
         )
 
-    def capabilities(self) -> List[str]:
+    def capabilities(self) -> list[str]:
         """Stable capability names Yasin-Agent may depend on."""
         return ["memory", "knowledge", "generation", "rag"]

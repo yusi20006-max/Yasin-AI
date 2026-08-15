@@ -2,13 +2,13 @@
 Encryption and Key Management Module for YasinAI Security Platform.
 Provides secure SHA-256 hashing, AEAD encryption/decryption, and secret storage.
 """
+from __future__ import annotations
 
 import base64
 import hashlib
 import logging
 import os
 import secrets
-from typing import Dict, List, Optional
 
 from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -96,7 +96,7 @@ class SecretStore:
 
     def __init__(self, encryption_engine: EncryptionEngine) -> None:
         self.engine: EncryptionEngine = encryption_engine
-        self._secrets: Dict[str, str] = {}
+        self._secrets: dict[str, str] = {}
 
     def set_secret(self, name: str, secret_value: str, master_key: str) -> None:
         """Encrypt and store a secret after validating the environment master key."""
@@ -109,7 +109,7 @@ class SecretStore:
             )
         self._secrets[name] = self.engine.encrypt(secret_value, master_key)
 
-    def get_secret(self, name: str, master_key: str) -> Optional[str]:
+    def get_secret(self, name: str, master_key: str) -> str | None:
         """Decrypt and retrieve a stored secret."""
         expected_key = os.environ.get("YASINAI_MASTER_KEY")
         if not expected_key or master_key != expected_key:
@@ -134,6 +134,6 @@ class SecretStore:
             return True
         return False
 
-    def list_secrets(self) -> List[str]:
+    def list_secrets(self) -> list[str]:
         """List secret names without exposing secret values."""
         return list(self._secrets.keys())

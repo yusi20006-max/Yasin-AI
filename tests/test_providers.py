@@ -2,6 +2,8 @@
 Tests for Yasin-AI Provider Abstraction Layer
 Phase 2.6
 """
+from __future__ import annotations
+
 import pytest
 
 from yasinai.providers.base import (
@@ -22,7 +24,7 @@ from yasinai.providers.router import ProviderRouter, ProviderUnavailableError
 class StubGenerationProvider(ProviderBase):
     """Minimal stub that supports GENERATION and is always available."""
 
-    def __init__(self, name: str = "stub-gen", models: list = None, available: bool = True):
+    def __init__(self, name: str = "stub-gen", models: list | None = None, available: bool = True):
         self._name = name
         self._models = models or ["stub-model-v1"]
         self._available = available

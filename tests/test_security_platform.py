@@ -127,8 +127,8 @@ def test_policy_engine_authorization():
     policy_engine = PolicyEngine(id_mgr)
 
     # Create permissions
-    read_perm = policy_engine.create_permission("data:read", "Read access to database")
-    write_perm = policy_engine.create_permission("data:write", "Write access to database")
+    _read_perm = policy_engine.create_permission("data:read", "Read access to database")
+    _write_perm = policy_engine.create_permission("data:write", "Write access to database")
 
     # Create policy
     policy_engine.create_policy("AdminAccess", ["admin"], ["data:read", "data:write"])
@@ -163,7 +163,7 @@ def test_encryption_engine():
 
     # Different key should fail decryption
     another_key = engine.generate_key()
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         engine.decrypt(ciphertext, another_key)
 
 

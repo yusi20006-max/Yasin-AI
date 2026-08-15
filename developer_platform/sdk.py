@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 
 
 class SDKError(Exception):
@@ -31,7 +31,7 @@ class PluginSpec:
     handler: Callable[..., Any]
     version: str = "1.0.0"
     description: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     trusted: bool = True
 
 
@@ -43,7 +43,7 @@ class PluginRegistry:
     """
 
     def __init__(self, *, allow_untrusted: bool = False) -> None:
-        self._plugins: Dict[str, PluginSpec] = {}
+        self._plugins: dict[str, PluginSpec] = {}
         self.allow_untrusted = allow_untrusted
 
     def register(self, plugin: PluginSpec) -> PluginSpec:
@@ -63,7 +63,7 @@ class PluginRegistry:
     def unregister(self, name: str) -> bool:
         return self._plugins.pop(name, None) is not None
 
-    def get(self, name: str) -> Optional[PluginSpec]:
+    def get(self, name: str) -> PluginSpec | None:
         return self._plugins.get(name)
 
     def list(self) -> Iterable[PluginSpec]:
@@ -81,7 +81,7 @@ def plugin(
     *,
     version: str = "1.0.0",
     description: str = "",
-    metadata: Optional[Dict[str, Any]] = None,
+    metadata: dict[str, Any] | None = None,
     trusted: bool = True,
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Declare plugin metadata without coupling the handler to the registry."""

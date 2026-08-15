@@ -13,7 +13,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class ProviderCapability(str, Enum):
@@ -33,9 +33,9 @@ class ProviderInfo:
     """Static metadata about a registered provider."""
     name: str
     version: str = "unknown"
-    capabilities: List[ProviderCapability] = field(default_factory=list)
-    model_ids: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    capabilities: list[ProviderCapability] = field(default_factory=list)
+    model_ids: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -46,12 +46,12 @@ class GenerationRequest:
     provider-specific hints that are not part of the public contract.
     """
     prompt: str
-    model: Optional[str] = None
+    model: str | None = None
     max_tokens: int = 1024
     temperature: float = 0.7
-    system_prompt: Optional[str] = None
-    stop_sequences: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    system_prompt: str | None = None
+    stop_sequences: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.prompt:
@@ -72,8 +72,8 @@ class GenerationResponse:
     provider: str
     input_tokens: int = 0
     output_tokens: int = 0
-    finish_reason: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    finish_reason: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class ProviderBase(ABC):

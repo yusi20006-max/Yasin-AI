@@ -7,7 +7,7 @@ import json
 import logging
 import os
 import sys
-from typing import Any, Dict, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class Installer:
     def __init__(self, target_directory: str = "."):
         self.target_directory: str = target_directory
 
-    def verify_environment(self) -> Dict[str, Any]:
+    def verify_environment(self) -> dict[str, Any]:
         """
         Verify the system environment meets prerequisites (Python version, write permissions).
         """
@@ -44,7 +44,7 @@ class Installer:
             "target_directory": target_path
         }
 
-    def setup_directories(self) -> List[str]:
+    def setup_directories(self) -> list[str]:
         """
         Create necessary system directories.
         """
@@ -54,25 +54,25 @@ class Installer:
             os.path.join(self.target_directory, "logs"),
             os.path.join(self.target_directory, "config"),
         ]
-        created: List[str] = []
+        created: list[str] = []
         for d in directories:
             if not os.path.exists(d):
                 try:
                     os.makedirs(d, exist_ok=True)
                     created.append(d)
                     logger.info(f"Created directory: {d}")
-                except Exception as e:
-                    logger.error(f"Failed to create directory '{d}': {e}", exc_info=True)
+                except Exception:
+                    logger.exception("Failed to create directory %s", d)
         return created
 
-    def install(self) -> Dict[str, Any]:
+    def install(self) -> dict[str, Any]:
         """
         Execute the full automated setup.
         """
         logger.info("Executing YasinAI local installation...")
         env_status = self.verify_environment()
         if not env_status["success"]:
-            logger.error("Local installation aborted: environment verification failed.")
+            logger.exception("Local installation aborted: environment verification failed.")
             return {
                 "success": False,
                 "message": "Environment verification failed.",
@@ -87,11 +87,11 @@ class Installer:
         if not os.path.exists(config_path):
             try:
                 from yasinai import __version__ as _pkg_version
-            except Exception:
+            except Exception:  # noqa: BLE001 — package may be partially installed
                 try:
                     from importlib.metadata import version as _meta_version
                     _pkg_version = _meta_version("yasinai")
-                except Exception:
+                except Exception:  # noqa: BLE001 — fall back when metadata unavailable
                     _pkg_version = "0.0.0"
             default_config = {
                 "app_name": "YasinAI",
@@ -107,7 +107,7 @@ class Installer:
                 config_created = True
                 logger.info(f"Created default configuration template at: {config_path}")
             except OSError as e:
-                logger.error(f"Failed to create configuration file template at '{config_path}': {e}", exc_info=True)
+                logger.error(f"Failed to create configuration file template at '{config_path}': {e}")
 
         logger.info("YasinAI local installation successfully completed.")
         return {

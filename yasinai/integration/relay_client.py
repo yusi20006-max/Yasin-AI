@@ -6,8 +6,6 @@ enrichment (generation / RAG) without importing internal platforms.
 """
 from __future__ import annotations
 
-from typing import Optional
-
 from yasinai.contracts.generation import GenerationRequest, GenerationResult
 from yasinai.contracts.rag import RagRequest, RagResult
 from yasinai.services.generation_service import GenerationService
@@ -20,8 +18,8 @@ class YasinRelayClient:
     def __init__(
         self,
         *,
-        generation: Optional[GenerationService] = None,
-        rag: Optional[RagService] = None,
+        generation: GenerationService | None = None,
+        rag: RagService | None = None,
     ) -> None:
         self._generation = (
             generation if generation is not None else GenerationService()
@@ -33,8 +31,8 @@ class YasinRelayClient:
         payload: str,
         *,
         instruction: str = "Summarize for relay delivery.",
-        provider: Optional[str] = None,
-        model: Optional[str] = None,
+        provider: str | None = None,
+        model: str | None = None,
     ) -> GenerationResult:
         prompt = f"{instruction}\n\nPayload:\n{payload}"
         return self._generation.generate(
@@ -51,7 +49,7 @@ class YasinRelayClient:
         query: str,
         *,
         top_k: int = 3,
-        provider: Optional[str] = None,
+        provider: str | None = None,
     ) -> RagResult:
         return self._rag.run(
             RagRequest(query=query, top_k=top_k, provider=provider, include_memory=False)

@@ -5,8 +5,6 @@ Always available. Useful for tests, CI, and air-gapped environments.
 """
 from __future__ import annotations
 
-from typing import Optional
-
 from yasinai.providers.base import (
     GenerationRequest,
     GenerationResponse,
@@ -21,7 +19,7 @@ class LocalProvider(ProviderBase):
 
     DEFAULT_MODEL = "local-echo-v1"
 
-    def __init__(self, *, model_id: Optional[str] = None) -> None:
+    def __init__(self, *, model_id: str | None = None) -> None:
         self._model_id = model_id or self.DEFAULT_MODEL
 
     @property

@@ -2,13 +2,13 @@
 Authentication Module for YasinAI Security Platform.
 Manages user credentials, hashing, tokens, and active sessions.
 """
+from __future__ import annotations
 
 import hashlib
 import hmac
 import logging
 import secrets
 import time
-from typing import Dict, Optional
 
 from security_platform.identity import IdentityManager
 
@@ -38,9 +38,9 @@ class AuthManager:
 
     def __init__(self, identity_manager: IdentityManager) -> None:
         self.identity_manager: IdentityManager = identity_manager
-        self._user_secrets: Dict[str, bytes] = {}      # username -> salt
-        self._password_hashes: Dict[str, bytes] = {}   # username -> PBKDF2 hash
-        self._sessions: Dict[str, Session] = {}        # token -> Session
+        self._user_secrets: dict[str, bytes] = {}      # username -> salt
+        self._password_hashes: dict[str, bytes] = {}   # username -> PBKDF2 hash
+        self._sessions: dict[str, Session] = {}        # token -> Session
 
     def register_credentials(self, username: str, password: str) -> None:
         """
@@ -59,7 +59,7 @@ class AuthManager:
         self._password_hashes[username] = pwd_hash
         logger.info(f"Successfully registered secure credentials for user '{username}'.")
 
-    def login(self, username: str, password: str, session_duration: int = 3600) -> Optional[str]:
+    def login(self, username: str, password: str, session_duration: int = 3600) -> str | None:
         """
         Authenticate user and return a secure session token if successful.
         """
@@ -131,7 +131,7 @@ class AuthManager:
         logger.debug(f"Token validation: Token is valid for user '{session.username}'.")
         return True
 
-    def get_session(self, token: str) -> Optional[Session]:
+    def get_session(self, token: str) -> Session | None:
         """
         Retrieve session if valid.
         """

@@ -5,7 +5,7 @@ Measures execution times and resource utilization metrics.
 
 import logging
 import time
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +16,8 @@ class Profiler:
     """
 
     def __init__(self) -> None:
-        self.start_times: Dict[str, float] = {}
-        self.profiles: Dict[str, float] = {}
+        self.start_times: dict[str, float] = {}
+        self.profiles: dict[str, float] = {}
 
     def start_profile(self, operation_name: str) -> None:
         """
@@ -40,7 +40,7 @@ class Profiler:
         logger.info(f"Operation '{operation_name}' profiled in {elapsed:.6f} seconds.")
         return elapsed
 
-    def get_profile_report(self) -> Dict[str, Any]:
+    def get_profile_report(self) -> dict[str, Any]:
         """
         Generate a performance report of all profiled operations.
         """

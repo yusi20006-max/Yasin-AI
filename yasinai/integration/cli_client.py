@@ -6,7 +6,7 @@ yasinai.contracts / yasinai.services (not knowledge_platform directly).
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from yasinai.contracts.generation import GenerationRequest, GenerationResult
 from yasinai.contracts.knowledge import (
@@ -26,9 +26,9 @@ class YasinCLIClient:
     def __init__(
         self,
         *,
-        knowledge: Optional[KnowledgeService] = None,
-        generation: Optional[GenerationService] = None,
-        rag: Optional[RagService] = None,
+        knowledge: KnowledgeService | None = None,
+        generation: GenerationService | None = None,
+        rag: RagService | None = None,
     ) -> None:
         self._knowledge = knowledge if knowledge is not None else KnowledgeService()
         self._generation = (
@@ -73,8 +73,8 @@ class YasinCLIClient:
 
     def format_search_results(
         self, result: KnowledgeResult, *, threshold: float = 0.0
-    ) -> List[Dict[str, Any]]:
-        rows: List[Dict[str, Any]] = []
+    ) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
         for entry in result.entries or []:
             score = float(entry.score or 0.0)
             if score < threshold and threshold > 0:
@@ -98,5 +98,5 @@ class YasinCLIClient:
             )
         return rows
 
-    def capabilities(self) -> List[str]:
+    def capabilities(self) -> list[str]:
         return ["memory_search", "generation", "rag"]

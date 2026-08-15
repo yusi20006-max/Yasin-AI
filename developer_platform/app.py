@@ -2,9 +2,10 @@
 Application SDK for YasinAI Developer Platform.
 Provides building blocks for creating AI-powered applications.
 """
+from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from developer_platform.agent import Agent
 from developer_platform.plugin import Plugin
@@ -18,11 +19,11 @@ class AIApplication:
     Represents an end-to-end AI Application composed of agents and plugins.
     """
 
-    def __init__(self, name: str, config: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, name: str, config: dict[str, Any] | None = None) -> None:
         self.name: str = name
-        self.config: Dict[str, Any] = config or {}
-        self._agents: Dict[str, Agent] = {}
-        self._plugins: Dict[str, Plugin] = {}
+        self.config: dict[str, Any] = config or {}
+        self._agents: dict[str, Agent] = {}
+        self._plugins: dict[str, Plugin] = {}
 
     def add_agent(self, agent: Agent) -> None:
         """
@@ -58,25 +59,25 @@ class AIApplication:
         self._plugins[plugin.name] = plugin
         logger.info(f"Plugin '{plugin.name}' added to application '{self.name}'.")
 
-    def list_agents(self) -> List[Agent]:
+    def list_agents(self) -> list[Agent]:
         """
         List all agents assigned to the application.
         """
         return list(self._agents.values())
 
-    def list_plugins(self) -> List[Plugin]:
+    def list_plugins(self) -> list[Plugin]:
         """
         List all plugins assigned to the application.
         """
         return list(self._plugins.values())
 
-    def run(self, input_query: str) -> Dict[str, Any]:
+    def run(self, input_query: str) -> dict[str, Any]:
         """
         Run the application pipeline, invoking agents and plugins to answer the input query.
         """
         logger.info(f"Running AI Application '{self.name}' with query: '{input_query}'")
-        steps_executed: List[str] = []
-        result_payload: Dict[str, Any] = {}
+        steps_executed: list[str] = []
+        result_payload: dict[str, Any] = {}
 
         # Simulating workflow execution:
         # 1. Initialize and execute plugins if any
@@ -88,7 +89,7 @@ class AIApplication:
             result_payload[f"plugin_{name}"] = plugin_res
 
         # 2. Run agents to answer query
-        agent_responses: List[str] = []
+        agent_responses: list[str] = []
         for name, agent in self._agents.items():
             if agent.status != "active":
                 agent.start()
@@ -117,9 +118,9 @@ class AppSDK:
     """
 
     def __init__(self) -> None:
-        self._applications: Dict[str, AIApplication] = {}
+        self._applications: dict[str, AIApplication] = {}
 
-    def create_application(self, name: str, config: Optional[Dict[str, Any]] = None) -> AIApplication:
+    def create_application(self, name: str, config: dict[str, Any] | None = None) -> AIApplication:
         """
         Create and register a new AI Application.
         """
@@ -131,7 +132,7 @@ class AppSDK:
         logger.info(f"Successfully registered AI Application: '{name}'")
         return app
 
-    def get_application(self, name: str) -> Optional[AIApplication]:
+    def get_application(self, name: str) -> AIApplication | None:
         """
         Get a registered AI Application.
         """
@@ -148,7 +149,7 @@ class AppSDK:
         logger.warning(f"Attempted to delete non-existent AI Application: '{name}'")
         return False
 
-    def list_applications(self) -> List[AIApplication]:
+    def list_applications(self) -> list[AIApplication]:
         """
         List all registered AI Applications.
         """

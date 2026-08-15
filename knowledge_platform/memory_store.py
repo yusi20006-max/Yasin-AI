@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import sqlite3
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class SQLiteMemoryStore:
@@ -32,7 +32,7 @@ class SQLiteMemoryStore:
         )
         self._connection.commit()
 
-    def store(self, key: str, content: Any, timestamp: float, metadata: Dict[str, Any]) -> Dict[str, Any]:
+    def store(self, key: str, content: Any, timestamp: float, metadata: dict[str, Any]) -> dict[str, Any]:
         payload = json.dumps(content, ensure_ascii=False, default=str)
         metadata_json = json.dumps(metadata, ensure_ascii=False, default=str)
         self._connection.execute(
@@ -47,7 +47,7 @@ class SQLiteMemoryStore:
         self._connection.commit()
         return {"key": key, "content": content, "timestamp": timestamp, "metadata": metadata}
 
-    def retrieve(self, key: str) -> Optional[Dict[str, Any]]:
+    def retrieve(self, key: str) -> dict[str, Any] | None:
         row = self._connection.execute(
             "SELECT key, content, timestamp, metadata FROM memories WHERE key = ?", (key,)
         ).fetchone()
@@ -58,7 +58,7 @@ class SQLiteMemoryStore:
         self._connection.commit()
         return cursor.rowcount > 0
 
-    def list_all(self) -> List[Dict[str, Any]]:
+    def list_all(self) -> list[dict[str, Any]]:
         rows = self._connection.execute(
             "SELECT key, content, timestamp, metadata FROM memories ORDER BY timestamp DESC"
         ).fetchall()
@@ -72,7 +72,7 @@ class SQLiteMemoryStore:
         self._connection.close()
 
     @staticmethod
-    def _row_to_entry(row: sqlite3.Row) -> Dict[str, Any]:
+    def _row_to_entry(row: sqlite3.Row) -> dict[str, Any]:
         return {
             "key": row["key"],
             "content": json.loads(row["content"]),

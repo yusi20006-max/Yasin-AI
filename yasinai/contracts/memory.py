@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from yasinai.contracts.base import (
     CapabilityMetadata,
@@ -39,11 +39,11 @@ class MemoryRequest:
 
     operation: str
     memory_type: MemoryType = MemoryType.SHORT_TERM
-    key: Optional[str] = None
-    content: Optional[Any] = None
-    limit: Optional[int] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    context: Optional[ObservabilityContext] = None
+    key: str | None = None
+    content: Any | None = None
+    limit: int | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    context: ObservabilityContext | None = None
 
     LIMIT_LIMIT = 1000
 
@@ -62,8 +62,11 @@ class MemoryRequest:
                 )
         if self.operation == "store" and self.content is None:
             raise ContractViolationError("MemoryRequest: 'store' operation requires 'content'")
-        if self.memory_type == MemoryType.LONG_TERM and self.operation in {"store", "retrieve", "delete"}:
-            if not self.key:
+        if (
+            self.memory_type == MemoryType.LONG_TERM
+            and self.operation in {"store", "retrieve", "delete"}
+            and not self.key
+        ):
                 raise ContractViolationError(
                     f"MemoryRequest: long-term '{self.operation}' requires 'key'"
                 )
@@ -75,8 +78,8 @@ class MemoryEntry:
 
     content: Any
     timestamp: float
-    key: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    key: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -94,10 +97,10 @@ class MemoryResponse:
     """
 
     success: bool
-    entries: List[MemoryEntry] = field(default_factory=list)
-    entry: Optional[MemoryEntry] = None
+    entries: list[MemoryEntry] = field(default_factory=list)
+    entry: MemoryEntry | None = None
     deleted: bool = False
-    error: Optional[str] = None
+    error: str | None = None
     meta: CapabilityMetadata = field(
         default_factory=lambda: CapabilityMetadata(capability="memory")
     )
