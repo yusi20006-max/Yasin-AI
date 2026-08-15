@@ -17,6 +17,9 @@ class SQLiteVectorStore:
             self.path.parent.mkdir(parents=True, exist_ok=True)
         self._connection = sqlite3.connect(str(self.path))
         self._connection.row_factory = sqlite3.Row
+        self._connection.execute("PRAGMA busy_timeout = 5000")
+        if str(self.path) != ":memory:":
+            self._connection.execute("PRAGMA journal_mode = WAL")
         self._connection.execute(
             """
             CREATE TABLE IF NOT EXISTS vectors (
