@@ -1,269 +1,86 @@
 # YasinAI Release Checklist
 
-Version:
-v1.1.4
+Version: `v1.1.4`
 
-Status:
-Passed
+Status: Release Candidate — pending final CI verification
 
 ---
 
-# 1. Repository
+## Repository and source
 
-- [x] Repository name is correct
-- [x] Default branch is main
-- [x] Repository description updated
-- [x] Topics added
-- [x] README.md exists
-- [x] MASTER_PLAN.md exists
-- [x] AGENTS.md exists
-- [x] ARCHITECTURE.md exists
-- [x] CHANGELOG.md exists
-- [x] VERSIONING_POLICY.md exists
-- [x] LICENSE exists
+- [x] Repository and default branch verified
+- [x] Version metadata synchronized to `1.1.4`
+- [x] Source syntax/import audit completed
+- [x] No known duplicate security implementation remains on the supported CLI paths
 
----
-
-# 2. Source Code
-
-- [x] No syntax errors
-- [x] No broken imports
-- [x] No duplicate modules
-- [x] No unused packages
-- [x] All packages contain __init__.py
-- [x] Code formatted consistently
-
----
-
-# 3. Runtime
+## Runtime and platform
 
 - [x] Runtime starts successfully
-- [x] Bootstrap works
-- [x] Module registration works
-- [x] Configuration loads
+- [x] Bootstrap and configuration paths verified
+- [x] Agent SDK verified
+- [x] Plugin trust boundary documented
+- [x] Memory and knowledge services verified
+- [x] Package Builder verified
 
----
+## Security
 
-# 4. Developer Platform
+- [x] Authentication and authorization reviewed
+- [x] Encryption and key handling reviewed
+- [x] Provider credentials are environment-only
+- [x] Sensitive provider errors are redacted
+- [x] Repository security scanner is real and CI-backed
+- [x] `yasin security check` uses the canonical `SecurityScanner`
+- [x] `python -m yasinai.cli security check` uses the canonical scanner path
+- [x] No known committed secrets
 
-- [x] Agent SDK works
-- [x] Plugin SDK works
-- [x] Application SDK works
-- [x] CLI works
-- [x] Package Builder works
+## CLI
 
----
+- [x] `yasin status`
+- [x] `yasin agent create`
+- [x] `yasin memory search`
+- [x] `yasin security check`
+- [x] `yasin package build`
 
-# 5. Security Platform
+## Tests and CI
 
-- [x] Identity system verified
-- [x] Authentication verified
-- [x] Authorization verified
-- [x] Token validation verified
-- [x] Encryption verified
-- [x] Hashing verified
-- [x] Key management verified
-- [x] Audit logging verified
-- [x] Threat detection verified
+- [x] Unit/integration test suite defined
+- [x] Python 3.9–3.12 matrix configured
+- [x] Ruff lint gate configured
+- [x] `pip-audit` dependency gate configured
+- [x] Security gate configured
+- [x] Docker build/smoke gate configured
+- [ ] Final CI run on the post-audit commit is green
 
----
+## Documentation
 
-# 6. Knowledge Platform
+- [x] README and architecture documentation reviewed
+- [x] Security documentation reviewed
+- [x] Version references aligned to `1.1.4` where applicable
+- [x] Release notes updated for `v1.1.4`
 
-- [x] Short memory works
-- [x] Long memory works
-- [x] Memory manager works
-- [x] Knowledge Graph works
-- [x] Entity system works
-- [x] Relation system works
-- [x] Triple Store works
-- [x] Semantic Search works
-- [x] Context Engine works
-- [x] Reasoning works
+## Deployment
 
----
+- [x] Dockerfile reviewed
+- [x] Production compose hardening reviewed
+- [x] Non-root container execution configured
+- [x] Production read-only/capability restrictions reviewed
+- [x] Docker smoke test configured
 
-# 7. CLI
+## Release integrity
 
-Verify commands:
+- [x] Release tag `v1.1.4` points to the intended release line
+- [x] Release target is `main`
+- [ ] Publish GitHub Release only after final CI/security/Docker verification
 
-- [x] yasin status
-- [x] yasin agent create
-- [x] yasin memory search
-- [x] yasin security check
-- [x] yasin package build
+## Final approval
 
----
+Do not publish the release while any required CI, security, or Docker gate is failing.
 
-# 8. Tests
+### Release commands
 
-- [x] Unit tests pass
-- [x] Integration tests pass
-- [x] Runtime tests pass
-- [x] Security tests pass
-- [x] Memory tests pass
-- [x] CLI tests pass
+```bash
+git tag -a v1.1.4 -m "v1.1.4 Release"
+git push origin v1.1.4
+```
 
-Command:
-
-pytest
-
----
-
-# 9. Documentation
-
-- [x] README updated
-- [x] Architecture updated
-- [x] Installation guide updated
-- [x] SDK guide updated
-- [x] Security documentation updated
-- [x] API documentation updated
-- [x] Versioning policy documented
-
----
-
-# 10. Deployment
-
-- [x] Dockerfile builds
-- [x] requirements.txt verified
-- [x] Installer verified
-- [x] Health check passes
-
----
-
-# 11. GitHub
-
-- [x] No merge conflicts
-- [x] Working tree clean
-- [x] CHANGELOG updated
-- [x] Version updated
-- [x] Release notes prepared
-
-Commands:
-
-git status
-
-git tag
-
-git log
-
----
-
-# 12. Security Review
-
-Verify that repository DOES NOT contain:
-
-- [x] API Keys
-- [x] Tokens
-- [x] Passwords
-- [x] .env
-- [x] Secrets
-- [x] Backup archives
-- [x] Private certificates
-
----
-
-# 13. Performance
-
-- [x] Startup time acceptable
-- [x] Memory usage checked
-- [x] No obvious bottlenecks
-
----
-
-# 14. Release Build
-
-- [x] Version number correct
-- [x] Tag created
-- [x] GitHub Release prepared
-- [x] Release artifacts generated
-
-Tag:
-
-v1.1.0
-
----
-
-# 15. Final Approval
-
-Before publishing verify:
-
-- [x] Architecture preserved
-- [x] Tests passing
-- [x] Documentation complete
-- [x] Repository clean
-- [x] Security verified
-- [x] Deployment verified
-
----
-
-
----
-
-# 12. Phase 3 — Core AI Platform
-
-- [x] Concrete providers (OpenAI, Anthropic, Local)
-- [x] GenerationService + Generation contracts
-- [x] RagService + RAG contracts
-- [x] Provider credentials from environment only
-
----
-
-# 13. Phase 4 — Ecosystem Integration
-
-- [x] Yasin-Agent integration client + docs
-- [x] YasinHub integration client + metrics
-- [x] YasinCLI integration client (memory search via services)
-- [x] YasinRelay / YasinFeed / YasinPress clients + docs
-
----
-
-# 14. Phase 5 — Production Hardening
-
-- [x] Production deploy profile static gates
-- [x] Plugin trust boundary policy (trusted-only default)
-- [x] Production readiness pytest module
-- [x] CI coverage + pip-audit + security check gates
-
----
-
-# Release Commands
-
-git add .
-
-git commit -m "Release v1.1.0"
-
-git tag -a v1.1.0 -m "v1.1.0 Release"
-
-git push origin main
-
-git push origin v1.1.0
-
----
-
-# Agent Instructions
-
-Before every release:
-
-1. Read MASTER_PLAN.md
-2. Read AGENTS.md
-3. Read VERSIONING_POLICY.md
-4. Read docs/ARCHITECTURE.md
-5. Execute this checklist
-6. Report failures
-7. Do not publish if any critical item fails
-
----
-
-Release Status
-
-Version:
-1.1.4
-
-Project:
-YasinAI
-
-Release:
-Production
-
-End of Checklist
+The tag must remain immutable after publication.
