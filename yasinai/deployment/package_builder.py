@@ -7,7 +7,7 @@ from __future__ import annotations
 import logging
 import os
 import tarfile
-from pathlib import PurePath
+from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ _DEFAULT_INCLUDE_PATHS = (
 
 
 class PackageBuilder:
-    """Builds local, source-based deployment archives."""
+    """Builds source-based deployment archives with safe archive member names."""
 
     def build_package(
         self,
@@ -31,11 +31,12 @@ class PackageBuilder:
         include_paths: list[str] | None = None,
     ) -> dict[str, Any]:
         """
-        Bundle the given repository-relative paths into a real .tar.gz artifact.
+        Bundle the given paths into a real .tar.gz deployment artifact.
 
-        ``include_paths`` must be relative paths and may not contain ``..``.
-        This keeps the packaging surface confined to the current working tree
-        and prevents callers from accidentally archiving arbitrary host files.
+        Source paths may be relative or absolute for backwards compatibility.
+        Archive member names are always normalized to relative paths derived
+        from a common source root, preventing absolute/``..`` traversal names
+        from being emitted into the resulting tarball.
         """
         logger.info(
             "Building deployment package '%s' (version=%s) to directory '%s'...",
@@ -46,23 +47,31 @@ class PackageBuilder:
         paths_to_include = list(include_paths) if include_paths is not None else list(_DEFAULT_INCLUDE_PATHS)
 
         try:
-            for path in paths_to_include:
-                pure = PurePath(path)
-                if pure.is_absolute() or ".." in pure.parts:
-                    raise ValueError(f"include path must stay within the working tree: {path!r}")
-
             package_name = f"{name}-pkg-{version}.tar.gz" if "yasinai" in name else f"{name}-v{version}.tar.gz"
             os.makedirs(output_directory, exist_ok=True)
             archive_path = os.path.join(output_directory, package_name)
 
+            resolved_paths = [(path, Path(path).resolve()) for path in paths_to_include if os.path.exists(path)]
+            if resolved_paths:
+                common_root = Path(os.path.commonpath([str(resolved) for _, resolved in resolved_paths]))
+            else:
+                common_root = Path.cwd().resolve()
+
             files_included: list[str] = []
             with tarfile.open(archive_path, "w:gz") as tar:
+                for original_path, resolved_path in resolved_paths:
+                    try:
+                        arcname = resolved_path.relative_to(common_root).as_posix()
+                    except ValueError as exc:
+                        raise ValueError(f"cannot derive safe archive path for {original_path!r}") from exc
+                    if not arcname or arcname == "." or arcname.startswith("/") or ".." in Path(arcname).parts:
+                        raise ValueError(f"unsafe archive member path for {original_path!r}")
+                    tar.add(str(resolved_path), arcname=arcname)
+                    files_included.append(original_path)
+
                 for path in paths_to_include:
                     if not os.path.exists(path):
                         logger.warning("Skipping missing path for package '%s': '%s'", name, path)
-                        continue
-                    tar.add(path, arcname=path)
-                    files_included.append(path)
 
             result = {
                 "success": True,
