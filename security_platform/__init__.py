@@ -27,3 +27,5 @@ __all__ = [
     "ThreatDetector",
     "User",
 ]
+
+YASINAI_PRIVATE_MODULE = True
