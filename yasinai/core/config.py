@@ -21,7 +21,7 @@ class Config:
         """
         self._config: dict[str, Any] = {
             "app_name": "YasinAI",
-            "version": "1.1.3",
+            "version": "1.1.4",
             "environment": "production",
             "debug": False,
             "modules": []

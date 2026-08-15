@@ -1,7 +1,7 @@
 # YasinAI Release Checklist
 
 Version:
-v1.1.3
+v1.1.4
 
 Status:
 Passed
@@ -258,7 +258,7 @@ Before every release:
 Release Status
 
 Version:
-1.1.3
+1.1.4
 
 Project:
 YasinAI

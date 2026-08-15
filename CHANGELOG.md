@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project follows Semantic Versioning.
 
+## [1.1.4] - 2026-08-15
+
+### Fixed
+- Final audit gaps: preserve requested model across provider fallback; redact internal exceptions from GenerationResult/RagResult errors; PackageBuilder path-traversal guard (#124)
+
 ## [1.1.3] - 2026-08-15
 
 ### Fixed
