@@ -53,7 +53,8 @@ class PackageBuilder:
 
             resolved_paths = [(path, Path(path).resolve()) for path in paths_to_include if os.path.exists(path)]
             if resolved_paths:
-                common_root = Path(os.path.commonpath([str(resolved) for _, resolved in resolved_paths]))
+                source_roots = [resolved.parent if resolved.is_file() else resolved.parent for _, resolved in resolved_paths]
+                common_root = Path(os.path.commonpath([str(root) for root in source_roots]))
             else:
                 common_root = Path.cwd().resolve()
 
