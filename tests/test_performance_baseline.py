@@ -8,6 +8,8 @@ from yasinai.contracts.knowledge import KnowledgeQuery, KnowledgeQueryType
 from yasinai.contracts.memory import MemoryRequest, MemoryType
 from yasinai.providers.base import (
     GenerationRequest as PReq,
+)
+from yasinai.providers.base import (
     GenerationResponse,
     ProviderBase,
     ProviderCapability,
@@ -58,8 +60,8 @@ def test_local_generate_baseline():
 def test_memory_and_knowledge_baseline(tmp_path, monkeypatch):
     monkeypatch.setenv("YASINAI_MEMORY_PATH", str(tmp_path / "m.db"))
     monkeypatch.setenv("YASINAI_VECTOR_PATH", str(tmp_path / "v.db"))
-    from knowledge_platform.memory import MemoryManager
     from knowledge_platform.graph import KnowledgeGraph
+    from knowledge_platform.memory import MemoryManager
     from knowledge_platform.semantic_search import Retriever
 
     svc = KnowledgeService(
