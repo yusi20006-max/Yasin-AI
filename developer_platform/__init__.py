@@ -37,3 +37,5 @@ __all__ = [
     "SDKError",
     "plugin",
 ]
+
+YASINAI_PRIVATE_MODULE = True

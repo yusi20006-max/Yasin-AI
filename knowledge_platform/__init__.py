@@ -45,3 +45,5 @@ __all__ = [
     "TripleStore",
     "VectorStore",
 ]
+
+YASINAI_PRIVATE_MODULE = True
