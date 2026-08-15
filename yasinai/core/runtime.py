@@ -90,6 +90,21 @@ class Runtime:
         self.last_error = None
         self.services.register_service("runtime", self, overwrite=True)
 
+
+    def is_ready(self) -> bool:
+        """Liveness/readiness: True only when lifecycle reached READY."""
+        return self.state == self.READY
+
+    def readiness(self) -> dict[str, Any]:
+        """Structured readiness snapshot for probes and operators."""
+        return {
+            "status": "ready" if self.is_ready() else "not_ready",
+            "state": self.state,
+            "version": self.system_info.version,
+            "services": list(self.services.list_services().keys()),
+            "last_error": self.last_error,
+        }
+
     def shutdown(self) -> None:
         """Gracefully stop the runtime; shutdown is safe to call repeatedly."""
         if self.state == self.STOPPED:
