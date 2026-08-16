@@ -24,6 +24,11 @@ test = [
 lint = [
     "ruff==0.16.3",
 ]
+dev = [
+    "pytest>=7.4,<10",
+    "pytest-cov>=6,<8",
+    "ruff==0.16.3",
+]
 
 [project.scripts]
 yasin = "yasinai.cli.security_entrypoint:main"
