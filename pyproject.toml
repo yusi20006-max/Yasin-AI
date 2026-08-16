@@ -27,7 +27,6 @@ lint = [
 dev = [
     "pytest>=7.4,<10",
     "pytest-cov>=6,<8",
-    "ruff==0.16.3",
 ]
 
 [project.scripts]
