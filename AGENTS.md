@@ -6,7 +6,7 @@ Name:
 YasinAI
 
 Version:
-1.1.1
+1.1.4
 
 
 ## Role
@@ -181,7 +181,7 @@ Do not perform large refactors without approval.
 
 Current target:
 
-YasinAI v1.1.1
+YasinAI v1.1.4 — see `PROJECT_STATUS.md` for the authoritative current-state summary before starting any release work.
 
 
 Before release:
