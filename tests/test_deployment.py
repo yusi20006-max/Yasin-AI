@@ -144,6 +144,14 @@ def test_package_builder_build(tmp_path):
     assert res_other["package_name"] == "custom-plugin-v2.5.tar.gz"
 
 
+def test_package_builder_default_paths_are_independent_of_cwd(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    result = PackageBuilder().build_package(name="yasinai", version="1.0.0")
+    assert result["success"] is True
+    assert "yasinai/core/" in result["files_included"]
+    assert (tmp_path / "dist" / "yasinai-pkg-1.0.0.tar.gz").exists()
+
+
 def test_package_builder_archive_member_names_are_safe(tmp_path):
     builder = PackageBuilder()
     source = tmp_path / "src"
