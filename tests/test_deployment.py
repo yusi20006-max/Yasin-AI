@@ -144,6 +144,26 @@ def test_package_builder_build(tmp_path):
     assert res_other["package_name"] == "custom-plugin-v2.5.tar.gz"
 
 
+def test_package_builder_build_from_unrelated_cwd(tmp_path, monkeypatch):
+    builder = PackageBuilder()
+    output = tmp_path / "dist"
+    unrelated_cwd = tmp_path / "unrelated"
+    unrelated_cwd.mkdir()
+    monkeypatch.chdir(unrelated_cwd)
+
+    result = builder.build_package(name="yasinai", version="1.0.0", output_directory=str(output))
+
+    assert result["success"] is True
+    assert "yasinai/core/" in result["files_included"]
+    assert "yasinai/cli/" in result["files_included"]
+    assert "pyproject.toml" in result["files_included"]
+    with tarfile.open(result["archive_path"], "r:gz") as archive:
+        members = archive.getnames()
+    assert members
+    assert all(not member.startswith("/") for member in members)
+    assert all(".." not in member.split("/") for member in members)
+
+
 def test_package_builder_archive_member_names_are_safe(tmp_path):
     builder = PackageBuilder()
     source = tmp_path / "src"
