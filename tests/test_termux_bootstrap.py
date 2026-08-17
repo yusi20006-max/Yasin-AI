@@ -10,7 +10,9 @@ def test_termux_bootstrap_exists_and_is_fail_fast() -> None:
     text = SCRIPT.read_text(encoding="utf-8")
     assert "set -euo pipefail" in text
     assert "pkg install -y python python-cryptography" in text
-    assert "python -m venv --system-site-packages .venv" in text
+    assert "--system-site-packages .venv" in text
+    assert "PYTHON_BIN=\"${PYTHON_BIN:-python}\"" in text
+    assert '"$PYTHON_BIN" -m venv --system-site-packages .venv' in text
     assert "--no-deps" in text
     assert "cryptography.exceptions import InvalidTag" in text
     assert "cryptography.hazmat.primitives.ciphers.aead import AESGCM" in text
