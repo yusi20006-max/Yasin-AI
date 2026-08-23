@@ -1,7 +1,7 @@
 """Persistent configuration for runtime-defined providers.
 
 Provider metadata is stored as JSON, while API keys are encrypted with the
-existing Yasin-AI AES-256-GCM engine.  The encryption master key is accepted
+existing Yasin-AI AES-256-GCM engine. The encryption master key is accepted
 only from ``YASINAI_MASTER_KEY`` and is never written by this module.
 """
 from __future__ import annotations
@@ -17,6 +17,9 @@ from security_platform.encryption import EncryptionEngine
 
 class ProviderConfigError(ValueError):
     """Raised when provider configuration is invalid or unavailable."""
+
+
+RESERVED_PROVIDER_NAMES = {"local", "openai", "anthropic"}
 
 
 def validate_base_url(base_url: str) -> str:
@@ -103,6 +106,8 @@ class ProviderStore:
         model = model.strip()
         if not name:
             raise ProviderConfigError("Provider name must not be empty")
+        if name.lower() in RESERVED_PROVIDER_NAMES:
+            raise ProviderConfigError(f"Provider name '{name}' is reserved")
         if not model:
             raise ProviderConfigError("Model must not be empty")
         if not api_key:
