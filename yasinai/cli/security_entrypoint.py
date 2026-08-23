@@ -16,14 +16,7 @@ def _finding_id(finding: dict) -> str | None:
 
 
 def security_check(argv: list[str]) -> int:
-    """Run the canonical scanner with a stable CLI presentation.
-
-    All security decisions and values come from ``SecurityScanner``. The
-    ``checks`` compatibility field and legacy heading are presentation-only;
-    they never contain hard-coded pass/fail results. Scanner findings may be
-    represented by older/partial schemas, so presentation must not crash when
-    optional metadata such as ``id`` or ``path`` is absent.
-    """
+    """Run the canonical scanner with a stable CLI presentation."""
     from security_platform.scanner import SecurityScanner
 
     json_output = "--json" in argv
@@ -49,9 +42,6 @@ def security_check(argv: list[str]) -> int:
             print(f"{status} {name} [{severity}]{location}")
             print(f"         Details: {details}")
 
-        # Backward-compatible human-readable alias for the canonical secret
-        # scan. It is printed only from the actual scanner result. Older report
-        # schemas may omit the optional finding id, so lookup must be tolerant.
         secret_finding = next(
             (item for item in findings if _finding_id(item) == "SEC_SECRET_001"),
             None,
@@ -69,6 +59,9 @@ def main(argv: list[str] | None = None) -> None:
     args = list(sys.argv[1:] if argv is None else argv)
     if len(args) >= 2 and args[0] == "security" and args[1] == "check":
         raise SystemExit(security_check(args[2:]))
+    if args and args[0] == "provider":
+        from yasinai.cli.provider import main as provider_main
+        raise SystemExit(provider_main(args[1:]))
 
     cli = importlib.import_module("yasinai.cli.main")
     cli.main(args)
