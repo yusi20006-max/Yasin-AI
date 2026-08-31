@@ -1,8 +1,9 @@
+# ruff: noqa: I001
 import json
 
 import pytest
 
-from yasinai.providers.config_store import ProviderConfigError, ProviderStore, validate_base_url  # noqa: I001
+from yasinai.providers.config_store import ProviderConfigError, ProviderStore, validate_base_url
 
 
 FIXTURE_KEY = "test-" + "fixture-key"
