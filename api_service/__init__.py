@@ -6,13 +6,13 @@ from .errors import APIError, AuthenticationError, AuthorizationError, Validatio
 from .models import HealthResponse, ServiceResponse
 
 __all__ = [
+    "CAPABILITIES_PATH",
+    "CONTRACT_VERSION",
+    "GENERATION_PATH",
     "APIError",
     "APIService",
     "AuthenticationError",
     "AuthorizationError",
-    "CAPABILITIES_PATH",
-    "CONTRACT_VERSION",
-    "GENERATION_PATH",
     "HealthResponse",
     "ServiceResponse",
     "ValidationError",

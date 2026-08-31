@@ -6,9 +6,9 @@ import getpass
 import json
 import sys
 from typing import Any
-from urllib.parse import urlparse
 
 from yasinai.contracts import GenerationRequest as PublicGenerationRequest
+from yasinai.providers.base import ProviderError
 from yasinai.providers.config_store import ProviderConfigError, ProviderStore, validate_base_url
 from yasinai.providers.generic_openai import GenericOpenAIProvider
 
@@ -51,11 +51,8 @@ def handle_setup(args: argparse.Namespace) -> int:
         store.save(**config, make_default=bool(args.default))
         print(f"SUCCESS: provider '{config['name']}' configured and tested.")
         return 0
-    except (ProviderConfigError, ValueError, OSError) as exc:
+    except (ProviderConfigError, ProviderError, ValueError, OSError) as exc:
         print(f"Provider setup failed: {exc}", file=sys.stderr)
-        return 1
-    except Exception:
-        print("Provider setup failed: connection test did not succeed.", file=sys.stderr)
         return 1
 
 
@@ -110,11 +107,8 @@ def handle_test(args: argparse.Namespace) -> int:
         _test_provider(config)
         print("SUCCESS: provider connection and model test passed.")
         return 0
-    except ProviderConfigError as exc:
+    except (ProviderConfigError, ProviderError, ValueError, OSError) as exc:
         print(f"Provider test failed: {exc}", file=sys.stderr)
-        return 1
-    except Exception:
-        print("Provider test failed: connection or model request was unsuccessful.", file=sys.stderr)
         return 1
 
 

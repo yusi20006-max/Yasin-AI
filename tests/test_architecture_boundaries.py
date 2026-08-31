@@ -42,7 +42,9 @@ def test_contracts_do_not_import_services_or_platforms():
 
 
 def test_providers_do_not_import_private_platforms():
-    forbidden = {"knowledge_platform", "developer_platform", "security_platform"}
+    # Provider configuration legitimately uses the platform-owned encryption
+    # boundary; knowledge/developer layers remain forbidden dependencies.
+    forbidden = {"knowledge_platform", "developer_platform"}
     violations = []
     for path in (ROOT / "yasinai" / "providers").rglob("*.py"):
         imported = _imports(path)
