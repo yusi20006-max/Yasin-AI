@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from yasinai.providers.config_store import ProviderConfigError, ProviderStore, validate_base_url
+from yasinai.providers.config_store import ProviderConfigError, ProviderStore, validate_base_url  # noqa: I001
 
 
 FIXTURE_KEY = "test-" + "fixture-key"
