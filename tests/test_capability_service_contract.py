@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from yasinai.contracts import GenerationResult
 from api_service import CAPABILITIES_PATH, CONTRACT_VERSION, GENERATION_PATH, create_capability_service
+from yasinai.contracts import GenerationResult
 
 
 class FakeGenerationService:
