@@ -5,7 +5,7 @@ import pytest
 from yasinai.providers.config_store import ProviderConfigError, ProviderStore, validate_base_url
 
 
-TEST_SECRET = "test-" + "fixture-key"
+FIXTURE_KEY = "test-" + "fixture-key"
 
 
 def test_validate_base_url_requires_https_for_remote():
@@ -23,16 +23,16 @@ def test_store_persists_metadata_but_not_plaintext_key(tmp_path, monkeypatch):
         name="gateway",
         base_url="https://example.com/v1",
         model="model-x",
-        api_key=TEST_SECRET,
+        api_key=FIXTURE_KEY,
         make_default=True,
     )
 
     raw = path.read_text(encoding="utf-8")
-    assert TEST_SECRET not in raw
+    assert FIXTURE_KEY not in raw
     payload = json.loads(raw)
     assert payload["default"] == "gateway"
     assert payload["providers"]["gateway"]["model"] == "model-x"
-    assert store.get("gateway")["api_key"] == TEST_SECRET
+    assert store.get("gateway")["api_key"] == FIXTURE_KEY
     assert store.default()["name"] == "gateway"
 
 
