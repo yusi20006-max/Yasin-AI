@@ -12,10 +12,10 @@ __all__ = [
     "AuthorizationError",
     "CAPABILITIES_PATH",
     "CONTRACT_VERSION",
+    "create_capability_service",
+    "create_service",
     "GENERATION_PATH",
     "HealthResponse",
     "ServiceResponse",
     "ValidationError",
-    "create_capability_service",
-    "create_service",
 ]
