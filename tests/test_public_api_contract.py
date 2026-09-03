@@ -9,7 +9,7 @@ import pytest
 
 # Machine-readable public symbol registry (must match docs/PUBLIC_API_CONTRACT.md)
 PUBLIC_IMPORTS: dict[str, list[str]] = {
-    "yasinai": ["__version__"],
+    "yasinai": ["__version__", "GenerationRequest", "GenerationService"],
     "yasinai.contracts": [
         "CONTRACT_VERSION",
         "CapabilityError",

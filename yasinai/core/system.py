@@ -1,9 +1,87 @@
+from __future__ import annotations
+
+import importlib.metadata
 import logging
+import os
 import platform
+import subprocess
 import sys
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
+
+def detect_android_api_level() -> int | None:
+    """Detect Android API level if running under Android/Termux."""
+    if hasattr(sys, "getandroidapilevel"):
+        try:
+            return sys.getandroidapilevel()  # type: ignore[attr-defined]
+        except (AttributeError, ValueError):
+            logger.debug("sys.getandroidapilevel() call failed")
+
+    for key in ("ANDROID_API_LEVEL", "RO_BUILD_VERSION_SDK"):
+        val = os.environ.get(key)
+        if val and val.isdigit():
+            return int(val)
+
+    try:
+        res = subprocess.run(
+            ["getprop", "ro.build.version.sdk"],
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=False,
+        )
+        if res.returncode == 0 and res.stdout.strip().isdigit():
+            return int(res.stdout.strip())
+    except (OSError, subprocess.SubprocessError):
+        logger.debug("Failed to detect Android API level via getprop")
+
+    return None
+
+
+def detect_termux() -> bool:
+    """Check whether execution is inside a Termux environment."""
+    if os.environ.get("TERMUX_VERSION"):
+        return True
+    return os.path.exists("/data/data/com.termux")
+
+
+def detect_native_deps() -> dict[str, str | None]:
+    """Gather native dependency version diagnostics."""
+    crypto_ver: str | None = None
+    cffi_ver: str | None = None
+    openssl_ver: str | None = None
+
+    try:
+        crypto_ver = importlib.metadata.version("cryptography")
+    except importlib.metadata.PackageNotFoundError:
+        try:
+            import cryptography
+            crypto_ver = getattr(cryptography, "__version__", None)
+        except ImportError:
+            logger.debug("cryptography package is not installed")
+
+    try:
+        cffi_ver = importlib.metadata.version("cffi")
+    except importlib.metadata.PackageNotFoundError:
+        try:
+            import cffi
+            cffi_ver = getattr(cffi, "__version__", None)
+        except ImportError:
+            logger.debug("cffi package is not installed")
+
+    try:
+        import ssl
+        openssl_ver = getattr(ssl, "OPENSSL_VERSION", None)
+    except ImportError:
+        logger.debug("ssl module is not available")
+
+    return {
+        "cryptography_version": crypto_ver,
+        "cffi_version": cffi_ver,
+        "openssl_version": openssl_ver,
+    }
 
 
 class SystemInfo:
@@ -21,6 +99,7 @@ class SystemInfo:
         Get system and environment details.
         """
         try:
+            deps = detect_native_deps()
             return {
                 "app_name": self.app_name,
                 "version": self.version,
@@ -29,6 +108,11 @@ class SystemInfo:
                 "platform": platform.platform(),
                 "os": platform.system(),
                 "architecture": platform.machine(),
+                "is_termux": detect_termux(),
+                "android_api_level": detect_android_api_level(),
+                "cryptography_version": deps["cryptography_version"],
+                "cffi_version": deps["cffi_version"],
+                "openssl_version": deps["openssl_version"],
             }
         except Exception:
             logger.exception("Failed to gather system information")
@@ -41,6 +125,11 @@ class SystemInfo:
                 "platform": "Unknown",
                 "os": "Unknown",
                 "architecture": "Unknown",
+                "is_termux": False,
+                "android_api_level": None,
+                "cryptography_version": None,
+                "cffi_version": None,
+                "openssl_version": None,
             }
 
 

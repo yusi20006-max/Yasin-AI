@@ -35,6 +35,10 @@ def handle_status(args: argparse.Namespace) -> int:
             print(f"Platform:     {info.get('platform')}")
             print(f"Architecture: {info.get('architecture')}")
             print(f"Python Ver:   {info.get('python_version', '').split()[0] if info.get('python_version') else ''}")
+            print(f"Termux:       {'Yes' if info.get('is_termux') else 'No'}")
+            if info.get('android_api_level'):
+                print(f"Android API:  {info.get('android_api_level')}")
+            print(f"Crypto Ver:   {info.get('cryptography_version') or 'N/A'}")
             print("=========================================")
         logger.info("Successfully displayed status.")
         return 0

@@ -12,7 +12,7 @@ This document is the **canonical public surface** of Yasin-AI. Consumers **must*
 
 | Package / module | Public? | Purpose |
 |---|---|---|
-| `yasinai` | Yes | Package version (`__version__`) |
+| `yasinai` | Yes | Package version (`__version__`), top-level re-exports (`GenerationRequest`, `GenerationService`) |
 | `yasinai.contracts` | Yes | Capability request/response contracts |
 | `yasinai.services` | Yes | Service facades (generation, knowledge, RAG) |
 | `yasinai.providers` | Yes | Provider abstraction, registry, router, concrete adapters |
