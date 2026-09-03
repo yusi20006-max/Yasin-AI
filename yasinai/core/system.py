@@ -6,12 +6,12 @@ import os
 import platform
 import subprocess
 import sys
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-def detect_android_api_level() -> Optional[int]:
+def detect_android_api_level() -> int | None:
     """Detect Android API level if running under Android/Termux."""
     if hasattr(sys, "getandroidapilevel"):
         try:
@@ -47,11 +47,11 @@ def detect_termux() -> bool:
     return os.path.exists("/data/data/com.termux")
 
 
-def detect_native_deps() -> dict[str, Optional[str]]:
+def detect_native_deps() -> dict[str, str | None]:
     """Gather native dependency version diagnostics."""
-    crypto_ver: Optional[str] = None
-    cffi_ver: Optional[str] = None
-    openssl_ver: Optional[str] = None
+    crypto_ver: str | None = None
+    cffi_ver: str | None = None
+    openssl_ver: str | None = None
 
     try:
         crypto_ver = importlib.metadata.version("cryptography")
