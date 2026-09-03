@@ -1,21 +1,23 @@
+from __future__ import annotations
+
 import importlib.metadata
 import logging
 import os
 import platform
 import subprocess
 import sys
-from typing import Any
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
 
-def detect_android_api_level() -> int | None:
+def detect_android_api_level() -> Optional[int]:
     """Detect Android API level if running under Android/Termux."""
     if hasattr(sys, "getandroidapilevel"):
         try:
             return sys.getandroidapilevel()  # type: ignore[attr-defined]
-        except Exception:
-            pass
+        except (AttributeError, ValueError):
+            logger.debug("sys.getandroidapilevel() call failed")
 
     for key in ("ANDROID_API_LEVEL", "RO_BUILD_VERSION_SDK"):
         val = os.environ.get(key)
@@ -23,11 +25,17 @@ def detect_android_api_level() -> int | None:
             return int(val)
 
     try:
-        res = subprocess.run(["getprop", "ro.build.version.sdk"], capture_output=True, text=True, timeout=2)
+        res = subprocess.run(
+            ["getprop", "ro.build.version.sdk"],
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=False,
+        )
         if res.returncode == 0 and res.stdout.strip().isdigit():
             return int(res.stdout.strip())
-    except Exception:
-        pass
+    except (OSError, subprocess.SubprocessError):
+        logger.debug("Failed to detect Android API level via getprop")
 
     return None
 
@@ -39,35 +47,35 @@ def detect_termux() -> bool:
     return os.path.exists("/data/data/com.termux")
 
 
-def detect_native_deps() -> dict[str, str | None]:
+def detect_native_deps() -> dict[str, Optional[str]]:
     """Gather native dependency version diagnostics."""
-    crypto_ver: str | None = None
-    cffi_ver: str | None = None
-    openssl_ver: str | None = None
+    crypto_ver: Optional[str] = None
+    cffi_ver: Optional[str] = None
+    openssl_ver: Optional[str] = None
 
     try:
         crypto_ver = importlib.metadata.version("cryptography")
-    except Exception:
+    except importlib.metadata.PackageNotFoundError:
         try:
             import cryptography
             crypto_ver = getattr(cryptography, "__version__", None)
-        except Exception:
-            pass
+        except ImportError:
+            logger.debug("cryptography package is not installed")
 
     try:
         cffi_ver = importlib.metadata.version("cffi")
-    except Exception:
+    except importlib.metadata.PackageNotFoundError:
         try:
             import cffi
             cffi_ver = getattr(cffi, "__version__", None)
-        except Exception:
-            pass
+        except ImportError:
+            logger.debug("cffi package is not installed")
 
     try:
         import ssl
         openssl_ver = getattr(ssl, "OPENSSL_VERSION", None)
-    except Exception:
-        pass
+    except ImportError:
+        logger.debug("ssl module is not available")
 
     return {
         "cryptography_version": crypto_ver,
