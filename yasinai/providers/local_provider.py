@@ -1,64 +1,101 @@
-"""
-LocalProvider — offline generation adapter (no network, no external SDK).
+"""LocalProvider — OpenAI-compatible local inference adapter.
 
-Always available. Useful for tests, CI, and air-gapped environments.
+The provider owns request/response translation only. Optional process lifecycle
+is delegated to LocalLLMRuntime; it never launches llama-server directly.
 """
 from __future__ import annotations
+
+import os
+import urllib.error
+import urllib.request
 
 from yasinai.providers.base import (
     GenerationRequest,
     GenerationResponse,
-    ProviderBase,
     ProviderCapability,
+    ProviderError,
     ProviderInfo,
 )
+from yasinai.providers.openai_provider import HttpTransport, OpenAIProvider
+from yasinai.runtime.local_llm import LocalLLMRuntime
 
 
-class LocalProvider(ProviderBase):
-    """Deterministic local stub that echoes structured completions."""
+DEFAULT_MODEL = "local-qwen17"
+DEFAULT_BASE_URL = "http://127.0.0.1:18765"
 
-    DEFAULT_MODEL = "local-echo-v1"
 
-    def __init__(self, *, model_id: str | None = None) -> None:
-        self._model_id = model_id or self.DEFAULT_MODEL
+class LocalProvider(OpenAIProvider):
+    """Local OpenAI-compatible provider backed by llama-server."""
+
+    DEFAULT_MODEL = DEFAULT_MODEL
+
+    def __init__(
+        self,
+        *,
+        model_id: str | None = None,
+        base_url: str | None = None,
+        runtime: LocalLLMRuntime | None = None,
+        transport: HttpTransport | None = None,
+    ) -> None:
+        self._model_id = model_id or os.environ.get("YASINAI_LOCAL_MODEL", DEFAULT_MODEL)
+        self._runtime = runtime
+        resolved_base_url = base_url or (
+            runtime.config.base_url if runtime is not None else None
+        ) or os.environ.get("YASINAI_LOCAL_BASE_URL", DEFAULT_BASE_URL)
+        super().__init__(
+            api_key="local",
+            base_url=resolved_base_url,
+            default_model=self._model_id,
+            transport=transport,
+        )
 
     @property
     def info(self) -> ProviderInfo:
         return ProviderInfo(
             name="local",
-            version="1.0.0",
-            capabilities=[
-                ProviderCapability.GENERATION,
-                ProviderCapability.CHAT,
-            ],
+            version="2.0.0",
+            capabilities=[ProviderCapability.GENERATION, ProviderCapability.CHAT],
             model_ids=[self._model_id],
-            metadata={"network": False, "sdk": None},
+            metadata={
+                "network": "localhost",
+                "protocol": "openai-chat-completions",
+                "managed_runtime": self._runtime is not None,
+            },
         )
 
     def is_available(self) -> bool:
-        return True
+        """Return whether the configured local endpoint is reachable and healthy."""
+        if self._runtime is not None:
+            return self._runtime.health()
+        try:
+            with urllib.request.urlopen(f"{self._base_url}/health", timeout=2) as response:
+                return 200 <= response.status < 300
+        except (urllib.error.URLError, TimeoutError, OSError):
+            return False
 
     def _generate(self, request: GenerationRequest) -> GenerationResponse:
-        model = request.model or self._model_id
-        system = request.system_prompt or ""
-        prefix = f"[system: {system}] " if system else ""
-        text = (
-            f"{prefix}[local:{model}] "
-            f"{request.prompt[: max(1, request.max_tokens)]}"
-        )
-        if request.stop_sequences:
-            for stop in request.stop_sequences:
-                if stop and stop in text:
-                    text = text.split(stop, 1)[0]
-                    break
-        # Rough token estimate: ~4 chars per token
-        in_tok = max(1, len(request.prompt) // 4)
-        out_tok = max(1, len(text) // 4)
+        if self._runtime is not None and not self._runtime.health():
+            try:
+                self._runtime.start()
+            except Exception as exc:
+                raise ProviderError(
+                    "local",
+                    "local inference runtime is unavailable",
+                    retryable=True,
+                ) from exc
+
+        try:
+            response = super()._generate(request)
+        except ProviderError as exc:
+            if exc.provider == "openai":
+                raise ProviderError("local", str(exc).split("] ", 1)[-1], exc.retryable) from exc
+            raise
         return GenerationResponse(
-            text=text,
-            model=model,
+            text=response.text,
+            model=response.model,
             provider="local",
-            input_tokens=in_tok,
-            output_tokens=out_tok,
-            metadata={"temperature": request.temperature},
+            input_tokens=response.input_tokens,
+            output_tokens=response.output_tokens,
+            finish_reason=response.finish_reason,
+            metadata=response.metadata,
         )
