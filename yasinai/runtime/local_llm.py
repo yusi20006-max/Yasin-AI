@@ -15,7 +15,6 @@ import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Sequence
 
 
 class LocalLLMRuntimeError(RuntimeError):
@@ -157,6 +156,10 @@ class LocalLLMRuntime:
             return None
         if str(state.get("starttime")) != starttime:
             self._clear_state()
+            return None
+        if str(state.get("port")) != str(self.config.port):
+            return None
+        if str(state.get("model")) != self.config.model:
             return None
         executable_name = Path(self.config.executable).name
         if not any(Path(arg).name == executable_name for arg in cmdline):
