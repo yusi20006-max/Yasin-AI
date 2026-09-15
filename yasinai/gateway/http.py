@@ -4,11 +4,11 @@ from __future__ import annotations
 import json
 import logging
 import os
-from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Any, Callable
+from typing import Any
 
 from yasinai.contracts.generation import GenerationRequest, GenerationResult
+from yasinai.providers.base import ProviderCapability
 from yasinai.services.generation_service import GenerationService
 
 logger = logging.getLogger(__name__)
@@ -26,9 +26,7 @@ class YasinAIGateway:
 
     def models(self) -> dict[str, Any]:
         data: list[dict[str, Any]] = []
-        for provider in self.generation_service.registry.all():
-            if not provider.is_available():
-                continue
+        for provider in self.generation_service.registry.available_for_capability(ProviderCapability.GENERATION):
             for model in provider.info.model_ids:
                 data.append({"id": model, "object": "model", "owned_by": provider.info.name})
         return {"object": "list", "data": data}
@@ -77,28 +75,15 @@ class YasinAIGateway:
             "id": "yasinai-chat-completion",
             "object": "chat.completion",
             "model": result.model,
-            "choices": [{
-                "index": 0,
-                "message": {"role": "assistant", "content": result.text},
-                "finish_reason": result.finish_reason or "stop",
-            }],
-            "usage": {
-                "prompt_tokens": result.input_tokens,
-                "completion_tokens": result.output_tokens,
-                "total_tokens": result.input_tokens + result.output_tokens,
-            },
+            "choices": [{"index": 0, "message": {"role": "assistant", "content": result.text}, "finish_reason": result.finish_reason or "stop"}],
+            "usage": {"prompt_tokens": result.input_tokens, "completion_tokens": result.output_tokens, "total_tokens": result.input_tokens + result.output_tokens},
         }
 
 
-def create_server(
-    gateway: YasinAIGateway | None = None,
-    *,
-    host: str | None = None,
-    port: int | None = None,
-) -> ThreadingHTTPServer:
+def create_server(gateway: YasinAIGateway | None = None, *, host: str | None = None, port: int | None = None) -> ThreadingHTTPServer:
     gateway = gateway or YasinAIGateway()
     bind_host = host or os.environ.get("YASINAI_GATEWAY_HOST", "127.0.0.1")
-    bind_port = port or int(os.environ.get("YASINAI_GATEWAY_PORT", "8000"))
+    bind_port = port if port is not None else int(os.environ.get("YASINAI_GATEWAY_PORT", "8000"))
 
     class Handler(BaseHTTPRequestHandler):
         server_version = "YasinAI/1"
@@ -126,7 +111,7 @@ def create_server(
             try:
                 length = int(self.headers.get("Content-Length", "0"))
             except ValueError:
-                self._write(400, {"error": {"message": "invalid content length", "type": "invalid_request_error"}})
+                self._write(400, {"error": {"message": "invalid content length", "type": "invalid_request_error"})
                 return
             if length <= 0 or length > MAX_BODY_BYTES:
                 self._write(413, {"error": {"message": "request body too large or empty", "type": "invalid_request_error"}})
@@ -158,3 +143,7 @@ def serve() -> None:
         pass
     finally:
         server.server_close()
+
+
+if __name__ == "__main__":
+    serve()
