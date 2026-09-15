@@ -37,6 +37,7 @@ dev = [
 
 [project.scripts]
 yasin = "yasinai.cli.security_entrypoint:main"
+yasin-ai-gateway = "yasinai.gateway.http:serve"
 
 [tool.setuptools.packages.find]
 include = [
