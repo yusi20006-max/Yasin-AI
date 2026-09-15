@@ -7,6 +7,7 @@ import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
+from yasinai.contracts.base import ContractViolationError
 from yasinai.contracts.generation import GenerationRequest, GenerationResult
 from yasinai.providers.base import ProviderCapability
 from yasinai.services.generation_service import GenerationService
@@ -60,7 +61,7 @@ class YasinAIGateway:
                 stop_sequences=payload.get("stop", []) or [],
                 provider=payload.get("provider"),
             )
-        except (TypeError, ValueError) as exc:
+        except (TypeError, ValueError, ContractViolationError) as exc:
             return 400, {"error": {"message": str(exc), "type": "invalid_request_error"}}
         result = self.generation_service.generate(request)
         if not result.success:
