@@ -4,6 +4,7 @@ from __future__ import annotations
 from yasinai.providers.anthropic_provider import AnthropicProvider
 from yasinai.providers.config_store import ProviderConfigError, ProviderStore
 from yasinai.providers.generic_openai import GenericOpenAIProvider
+from yasinai.providers.gemini_provider import GeminiProvider
 from yasinai.providers.local_provider import LocalProvider
 from yasinai.providers.openai_provider import OpenAIProvider
 from yasinai.providers.registry import ProviderRegistry
@@ -15,10 +16,18 @@ def register_default_providers(
     include_local: bool = True,
     include_openai: bool = True,
     include_anthropic: bool = True,
+    include_gemini: bool = True,
     include_configured: bool = True,
     overwrite: bool = False,
 ) -> ProviderRegistry:
-    """Register built-in providers and optional user-configured providers."""
+    """Register built-in providers and optional user-configured providers.
+
+    Gemini is registered first so the existing router naturally prefers it
+    when configured; unavailable Gemini is skipped by availability checks and
+    local then becomes the first available built-in provider.
+    """
+    if include_gemini:
+        registry.register(GeminiProvider(), overwrite=overwrite)
     if include_local:
         registry.register(LocalProvider(), overwrite=overwrite)
     if include_openai:
