@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import os
 import stat
 import sys
 import textwrap
-import time
 from pathlib import Path
 
 import pytest
@@ -102,7 +100,6 @@ def test_restart_rotates_process(tmp_path: Path) -> None:
 
 def test_missing_model_fails_without_starting_process(tmp_path: Path) -> None:
     runtime = make_runtime(tmp_path)
-    runtime.config.resolved_state_file.unlink(missing_ok=True)
     missing = tmp_path / "missing.gguf"
     runtime = LocalLLMRuntime(
         LocalLLMRuntimeConfig(
@@ -119,7 +116,9 @@ def test_missing_model_fails_without_starting_process(tmp_path: Path) -> None:
 
 def test_occupied_port_is_reported_without_killing_other_process(tmp_path: Path) -> None:
     runtime = make_runtime(tmp_path, port=18767)
-    other = __import__("socket").socket()
+    import socket
+
+    other = socket.socket()
     other.bind(("127.0.0.1", 18767))
     try:
         other.listen(1)
