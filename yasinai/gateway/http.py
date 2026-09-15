@@ -50,7 +50,6 @@ class YasinAIGateway:
         prompt = "\n".join(prompt_parts).strip()
         if not prompt:
             return 400, {"error": {"message": "at least one non-system message is required", "type": "invalid_request_error"}}
-
         try:
             request = GenerationRequest(
                 prompt=prompt,
@@ -63,7 +62,6 @@ class YasinAIGateway:
             )
         except (TypeError, ValueError) as exc:
             return 400, {"error": {"message": str(exc), "type": "invalid_request_error"}}
-
         result = self.generation_service.generate(request)
         if not result.success:
             return 503, {"error": {"message": result.error or "generation failed", "type": "provider_error"}}
@@ -111,7 +109,7 @@ def create_server(gateway: YasinAIGateway | None = None, *, host: str | None = N
             try:
                 length = int(self.headers.get("Content-Length", "0"))
             except ValueError:
-                self._write(400, {"error": {"message": "invalid content length", "type": "invalid_request_error"})
+                self._write(400, {"error": {"message": "invalid content length", "type": "invalid_request_error"}})
                 return
             if length <= 0 or length > MAX_BODY_BYTES:
                 self._write(413, {"error": {"message": "request body too large or empty", "type": "invalid_request_error"}})
