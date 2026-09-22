@@ -12,6 +12,19 @@ from yasinai.providers.base import GenerationRequest, GenerationResponse, Provid
 from yasinai.providers.openai_provider import HttpTransport, OpenAIProvider
 
 
+def _validation_result_from_exception(exc: Exception, latency_ms: int):
+    from yasinai.providers.validation import ValidationResult
+    import re
+    message = str(exc)
+    match = re.search(r"HTTP (\d{3})", message)
+    status = int(match.group(1)) if match else None
+    if status in (401, 403): return ValidationResult(True, False, status, "UNAUTHORIZED" if status == 401 else "FORBIDDEN", "credential rejected by provider", latency_ms, {})
+    if status == 429: return ValidationResult(True, None, status, "RATE_LIMITED", "provider rate limit", latency_ms, {})
+    if status and status >= 500: return ValidationResult(True, None, status, "SERVER_ERROR", "provider server error", latency_ms, {})
+    if getattr(exc, "retryable", False): return ValidationResult(False, None, status, "NETWORK_ERROR", "provider transport error", latency_ms, {})
+    return ValidationResult(None, None, status, "UNKNOWN", "credential validation failed", latency_ms, {})
+
+
 class GenericOpenAIProvider(OpenAIProvider):
     """Runtime-configured provider for OpenAI-compatible chat APIs."""
 
@@ -47,6 +60,19 @@ class GenericOpenAIProvider(OpenAIProvider):
             model_ids=[self._default_model],
             metadata={"base_url": self._base_url, "protocol": "openai-chat-completions"},
         )
+
+    def validate_credential(self, credential: str, *, model: str | None = None):
+        from time import perf_counter
+        from yasinai.providers.validation import ValidationResult
+        if not credential: return ValidationResult(None, False, error_code="INVALID_CREDENTIAL", error_message="credential is empty")
+        started = perf_counter()
+        try:
+            probe = GenericOpenAIProvider(name=self._provider_name, api_key=credential, base_url=self._base_url, default_model=model or self._default_model, transport=self._transport)
+            probe._generate(GenerationRequest(prompt="health check", model=model or self._default_model, max_tokens=1, temperature=0.0))
+            latency = round((perf_counter()-started)*1000)
+            return ValidationResult(True, True, 200, None, None, latency, {"generation":"available"})
+        except Exception as exc:
+            return _validation_result_from_exception(exc, round((perf_counter()-started)*1000))
 
     def _generate(self, request: GenerationRequest) -> GenerationResponse:
         response = super()._generate(request)
