@@ -7,13 +7,12 @@ name = "yasinai"
 version = "1.1.4"
 description = "YasinAI Modular AI Platform"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "cryptography>=48.0.1",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -78,5 +77,5 @@ show_missing = true
 skip_covered = false
 
 [tool.ruff]
-target-version = "py39"
+target-version = "py310"
 line-length = 120
