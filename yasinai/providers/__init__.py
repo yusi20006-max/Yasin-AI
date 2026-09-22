@@ -24,6 +24,7 @@ from yasinai.providers.base import (
     ProviderError,
     ProviderInfo,
 )
+from yasinai.providers.validation import ValidationResult
 from yasinai.providers.factory import build_default_registry, register_default_providers
 from yasinai.providers.local_provider import LocalProvider
 from yasinai.providers.openai_provider import OpenAIProvider
@@ -40,6 +41,7 @@ __all__ = [
     "ProviderCapability",
     "ProviderError",
     "ProviderInfo",
+    "ValidationResult",
     "ProviderRegistry",
     "ProviderRouter",
     "ProviderUnavailableError",

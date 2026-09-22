@@ -15,6 +15,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+from yasinai.providers.validation import ValidationResult
+
 
 class ProviderCapability(str, Enum):
     """Capabilities a provider may or may not support."""
@@ -95,6 +97,12 @@ class ProviderBase(ABC):
     @abstractmethod
     def is_available(self) -> bool:
         """Return True if the provider is reachable and configured."""
+
+    def validate_credential(self, credential: str, *, model: str | None = None) -> ValidationResult:
+        """Validate a credential without persisting or logging the secret."""
+        if not credential:
+            return ValidationResult(reachable=None, authenticated=False, error_code="INVALID_CREDENTIAL", error_message="credential is empty")
+        return ValidationResult(reachable=None, authenticated=None, error_code="NOT_SUPPORTED", error_message="provider-native validation is not implemented")
 
     def generate(self, request: GenerationRequest) -> GenerationResponse:
         """
