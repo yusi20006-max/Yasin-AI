@@ -11,6 +11,7 @@ from yasinai.contracts.base import ContractViolationError
 from yasinai.contracts.generation import GenerationRequest, GenerationResult
 from yasinai.providers.base import ProviderCapability
 from yasinai.services.generation_service import GenerationService
+from yasinai.gateway.token_validation import TokenValidationBridge
 
 logger = logging.getLogger(__name__)
 MAX_BODY_BYTES = 1_048_576
@@ -79,8 +80,9 @@ class YasinAIGateway:
         }
 
 
-def create_server(gateway: YasinAIGateway | None = None, *, host: str | None = None, port: int | None = None) -> ThreadingHTTPServer:
+def create_server(gateway: YasinAIGateway | None = None, *, host: str | None = None, port: int | None = None, token_bridge: TokenValidationBridge | None = None) -> ThreadingHTTPServer:
     gateway = gateway or YasinAIGateway()
+    token_bridge = token_bridge
     bind_host = host or os.environ.get("YASINAI_GATEWAY_HOST", "127.0.0.1")
     bind_port = port if port is not None else int(os.environ.get("YASINAI_GATEWAY_PORT", "8000"))
 
@@ -92,8 +94,23 @@ def create_server(gateway: YasinAIGateway | None = None, *, host: str | None = N
             self.send_response(status)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(data)))
+            self._cors()
             self.end_headers()
             self.wfile.write(data)
+
+        def _cors(self) -> None:
+            origin = self.headers.get("Origin")
+            if token_bridge and origin == token_bridge.allowed_origin:
+                self.send_header("Access-Control-Allow-Origin", origin)
+                self.send_header("Vary", "Origin")
+                self.send_header("Access-Control-Allow-Headers", "Content-Type, X-YasinAI-Bridge-Token")
+                self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+
+        def do_OPTIONS(self) -> None:
+            if not token_bridge or self.headers.get("Origin") != token_bridge.allowed_origin:
+                self._write(403, {"error": {"message": "origin not allowed", "type": "forbidden"}})
+                return
+            self.send_response(204); self._cors(); self.end_headers()
 
         def do_GET(self) -> None:
             if self.path == "/health":
@@ -104,6 +121,15 @@ def create_server(gateway: YasinAIGateway | None = None, *, host: str | None = N
                 self._write(404, {"error": {"message": "not found", "type": "not_found"}})
 
         def do_POST(self) -> None:
+            if self.path == "/v1/token/validate":
+                if not token_bridge or not token_bridge.authorize(dict(self.headers), self.headers.get("Origin")):
+                    self._write(403, {"error": {"message": "bridge authorization failed", "type": "forbidden"}}); return
+                try:
+                    length=int(self.headers.get("Content-Length", "0")); payload=json.loads(self.rfile.read(length))
+                    status,response=(200, token_bridge.validate(payload)) if isinstance(payload, dict) else (400, {"error":{"message":"JSON body must be an object","type":"invalid_request_error"}})
+                except Exception:
+                    status,response=400,{"error":{"message":"invalid validation request","type":"invalid_request_error"}}
+                self._write(status,response); return
             if self.path != "/v1/chat/completions":
                 self._write(404, {"error": {"message": "not found", "type": "not_found"}})
                 return
