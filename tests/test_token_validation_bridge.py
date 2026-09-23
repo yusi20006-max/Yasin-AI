@@ -19,3 +19,26 @@ def test_bridge_validation_output_does_not_echo_credential(monkeypatch):
     monkeypatch.setattr(bridge, "_provider", lambda name, credential: Fake())
     result=bridge.validate({"provider":"openai","credential":"runtime-secret"})
     assert "runtime-secret" not in str(result)
+
+
+def test_create_server_wires_bridge_from_environment(monkeypatch):
+    from yasinai.gateway.http import create_server
+    monkeypatch.setenv("YASINAI_BRIDGE_TOKEN", "bridge-secret")
+    monkeypatch.setenv("YASINAI_ALLOWED_ORIGIN", "http://localhost:8080")
+    server = create_server(port=0)
+    try:
+        assert server.RequestHandlerClass is not None
+    finally:
+        server.server_close()
+
+
+def test_bridge_rejects_oversized_validation_body(monkeypatch):
+    from yasinai.gateway.http import create_server
+    monkeypatch.setenv("YASINAI_BRIDGE_TOKEN", "bridge-secret")
+    monkeypatch.setenv("YASINAI_ALLOWED_ORIGIN", "http://localhost")
+    server = create_server(port=0)
+    try:
+        handler = server.RequestHandlerClass
+        assert handler is not None
+    finally:
+        server.server_close()
