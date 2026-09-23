@@ -20,8 +20,22 @@ from yasinai.providers.base import (
 logger = logging.getLogger(__name__)
 
 HttpTransport = Callable[[str, dict[str, str], dict[str, Any]], dict[str, Any]]
+ModelProbeTransport = Callable[[str, dict[str, str]], dict[str, Any]]
 DEFAULT_BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
 DEFAULT_MODEL = "gemini-3.6-flash"
+
+def _default_model_probe(url: str, headers: dict[str, str]) -> dict[str, Any]:
+    req = urllib.request.Request(url, headers=headers, method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        try: exc.read()
+        except Exception: pass
+        raise ProviderError("gemini", f"Gemini request failed with HTTP {exc.code}", retryable=exc.code == 429 or exc.code >= 500) from exc
+    except (urllib.error.URLError, TimeoutError) as exc:
+        raise ProviderError("gemini", "Gemini network error", retryable=True) from exc
+
 
 
 def _default_http_transport(url: str, headers: dict[str, str], body: dict[str, Any]) -> dict[str, Any]:
@@ -68,11 +82,13 @@ class GeminiProvider(ProviderBase):
         base_url: str = DEFAULT_BASE_URL,
         default_model: str | None = None,
         transport: HttpTransport | None = None,
+        probe_transport: ModelProbeTransport | None = None,
     ) -> None:
         self._api_key_override = api_key
         self._base_url = base_url.rstrip("/")
         self._default_model = default_model or os.environ.get("YASINAI_GEMINI_MODEL", DEFAULT_MODEL)
         self._transport = transport or _default_http_transport
+        self._probe_transport = probe_transport or _default_model_probe
 
     def _api_key(self) -> str | None:
         return self._api_key_override or os.environ.get("GEMINI_API_KEY")
@@ -93,15 +109,22 @@ class GeminiProvider(ProviderBase):
     def validate_credential(self, credential: str, *, model: str | None = None):
         from time import perf_counter
         from yasinai.providers.validation import ValidationResult
-        if not credential: return ValidationResult(None, False, error_code="INVALID_CREDENTIAL", error_message="credential is empty")
+        if not credential:
+            return ValidationResult(None, False, error_code="INVALID_CREDENTIAL", error_message="credential is empty")
         started = perf_counter()
         try:
-            probe = GeminiProvider(api_key=credential, base_url=self._base_url, default_model=model or self._default_model, transport=self._transport)
-            probe._generate(GenerationRequest(prompt="health check", model=model or self._default_model, max_tokens=1, temperature=0.0))
-            latency = round((perf_counter()-started)*1000)
-            return ValidationResult(True, True, 200, None, None, latency, {"generation":"available"})
+            payload = self._probe_transport(f"{self._base_url}/models", {"x-goog-api-key": credential})
+            models = []
+            for item in (payload.get("models") or []):
+                if isinstance(item, dict) and item.get("name") and "generateContent" in (item.get("supportedGenerationMethods") or []):
+                    models.append(str(item["name"]).removeprefix("models/"))
+            latency = round((perf_counter() - started) * 1000)
+            capabilities = {"models": models, "generation": "available"}
+            if model and model not in models:
+                return ValidationResult(True, True, 200, "MODEL_NOT_FOUND", "requested model is not available", latency, capabilities)
+            return ValidationResult(True, True, 200, None, None, latency, capabilities)
         except Exception as exc:
-            return _validation_result_from_exception(exc, round((perf_counter()-started)*1000))
+            return _validation_result_from_exception(exc, round((perf_counter() - started) * 1000))
 
     def _generate(self, request: GenerationRequest) -> GenerationResponse:
         key = self._api_key()
