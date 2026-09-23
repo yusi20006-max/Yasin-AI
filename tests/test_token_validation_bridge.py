@@ -44,7 +44,7 @@ def test_bridge_rejects_oversized_validation_body(monkeypatch):
         server.server_close()
 
 
-def test_bridge_supports_orcarouter_with_allowlisted_base_url(monkeypatch):
+def test_bridge_supports_orcarouter_with_allowlisted_base_url():
     bridge = TokenValidationBridge(bridge_token="bridge-secret", allowed_origin="http://localhost")
     adapter = bridge._provider(
         "orcarouter",
@@ -52,11 +52,9 @@ def test_bridge_supports_orcarouter_with_allowlisted_base_url(monkeypatch):
         base_url="https://api.orcarouter.ai/v1",
         model="orcarouter/auto",
     )
-    result = adapter.validate_credential(
-        "sk-orca-test",
-        model="orcarouter/auto",
-    )
-    assert result.authenticated is True if result.error_code is None else result.error_code == "NETWORK_ERROR"
+    assert adapter.info.name == "orcarouter"
+    assert adapter.info.metadata["base_url"] == "https://api.orcarouter.ai/v1"
+    assert adapter.info.model_ids == ["orcarouter/auto"]
 
 
 def test_bridge_rejects_unapproved_orcarouter_base_url():
