@@ -31,9 +31,23 @@ from yasinai.providers.base import (
 
 # Optional injectable transport: (url, headers, body_dict) -> response_dict
 HttpTransport = Callable[[str, dict[str, str], dict[str, Any]], dict[str, Any]]
+ModelProbeTransport = Callable[[str, dict[str, str]], dict[str, Any]]
 
 DEFAULT_BASE_URL = "https://api.openai.com/v1"
 DEFAULT_MODEL = "gpt-4o-mini"
+
+def _default_model_probe(url: str, headers: dict[str, str]) -> dict[str, Any]:
+    req = urllib.request.Request(url, headers=headers, method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        try: exc.read()
+        except Exception: pass
+        raise ProviderError("openai", f"OpenAI request failed with HTTP {exc.code}", retryable=exc.code == 429 or exc.code >= 500) from exc
+    except (urllib.error.URLError, TimeoutError) as exc:
+        raise ProviderError("openai", "OpenAI network error", retryable=True) from exc
+
 
 
 def _default_http_transport(
@@ -88,12 +102,14 @@ class OpenAIProvider(ProviderBase):
         base_url: str | None = None,
         default_model: str = DEFAULT_MODEL,
         transport: HttpTransport | None = None,
+        probe_transport: ModelProbeTransport | None = None,
     ) -> None:
         # api_key arg is for tests only; production uses env
         self._api_key_override = api_key
         self._base_url = (base_url or DEFAULT_BASE_URL).rstrip("/")
         self._default_model = default_model
         self._transport = transport or _default_http_transport
+        self._probe_transport = probe_transport or _default_model_probe
 
     def _api_key(self) -> str | None:
         return self._api_key_override or os.environ.get("OPENAI_API_KEY")
@@ -125,15 +141,19 @@ class OpenAIProvider(ProviderBase):
     def validate_credential(self, credential: str, *, model: str | None = None):
         from time import perf_counter
         from yasinai.providers.validation import ValidationResult
-        if not credential: return ValidationResult(None, False, error_code="INVALID_CREDENTIAL", error_message="credential is empty")
+        if not credential:
+            return ValidationResult(None, False, error_code="INVALID_CREDENTIAL", error_message="credential is empty")
         started = perf_counter()
         try:
-            probe = OpenAIProvider(api_key=credential, base_url=self._base_url, default_model=model or self._default_model, transport=self._transport)
-            probe._generate(GenerationRequest(prompt="health check", model=model or self._default_model, max_tokens=1, temperature=0.0))
-            latency = round((perf_counter()-started)*1000)
-            return ValidationResult(True, True, 200, None, None, latency, {"generation":"available"})
+            payload = self._probe_transport(f"{self._base_url}/models", {"Authorization": f"Bearer {credential}"})
+            models = [item.get("id") for item in (payload.get("data") or []) if isinstance(item, dict) and item.get("id")]
+            latency = round((perf_counter() - started) * 1000)
+            capabilities = {"models": models, "generation": "available"}
+            if model and model not in models:
+                return ValidationResult(True, True, 200, "MODEL_NOT_FOUND", "requested model is not available", latency, capabilities)
+            return ValidationResult(True, True, 200, None, None, latency, capabilities)
         except Exception as exc:
-            return _validation_result_from_exception(exc, round((perf_counter()-started)*1000))
+            return _validation_result_from_exception(exc, round((perf_counter() - started) * 1000))
 
     def _generate(self, request: GenerationRequest) -> GenerationResponse:
         key = self._api_key()
