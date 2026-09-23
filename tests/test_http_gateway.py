@@ -77,3 +77,26 @@ def test_generation_failure_maps_to_503():
     assert status == 503
     assert body["error"]["type"] == "provider_error"
     assert body["error"]["message"] == "provider unavailable"
+
+
+def test_chat_completion_preserves_provider_and_model_pinning():
+    service = FakeGenerationService(GenerationResult(success=True, text="ok", model="gemini-3.6-flash", provider="gemini"))
+    gateway = YasinAIGateway(service)
+    status, body = gateway.chat_completions({
+        "provider": "gemini",
+        "model": "gemini-3.6-flash",
+        "messages": [{"role": "user", "content": "Hello"}],
+    })
+    assert status == 200
+    assert body["model"] == "gemini-3.6-flash"
+    assert service.last_request.provider == "gemini"
+    assert service.last_request.model == "gemini-3.6-flash"
+
+
+def test_chat_completion_keeps_unpinned_provider_none():
+    service = FakeGenerationService(GenerationResult(success=True, text="ok", model="local", provider="local"))
+    status, _ = YasinAIGateway(service).chat_completions({
+        "messages": [{"role": "user", "content": "Hello"}],
+    })
+    assert status == 200
+    assert service.last_request.provider is None
