@@ -82,7 +82,8 @@ class YasinAIGateway:
 
 def create_server(gateway: YasinAIGateway | None = None, *, host: str | None = None, port: int | None = None, token_bridge: TokenValidationBridge | None = None) -> ThreadingHTTPServer:
     gateway = gateway or YasinAIGateway()
-    token_bridge = token_bridge
+    if token_bridge is None and os.environ.get("YASINAI_BRIDGE_TOKEN"):
+        token_bridge = TokenValidationBridge()
     bind_host = host or os.environ.get("YASINAI_GATEWAY_HOST", "127.0.0.1")
     bind_port = port if port is not None else int(os.environ.get("YASINAI_GATEWAY_PORT", "8000"))
 
@@ -125,7 +126,10 @@ def create_server(gateway: YasinAIGateway | None = None, *, host: str | None = N
                 if not token_bridge or not token_bridge.authorize(dict(self.headers), self.headers.get("Origin")):
                     self._write(403, {"error": {"message": "bridge authorization failed", "type": "forbidden"}}); return
                 try:
-                    length=int(self.headers.get("Content-Length", "0")); payload=json.loads(self.rfile.read(length))
+                    length = int(self.headers.get("Content-Length", "0"))
+                    if length <= 0 or length > MAX_BODY_BYTES:
+                        self._write(413, {"error": {"message": "request body too large or empty", "type": "invalid_request_error"}}); return
+                    payload = json.loads(self.rfile.read(length))
                     status,response=(200, token_bridge.validate(payload)) if isinstance(payload, dict) else (400, {"error":{"message":"JSON body must be an object","type":"invalid_request_error"}})
                 except Exception:
                     status,response=400,{"error":{"message":"invalid validation request","type":"invalid_request_error"}}
