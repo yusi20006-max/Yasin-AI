@@ -19,6 +19,8 @@ def _validation_result_from_exception(exc: Exception, latency_ms: int):
     match = re.search(r"HTTP (\d{3})", message)
     status = int(match.group(1)) if match else None
     if status in (401, 403): return ValidationResult(True, False, status, "UNAUTHORIZED" if status == 401 else "FORBIDDEN", "credential rejected by provider", latency_ms, {})
+    if status == 400: return ValidationResult(True, None, status, "BAD_REQUEST", "provider rejected the validation request", latency_ms, {})
+    if status == 404: return ValidationResult(True, None, status, "NOT_FOUND", "provider validation endpoint or model was not found", latency_ms, {})
     if status == 429: return ValidationResult(True, None, status, "RATE_LIMITED", "provider rate limit", latency_ms, {})
     if status and status >= 500: return ValidationResult(True, None, status, "SERVER_ERROR", "provider server error", latency_ms, {})
     if getattr(exc, "retryable", False): return ValidationResult(False, None, status, "NETWORK_ERROR", "provider transport error", latency_ms, {})
