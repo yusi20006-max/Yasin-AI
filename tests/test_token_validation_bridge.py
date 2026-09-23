@@ -92,8 +92,6 @@ def test_token_import_preserves_orcarouter_base_url_without_exposing_credential(
     from yasinai.gateway.token_import import TokenImportBridge
     from yasinai.services.credential_registry import CredentialRegistry
 
-    bridge = TokenValidationBridge(bridge_token="bridge-secret", allowed_origin="http://localhost")
-
     class FakeValidation:
         def validate(self, payload):
             from yasinai.providers.validation import ValidationResult
