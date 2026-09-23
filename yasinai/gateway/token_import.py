@@ -39,6 +39,10 @@ class TokenImportBridge:
         metadata = payload.get("metadata")
         if metadata is not None and not isinstance(metadata, dict):
             return 400, {"error": {"message": "metadata must be an object", "type": "invalid_request_error"}}
+        metadata = dict(metadata or {})
+        base_url = payload.get("baseUrl") or payload.get("base_url")
+        if base_url:
+            metadata["base_url"] = str(base_url).strip()
 
         public_record, created = self.registry.import_credential(
             provider=provider,
