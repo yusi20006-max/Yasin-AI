@@ -217,3 +217,54 @@ def test_router_unavailable(monkeypatch):
     router = ProviderRouter(reg)
     with pytest.raises(ProviderUnavailableError):
         router.select(ProviderCapability.GENERATION)
+
+def test_openai_validation_uses_models_probe_without_generation():
+    calls = []
+    def probe(url, headers):
+        calls.append((url, headers))
+        return {"data": [{"id": "gpt-test"}]}
+    def generation_transport(*args):
+        raise AssertionError("credential validation must not call generation")
+    result = OpenAIProvider(api_key="sk-test", transport=generation_transport, probe_transport=probe).validate_credential("sk-test", model="gpt-test")
+    assert result.authenticated is True
+    assert result.error_code is None
+    assert result.capabilities["models"] == ["gpt-test"]
+    assert calls[0][0].endswith("/models")
+
+
+def test_openai_validation_reports_model_mismatch_without_generation():
+    def probe(url, headers):
+        return {"data": [{"id": "gpt-test"}]}
+    result = OpenAIProvider(api_key="sk-test", probe_transport=probe).validate_credential("sk-test", model="missing")
+    assert result.authenticated is True
+    assert result.error_code == "MODEL_NOT_FOUND"
+
+
+def test_anthropic_validation_uses_native_models_probe():
+    result = AnthropicProvider(
+        api_key="ant-test",
+        probe_transport=lambda url, headers: {"data": [{"id": "claude-test"}]},
+    ).validate_credential("ant-test", model="claude-test")
+    assert result.authenticated is True
+    assert result.capabilities["models"] == ["claude-test"]
+
+
+def test_gemini_validation_uses_native_models_probe():
+    from yasinai.providers.gemini_provider import GeminiProvider
+    result = GeminiProvider(
+        api_key="gem-test",
+        probe_transport=lambda url, headers: {
+            "models": [{"name": "models/gemini-test", "supportedGenerationMethods": ["generateContent"]}]
+        },
+    ).validate_credential("gem-test", model="gemini-test")
+    assert result.authenticated is True
+    assert result.capabilities["models"] == ["gemini-test"]
+
+
+def test_openai_validation_normalizes_http_400_and_429():
+    from yasinai.providers.openai_provider import ProviderError
+    for code, expected in ((400, "BAD_REQUEST"), (429, "RATE_LIMITED")):
+        def probe(url, headers, code=code):
+            raise ProviderError("openai", f"OpenAI request failed with HTTP {code}", retryable=code == 429)
+        result = OpenAIProvider(api_key="sk-test", probe_transport=probe).validate_credential("sk-test")
+        assert result.error_code == expected
