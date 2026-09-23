@@ -36,6 +36,7 @@ class GenericOpenAIProvider(OpenAIProvider):
         base_url: str,
         default_model: str,
         transport: HttpTransport | None = None,
+        probe_transport = None,
     ) -> None:
         if not name.strip():
             raise ValueError("Provider name must not be empty")
@@ -48,6 +49,7 @@ class GenericOpenAIProvider(OpenAIProvider):
             base_url=base_url,
             default_model=default_model,
             transport=transport,
+            probe_transport=probe_transport,
         )
         self._provider_name = name.strip()
 
@@ -64,15 +66,27 @@ class GenericOpenAIProvider(OpenAIProvider):
     def validate_credential(self, credential: str, *, model: str | None = None):
         from time import perf_counter
         from yasinai.providers.validation import ValidationResult
-        if not credential: return ValidationResult(None, False, error_code="INVALID_CREDENTIAL", error_message="credential is empty")
+        if not credential:
+            return ValidationResult(None, False, error_code="INVALID_CREDENTIAL", error_message="credential is empty")
         started = perf_counter()
         try:
-            probe = GenericOpenAIProvider(name=self._provider_name, api_key=credential, base_url=self._base_url, default_model=model or self._default_model, transport=self._transport)
-            probe._generate(GenerationRequest(prompt="health check", model=model or self._default_model, max_tokens=1, temperature=0.0))
-            latency = round((perf_counter()-started)*1000)
-            return ValidationResult(True, True, 200, None, None, latency, {"generation":"available"})
+            probe = GenericOpenAIProvider(
+                name=self._provider_name,
+                api_key=credential,
+                base_url=self._base_url,
+                default_model=model or self._default_model,
+                transport=self._transport,
+                probe_transport=self._probe_transport,
+            )
+            payload = probe._probe_transport(f"{self._base_url}/models", {"Authorization": f"Bearer {credential}"})
+            models = [item.get("id") for item in (payload.get("data") or []) if isinstance(item, dict) and item.get("id")]
+            latency = round((perf_counter() - started) * 1000)
+            capabilities = {"models": models, "generation": "available"}
+            if model and model not in models:
+                return ValidationResult(True, True, 200, "MODEL_NOT_FOUND", "requested model is not available", latency, capabilities)
+            return ValidationResult(True, True, 200, None, None, latency, capabilities)
         except Exception as exc:
-            return _validation_result_from_exception(exc, round((perf_counter()-started)*1000))
+            return _validation_result_from_exception(exc, round((perf_counter() - started) * 1000))
 
     def _generate(self, request: GenerationRequest) -> GenerationResponse:
         response = super()._generate(request)
