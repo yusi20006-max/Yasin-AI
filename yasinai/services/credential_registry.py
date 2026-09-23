@@ -30,7 +30,7 @@ class CredentialRegistry:
 
     @staticmethod
     def credential_id(provider: str, credential: str) -> str:
-        digest = hashlib.sha256(f"{provider}\0{credential}".encode("utf-8")).hexdigest()
+        digest = hashlib.sha256(f"{provider}\0{credential}".encode()).hexdigest()
         return f"cred_{digest[:24]}"
 
     def _read(self) -> dict[str, Any]:

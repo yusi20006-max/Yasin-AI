@@ -138,7 +138,7 @@ def create_server(gateway: YasinAIGateway | None = None, *, host: str | None = N
                         self._write(413, {"error": {"message": "request body too large or empty", "type": "invalid_request_error"}}); return
                     payload = json.loads(self.rfile.read(length))
                     status, response = import_bridge.import_credential(payload) if isinstance(payload, dict) else (400, {"error": {"message": "JSON body must be an object", "type": "invalid_request_error"}})
-                except Exception:
+                except (ValueError, TypeError, OSError, json.JSONDecodeError):
                     status, response = 400, {"error": {"message": "invalid import request", "type": "invalid_request_error"}}
                 self._write(status, response); return
             if self.path == "/v1/token/validate":
