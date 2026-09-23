@@ -12,8 +12,6 @@ from yasinai.contracts.generation import GenerationRequest, GenerationResult
 from yasinai.providers.base import ProviderCapability
 from yasinai.services.generation_service import GenerationService
 from yasinai.gateway.token_validation import TokenValidationBridge
-from yasinai.gateway.token_import import TokenImportBridge
-from yasinai.services.credential_registry import CredentialRegistry
 
 logger = logging.getLogger(__name__)
 MAX_BODY_BYTES = 1_048_576
@@ -86,7 +84,6 @@ def create_server(gateway: YasinAIGateway | None = None, *, host: str | None = N
     gateway = gateway or YasinAIGateway()
     if token_bridge is None and os.environ.get("YASINAI_BRIDGE_TOKEN"):
         token_bridge = TokenValidationBridge()
-    import_bridge = TokenImportBridge(validation_bridge=token_bridge, registry=CredentialRegistry()) if token_bridge else None
     bind_host = host or os.environ.get("YASINAI_GATEWAY_HOST", "127.0.0.1")
     bind_port = port if port is not None else int(os.environ.get("YASINAI_GATEWAY_PORT", "8000"))
 
@@ -117,11 +114,7 @@ def create_server(gateway: YasinAIGateway | None = None, *, host: str | None = N
             self.send_response(204); self._cors(); self.end_headers()
 
         def do_GET(self) -> None:
-            if self.path == "/v1/token/credentials":
-                if not import_bridge or not token_bridge or not token_bridge.authorize(dict(self.headers), self.headers.get("Origin")):
-                    self._write(403, {"error": {"message": "bridge authorization failed", "type": "forbidden"}}); return
-                self._write(200, {"credentials": import_bridge.registry.list_public()})
-            elif self.path == "/health":
+            if self.path == "/health":
                 self._write(200, gateway.health())
             elif self.path == "/v1/models":
                 self._write(200, gateway.models())
@@ -129,18 +122,6 @@ def create_server(gateway: YasinAIGateway | None = None, *, host: str | None = N
                 self._write(404, {"error": {"message": "not found", "type": "not_found"}})
 
         def do_POST(self) -> None:
-            if self.path == "/v1/token/import":
-                if not import_bridge or not token_bridge or not token_bridge.authorize(dict(self.headers), self.headers.get("Origin")):
-                    self._write(403, {"error": {"message": "bridge authorization failed", "type": "forbidden"}}); return
-                try:
-                    length = int(self.headers.get("Content-Length", "0"))
-                    if length <= 0 or length > MAX_BODY_BYTES:
-                        self._write(413, {"error": {"message": "request body too large or empty", "type": "invalid_request_error"}}); return
-                    payload = json.loads(self.rfile.read(length))
-                    status, response = import_bridge.import_credential(payload) if isinstance(payload, dict) else (400, {"error": {"message": "JSON body must be an object", "type": "invalid_request_error"}})
-                except (ValueError, TypeError, OSError, json.JSONDecodeError):
-                    status, response = 400, {"error": {"message": "invalid import request", "type": "invalid_request_error"}}
-                self._write(status, response); return
             if self.path == "/v1/token/validate":
                 if not token_bridge or not token_bridge.authorize(dict(self.headers), self.headers.get("Origin")):
                     self._write(403, {"error": {"message": "bridge authorization failed", "type": "forbidden"}}); return
